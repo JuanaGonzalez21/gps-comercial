@@ -25,7 +25,13 @@ router = APIRouter(prefix="/auth", tags=["auth"], responses=PROBLEM_RESPONSES)
 REFRESH_COOKIE_PATH = "/api/v1/auth"
 
 
-def _set_session_cookies(response: Response, issued: IssuedSession, settings: Settings) -> None:
+def _set_session_cookies(
+    response: Response,
+    issued: IssuedSession,
+    settings: Settings,
+    *,
+    csrf_token: str | None = None,
+) -> None:
     secure = settings.secure_cookies
     refresh_max_age = settings.refresh_token_ttl_days * 86_400
     response.set_cookie(
@@ -47,9 +53,10 @@ def _set_session_cookies(response: Response, issued: IssuedSession, settings: Se
         path=REFRESH_COOKIE_PATH,
     )
     # Readable by the SPA on purpose: it echoes it in X-CSRF-Token (double-submit pattern).
+    # New at login; kept stable on refresh so requests already in flight stay valid.
     response.set_cookie(
         CSRF_COOKIE,
-        tokens.new_opaque_token(),
+        csrf_token or tokens.new_opaque_token(),
         max_age=refresh_max_age,
         httponly=False,
         secure=secure,
@@ -100,7 +107,7 @@ def refresh(
     issued = AuthService(db, settings).refresh(
         request.cookies.get(REFRESH_COOKIE), ip_address=client_ip(request)
     )
-    _set_session_cookies(response, issued, settings)
+    _set_session_cookies(response, issued, settings, csrf_token=request.cookies.get(CSRF_COOKIE))
     return AuthResponse(user=MeOut.from_user(issued.user))
 
 

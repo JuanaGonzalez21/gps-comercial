@@ -167,3 +167,13 @@ def test_cors_preflight_only_for_frontend(client: TestClient) -> None:
     )
     assert allowed.headers.get("access-control-allow-origin") == FRONTEND_ORIGIN
     assert "access-control-allow-origin" not in denied.headers
+
+
+def test_csrf_token_stays_stable_across_refresh(client, make_user) -> None:
+    user = make_user("viewer")
+    login(client, user.email)
+    before = client.cookies.get("gc_csrf")
+    assert client.post("/api/v1/auth/refresh").status_code == 200
+    assert client.cookies.get("gc_csrf") == before
+    # A request prepared with the token read before the refresh must still be accepted.
+    assert client.post("/api/v1/auth/logout").status_code == 204

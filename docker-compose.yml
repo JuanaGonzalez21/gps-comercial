@@ -1,0 +1,46 @@
+# Local reproduction of the stack (DEP-05): PostgreSQL + API + Vite dev server.
+#   cp backend/.env.example backend/.env   (fill WIALON_TOKEN, JWT_SECRET, ADMIN_* locally)
+#   docker compose up --build   ->  http://localhost:5173
+# Credentials below are for this local, throwaway database only.
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: gps_comercial
+      POSTGRES_USER: gps
+      POSTGRES_PASSWORD: gps-local-only
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gps -d gps_comercial"]
+      interval: 5s
+      retries: 10
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  api:
+    build: ./backend
+    env_file: backend/.env
+    environment:
+      DATABASE_URL: postgresql://gps:gps-local-only@db:5432/gps_comercial
+      CORS_ORIGINS: http://localhost:5173
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+
+  web:
+    image: node:24-alpine
+    working_dir: /app
+    command: sh -c "npm ci && npm run dev -- --host 0.0.0.0"
+    environment:
+      VITE_DEV_PROXY_TARGET: http://api:8000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    depends_on:
+      - api
+
+volumes:
+  pgdata:

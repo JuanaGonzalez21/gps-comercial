@@ -34,6 +34,12 @@ logger = logging.getLogger("app.wialon.gateway")
 UNIT_FLAGS = 0x1 | 0x8 | 0x400  # base, custom fields, last message and position
 RESOURCE_FLAGS = 0x1 | 0x100 | 0x200000  # base, drivers, tags (passengers)
 MESSAGES_WITH_DATA_MASK = 0xFF00  # flags=0 with this mask = "all messages with data"
+# Wialon applies bind/unbind asynchronously (~1-2 s, verified against the real account), so we
+# re-read until the new state is visible before answering.
+BINDING_CONFIRM_ATTEMPTS = 8
+BINDING_CONFIRM_INTERVAL_SECONDS = 0.75
+# An unbind stamped in the same second as the previous bind is not applied by Wialon (verified).
+MIN_SECONDS_BETWEEN_BINDINGS = 2.0
 
 
 class _TtlCache:
@@ -104,9 +110,11 @@ class WialonFleetGateway:
         *,
         cache_ttl_seconds: float,
         clock: Callable[[], float] = time.monotonic,
+        sleep: Callable[[float], None] = time.sleep,
     ) -> None:
         self._client = client
         self._cache = _TtlCache(cache_ttl_seconds, clock)
+        self._sleep = sleep
         self._messages_lock = threading.Lock()  # loaded messages live in the shared session
 
     def close(self) -> None:
@@ -147,6 +155,25 @@ class WialonFleetGateway:
                     return entry
             break
         raise NotFoundError(f"El {label} no existe en Wialon o no es accesible.")
+
+    def _confirm_binding(
+        self, resource_id: int, key: str, entry_id: int, label: str, expected_unit: int | None
+    ) -> None:
+        for attempt in range(BINDING_CONFIRM_ATTEMPTS):
+            self._cache.invalidate("resources")
+            entry = self._raw_entry(resource_id, key, entry_id, label)
+            if (entry.get("bu") or None) == expected_unit:
+                return
+            if attempt < BINDING_CONFIRM_ATTEMPTS - 1:
+                self._sleep(BINDING_CONFIRM_INTERVAL_SECONDS)
+        # Wialon accepted the request ({}); it may still be applying it. Never claim the opposite.
+        logger.warning("wialon_binding_not_confirmed", extra={"kind": key, "entry_id": entry_id})
+
+    def _respect_last_binding_time(self, entry: dict[str, Any]) -> None:
+        last_change = entry.get("bt") or 0  # UNIX time of the last bind/unbind
+        wait = last_change + MIN_SECONDS_BETWEEN_BINDINGS - time.time()
+        if 0 < wait <= MIN_SECONDS_BETWEEN_BINDINGS:
+            self._sleep(wait)
 
     def _require_resource(self, resource_id: int) -> None:
         if not any(r.id == resource_id for r in self.list_resources()):
@@ -237,12 +264,14 @@ class WialonFleetGateway:
             "mode": 1,
         }
         self._write("resource/bind_unit_driver", params, invalidate=("resources",))
+        self._confirm_binding(resource_id, "drvrs", driver_id, "conductor", unit_id)
 
     def unbind_driver(self, resource_id: int, driver_id: int) -> None:
         current = self._raw_entry(resource_id, "drvrs", driver_id, "conductor")
         unit_id = current.get("bu") or 0
         if not unit_id:
             raise ConflictError("El conductor no está vinculado a ningún vehículo.")
+        self._respect_last_binding_time(current)
         params = {
             "resourceId": resource_id,
             "unitId": unit_id,
@@ -251,6 +280,7 @@ class WialonFleetGateway:
             "mode": 0,
         }
         self._write("resource/bind_unit_driver", params, invalidate=("resources",))
+        self._confirm_binding(resource_id, "drvrs", driver_id, "conductor", None)
 
     def create_passenger(self, resource_id: int, data: PassengerInput) -> Passenger:
         self._require_resource(resource_id)
@@ -305,12 +335,14 @@ class WialonFleetGateway:
             "mode": 1,
         }
         self._write("resource/bind_unit_tag", params, invalidate=("resources",))
+        self._confirm_binding(resource_id, "tags", passenger_id, "pasajero", unit_id)
 
     def unbind_passenger(self, resource_id: int, passenger_id: int) -> None:
         current = self._raw_entry(resource_id, "tags", passenger_id, "pasajero")
         unit_id = current.get("bu") or 0
         if not unit_id:
             raise ConflictError("El pasajero no está asignado a ningún vehículo.")
+        self._respect_last_binding_time(current)
         params = {
             "resourceId": resource_id,
             "unitId": unit_id,
@@ -319,6 +351,7 @@ class WialonFleetGateway:
             "mode": 0,
         }
         self._write("resource/bind_unit_tag", params, invalidate=("resources",))
+        self._confirm_binding(resource_id, "tags", passenger_id, "pasajero", None)
 
     def _driver_from_object(self, resource_id: int, obj: dict[str, Any]) -> Driver:
         raw = mappers.map_resource({"id": resource_id, "nm": "", "drvrs": {"0": obj}})

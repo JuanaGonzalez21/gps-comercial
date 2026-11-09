@@ -115,7 +115,7 @@ def make_gateway(fake: FakeWialon, *, token: str = TOKEN) -> WialonFleetGateway:
         transport=httpx2.MockTransport(fake),
         sleep=lambda _s: None,
     )
-    return WialonFleetGateway(client, cache_ttl_seconds=60)
+    return WialonFleetGateway(client, cache_ttl_seconds=60, sleep=lambda _s: None)
 
 
 def test_units_are_validated_and_mapped() -> None:
@@ -216,9 +216,36 @@ def test_unbind_uses_currently_bound_unit() -> None:
     fake = FakeWialon()
     fake.handlers["resource/bind_unit_driver"] = {}
     make_gateway(fake).unbind_driver(77, 5)
-    svc, params = fake.calls[-1]
-    assert svc == "resource/bind_unit_driver"
-    assert params == {"resourceId": 77, "unitId": 1, "driverId": 5, "time": 0, "mode": 0}
+    binds = [params for svc, params in fake.calls if svc == "resource/bind_unit_driver"]
+    assert binds == [{"resourceId": 77, "unitId": 1, "driverId": 5, "time": 0, "mode": 0}]
+
+
+def test_binding_is_confirmed_by_rereading() -> None:
+    """Wialon applies bindings asynchronously: the gateway re-reads until the change is visible."""
+    fake = FakeWialon()
+    reads_until_applied = {"left": 2}
+    state = {"bu": 0}
+
+    def bind(params: dict) -> dict:
+        state["pending"] = params["unitId"] if params["mode"] else 0
+        return {}
+
+    def search(params: dict) -> dict:
+        if params["spec"]["itemsType"] == "avl_unit":
+            return UNITS
+        if "pending" in state:
+            reads_until_applied["left"] -= 1
+            if reads_until_applied["left"] <= 0:
+                state["bu"] = state.pop("pending")
+        resource = RESOURCES["items"][0]
+        tag = {**resource["tags"]["9"], "bu": state["bu"]}
+        return {"totalItemsCount": 1, "items": [{**resource, "tags": {"9": tag}}]}
+
+    fake.handlers["resource/bind_unit_tag"] = bind
+    fake.handlers["core/search_items"] = search
+    gateway = make_gateway(fake)
+    gateway.bind_passenger(77, 9, 1)
+    assert next(p for p in gateway.list_passengers() if p.id == 9).unit_id == 1
 
 
 def test_unbind_when_not_bound_is_a_conflict() -> None:

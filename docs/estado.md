@@ -1,29 +1,41 @@
 # Estado actual y relevo
-Snapshot: 2026-11-09 (noche). Verificar siempre Git y archivos antes de continuar.
+Snapshot: 2026-11-09 18:40 America/Bogota. Verificar siempre Git, archivos y procesos antes de continuar.
 
-## Confirmado
-- [x] Proyecto Work creado por Juana.
-- [x] Repositorio público con main y README verificado (clon anónimo 2026-11-09: solo `7f80496 Initial commit`).
-- [x] Primera solicitud enviada por Juana a Claude Design.
-- [x] Paquete de contexto y tres definiciones de agentes preparado.
-- [x] Paquete copiado dentro del clon real (`CLAUDE.md`, `AGENTS.md`, `docs/`, `.claude/agents/`, `.local-context/prueba_tecnica.md`).
-- [x] Agentes `ux-ui`, `code-orchestrator` y `architecture-quality` disponibles en Claude Code (VS Code).
-      En la tarea de integración del 2026-11-09 no se invocó ninguno; la hizo la sesión principal.
-- [x] Base ejecutable (backend + frontend + README) copiada al clon real, rama `chore/bootstrap-base`.
-      Comparada con `~/Downloads/gps-comercial-base` con `cmp`: todos los archivos de código idénticos.
-- [x] `.gitignore` combinado (reglas del repo + `dist-ssr/`, `*.local`, `npm-debug.log*` y editores de la base).
-- [x] Frontend instala, compila y pasa lint/audit en Windows.
-- [x] Backend en Windows: `uv sync --locked`, pytest (7 passed), ruff y pip-audit OK.
-- [x] `/health` mediante petición real en Windows → `200 {"status":"ok"}`.
-- [x] `backend/.env` local creado desde `.env.example` (sin token) e ignorado por Git.
+## Alcance vigente
+Desarrollo local autónomo autorizado (ver CLAUDE.md). Commits locales en `chore/bootstrap-base`, sin push ni despliegue.
 
-## No confirmado / pendiente
-- [ ] Commit de la base (propuesta abajo). Sin push.
-- [ ] Prueba visual en navegador (`npm run dev` + backend → "Servidor disponible") en Windows; en Linux sí se hizo.
-- [ ] Token configurado localmente y permisos Wialon verificados.
-- [ ] Base de datos, autenticación, funciones y pruebas de negocio.
-- [ ] Hosting, DNS y despliegue.
-- [ ] Diseño recibido, revisado e implementado.
+## Qué usa Wialon real, qué está simulado
+| Pieza | Estado |
+|---|---|
+| Login backend, sesión, CSRF, roles | Implementado y probado (pytest + curl). DB local SQLite; PostgreSQL 17 verificado aparte |
+| Lectura de vehículos, posiciones, conductor vinculado | **Wialon real** vía API propia: 62 vehículos, 61 con posición (curl contra `/api/v1`) |
+| Escrituras Wialon (conductor, pasajero, campos, vínculos) | **Verificadas en Wialon real** con datos de prueba propios: `scripts/wialon_write_check.py` 15/15 OK, sin restos |
+| Endpoints de conductores, pasajeros, campos, dashboard, historial, CSV, usuarios, auditoría | En implementación (agente backend) |
+| Frontend login → lista + mapa | En implementación (agente frontend); aún no visible en pantalla |
+| Pruebas automáticas | Wialon **simulado** (`FakeFleetGateway`, `httpx2.MockTransport`), identificado como tal |
+| Despliegue | Configuración preparada (`render.yaml`, `frontend/vercel.json`, Dockerfile); nada desplegado |
+
+## Relevo 2026-11-09 tarde — desarrollo autónomo
+Comandos y resultados reales:
+- `scripts/wialon_probe.py` (solo lectura): login OK; 62 unidades (61 con `pos`, 41 con `flds`); 2 recursos;
+  16 conductores (12 vinculados); 101 pasajeros. Permisos del token decodificados de `uacl`: ver/crear/editar/borrar
+  conductores y pasajeros, gestionar campos personalizados, consultar mensajes.
+- `scripts/wialon_write_check.py` (datos propios `ZZ-PRUEBA-GPS-COMERCIAL`): 15/15 OK. Hallazgos reales: los vínculos
+  se aplican de forma asíncrona (~2 s) y un desvínculo en el mismo segundo que el vínculo no se aplica; el gateway lo
+  confirma releyendo y respeta 2 s desde el último cambio.
+- Servidor local contra Wialon real: sin sesión 401; login 200 (3 cookies); `/vehicles` total 62; `/vehicles/positions` 61
+  marcadores; filtro por estado; CSRF falso 403; logout 204 y sesión revocada.
+- `uv run pytest` → 72 passed; ruff check/format OK.
+- Alembic en PostgreSQL 17.11 temporal (initdb aislado en el scratchpad, puerto 55432, sin tocar el servicio de Juana):
+  upgrade/downgrade/upgrade, `alembic check` sin diferencias, seed-admin idempotente, login/refresh/logout y auditoría
+  persistidos.
+- Docker: archivos creados, no ejecutados (Docker Desktop apagado).
+
+Local (no versionado): `backend/.env` contiene el token de Juana y valores locales generados (`JWT_SECRET`, `ADMIN_EMAIL`,
+`ADMIN_PASSWORD`, `ADMIN_FULL_NAME`, `DATABASE_URL` SQLite). La contraseña del Admin local solo está en ese archivo.
+
+Pendiente inmediato: integrar frontend (login, lista, mapa) y comprobar en navegador con Wialon real; endpoints restantes;
+landing completa; README y documentación de entrega; despliegue (requiere cuentas de Juana).
 
 ## Relevo 2026-11-09 — equipo de Juana (Windows)
 Fecha / rama / commit: 2026-11-09 / `chore/bootstrap-base` / sin commit (base `7f80496`).

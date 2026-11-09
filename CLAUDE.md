@@ -66,9 +66,21 @@ Después de cada fase entrega un resumen corto: hecho, prueba, pendiente y una a
 Incluye una explicación breve de los conceptos y una pregunta de sustentación; no conviertas cada paso en un examen bloqueante.
 Git: ramas por tarea, commits pequeños Conventional Commits, sin force push ni fechas inventadas.
 No atribuyas autoría o firma de commits que no esté configurada. No envíes el correo de entrega automáticamente.
-Si hay autorización de Git vigente, respétala; no hagas push durante el primer encargo definido aquí.
+Si hay autorización de Git vigente, respétala; no hagas push sin autorización expresa de Juana.
 
-## Primer alcance autorizado
-Ejecuta exclusivamente docs/primer-encargo.md inicialmente.
-No desarrolles la aplicación completa en una sola ejecución ni despliegues sin revisar proveedores y configuración.
+## Alcance autorizado vigente (desde 2026-11-09, sustituye al primer encargo)
+El primer encargo (docs/primer-encargo.md) está completado y se conserva como historial.
+Juana autorizó desarrollo local autónomo de todos los requisitos obligatorios del enunciado, con pruebas.
+- Prioridades: 1) base, contratos, DB y migraciones; 2) Wialon con modelos propios, errores y sesión;
+  3) autenticación, tres roles, usuarios y cambio inicial; 4) vehículos, mapa, detalle, conductores,
+  pasajeros, asignaciones y campos; 5) dashboard, historial, CSV y auditoría; 6) landing, responsive,
+  accesibilidad, pruebas, documentación y preparación del despliegue gratuito. Bonus después.
+- Decisiones técnicas rutinarias sin preguntar. Implementar y comprobar, no solo proponer.
+- Bloqueo externo: registrarlo y continuar con otras tareas.
+- Commits locales pequeños sobre la rama actual (`chore/bootstrap-base`) tras comprobar cada avance.
+  Las ramas por tarea de los agentes se integran en ella. Sin push hasta nueva autorización.
+- Sin token: documentar variables y usar pruebas simuladas claramente identificadas como tales.
+- Escrituras en Wialon solo sobre datos de prueba propios.
+- Preparar el despliegue y verificar proveedores, sin contratar servicios, publicar, cambiar DNS ni enviar mensajes.
+- Contrato compartido de implementación: docs/api-contract.md.
 

@@ -294,7 +294,6 @@ export interface PassengerOut {
   name: string
   code: string | null
   phone: string | null
-  description: string | null
   vehicle: VehicleRef | null
   custom_fields: PassengerCustomField[]
 }
@@ -304,7 +303,6 @@ export interface PassengerInput {
   name: string
   code?: string | null
   phone?: string | null
-  description?: string | null
   custom_fields?: PassengerCustomField[]
 }
 

@@ -68,14 +68,13 @@ class Driver:
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Passenger:
-    """A passenger. Wialon calls them tags; they live inside a resource."""
+    """A passenger. Wialon calls them tags; they live inside a resource and have no description."""
 
     resource_id: int
     id: int
     name: str
     code: str | None = None
     phone: str | None = None
-    description: str | None = None
     unit_id: int | None = None
     custom_fields: Mapping[str, str] = field(default_factory=dict)
 
@@ -101,7 +100,6 @@ class PassengerInput:
     name: str
     code: str | None = None
     phone: str | None = None
-    description: str | None = None
     custom_fields: Mapping[str, str] = field(default_factory=dict)
 
 

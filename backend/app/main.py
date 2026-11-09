@@ -11,8 +11,8 @@ from app.core.config import Settings, get_settings
 def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or get_settings()
 
-    # Interactive docs stay available in development; production exposure is decided later (SEG-05).
-    docs_enabled = not settings.is_production
+    # Interactive docs: on by default except in production (API_DOCS_ENABLED overrides, SEG-05).
+    docs_enabled = settings.docs_enabled
     app = FastAPI(
         title="GPS Comercial API",
         version="0.1.0",

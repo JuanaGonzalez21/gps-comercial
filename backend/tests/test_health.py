@@ -39,8 +39,15 @@ def test_cors_rejects_wildcard() -> None:
         Settings(_env_file=None, cors_origins="*")
 
 
+PRODUCTION = {
+    "app_env": "production",
+    "jwt_secret": "x" * 48,
+    "database_url": "postgresql://user@localhost/db",
+}
+
+
 def test_docs_disabled_in_production() -> None:
-    client = make_client(app_env="production")
+    client = make_client(**PRODUCTION)
     assert client.get("/docs").status_code == 404
     assert client.get("/openapi.json").status_code == 404
 

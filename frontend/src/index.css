@@ -1,0 +1,52 @@
+/* Mandatory palette. Final roles and contrast checks come with the approved design. */
+:root {
+  --color-red: #eb162c;
+  --color-red-dark: #a81a2b;
+  --color-gray: #6b6b6b;
+  --color-teal: #1e8c93;
+  --color-lavender: #eee8f2;
+  --color-text: #1f1f1f;
+
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  color: var(--color-text);
+  background: var(--color-lavender);
+}
+
+body {
+  margin: 0;
+}
+
+.bootstrap {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 3rem 1rem;
+}
+
+.bootstrap h1 {
+  color: var(--color-red-dark);
+}
+
+/* Text stays dark for WCAG AA; colour goes on a non-text indicator (3:1 is enough there).
+   Measured on --color-lavender: teal 3.34:1, red 3.73:1, gray 4.43:1, red-dark 6.13:1. */
+.status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+
+.status::before {
+  content: '';
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  background: var(--color-gray);
+}
+
+.status--ok::before {
+  background: var(--color-teal);
+}
+
+.status--unreachable::before {
+  background: var(--color-red-dark);
+}

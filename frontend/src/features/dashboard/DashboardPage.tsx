@@ -80,6 +80,7 @@ function kpiItems(summary: DashboardSummary): KpiItem[] {
       hint: ofFleet(status.moving),
       tone: 'moving',
       Icon: MovingIcon,
+      link: { to: '/app/vehicles?status=moving', label: 'Ver en movimiento', permission: 'vehicles:read' },
     },
     {
       id: 'stopped',
@@ -88,6 +89,7 @@ function kpiItems(summary: DashboardSummary): KpiItem[] {
       hint: ofFleet(status.stopped),
       tone: 'stopped',
       Icon: StoppedIcon,
+      link: { to: '/app/vehicles?status=stopped', label: 'Ver detenidos', permission: 'vehicles:read' },
     },
     {
       id: 'no_signal',
@@ -96,6 +98,7 @@ function kpiItems(summary: DashboardSummary): KpiItem[] {
       hint: ofFleet(status.no_signal),
       tone: 'no_signal',
       Icon: NoSignalIcon,
+      link: { to: '/app/vehicles?status=no_signal', label: 'Ver sin señal', permission: 'vehicles:read' },
     },
     {
       id: 'with_driver',
@@ -104,6 +107,7 @@ function kpiItems(summary: DashboardSummary): KpiItem[] {
       hint: ofFleet(summary.vehicles_with_driver),
       tone: 'with',
       Icon: SteeringWheelIcon,
+      link: { to: '/app/vehicles?has_driver=true', label: 'Ver con conductor', permission: 'vehicles:read' },
     },
     {
       id: 'without_driver',
@@ -112,6 +116,7 @@ function kpiItems(summary: DashboardSummary): KpiItem[] {
       hint: ofFleet(summary.vehicles_without_driver),
       tone: 'without',
       Icon: UnlinkIcon,
+      link: { to: '/app/vehicles?has_driver=false', label: 'Ver sin conductor', permission: 'vehicles:read' },
     },
     {
       id: 'drivers',

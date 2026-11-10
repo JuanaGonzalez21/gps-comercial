@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate } from 'react-router'
+import { useNavigate, useSearchParams } from 'react-router'
 import { getErrorMessage } from '@/api/errors'
 import type { VehicleListParams, VehicleSort, VehicleStatus } from '@/api/types'
 import { useVehiclePositions, useVehicles } from '@/api/vehicles'
 import { ExportCsvButton } from '@/features/exports/ExportCsvButton'
+import { isVehicleStatus } from '@/lib/vehicleStatus'
 import { formatNumber, formatTime } from '@/lib/format'
 import { useDebouncedValue, useDocumentTitle, useMediaQuery, usePrefersReducedMotion } from '@/lib/hooks'
 import { VehicleMap } from '@/map/VehicleMap'
@@ -50,8 +51,16 @@ export default function VehiclesPage() {
   // ---- Filters (UI state) -> query params (server state) ----
   const [searchInput, setSearchInput] = useState('')
   const search = useDebouncedValue(searchInput.trim(), SEARCH_DEBOUNCE_MS)
-  const [status, setStatus] = useState<VehicleStatus | ''>('')
-  const [driver, setDriver] = useState<DriverFilter>('')
+  // Initial filters can come from the URL (dashboard KPIs link to /app/vehicles?status=moving).
+  const [searchParams] = useSearchParams()
+  const [status, setStatus] = useState<VehicleStatus | ''>(() => {
+    const value = searchParams.get('status') ?? ''
+    return isVehicleStatus(value) ? value : ''
+  })
+  const [driver, setDriver] = useState<DriverFilter>(() => {
+    const value = searchParams.get('has_driver')
+    return value === 'true' ? 'with' : value === 'false' ? 'without' : ''
+  })
   const [sort, setSort] = useState<VehicleSort>('name')
 
   // Any filter change starts again at page 1, without an extra effect/render.

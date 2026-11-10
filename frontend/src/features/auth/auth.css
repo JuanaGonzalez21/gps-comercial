@@ -37,6 +37,36 @@
     padding: var(--space-10) var(--space-12);
     background: var(--color-dark);
     color: var(--color-on-dark);
+    /* Contains the decorative rings below (no effect on the column layout). */
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  /* Decorative brand-red rings from the design reference. CSS only (never announced), drawn
+     behind the content and kept in the top-right corner so they never cross the text. */
+  .auth-aside::before,
+  .auth-aside::after {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    border: 1px solid rgb(235 22 44 / 0.45);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  .auth-aside::before {
+    top: -11.5rem;
+    right: -11.5rem;
+    width: 23rem;
+    height: 23rem;
+  }
+
+  .auth-aside::after {
+    top: -7rem;
+    right: -7rem;
+    width: 14rem;
+    height: 14rem;
   }
 
   .auth-aside__title {

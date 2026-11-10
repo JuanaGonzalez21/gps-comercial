@@ -64,7 +64,17 @@ OptionalPhone = Annotated[
 ]
 
 # Custom fields: passenger keys and vehicle field names 1-50, values up to 255.
-CustomFieldKey = Annotated[str, _trimmed(50, required=True)]
+
+
+def _no_dot_segments(value: str) -> str:
+    # The key travels in the URL path: "." or ".." segments are normalised away by browsers and
+    # proxies, so ".../custom-fields/.." would reach the passenger itself (e.g. a DELETE).
+    if any(segment in {".", ".."} for segment in value.split("/")):
+        raise ValueError("La clave no puede ser «.» ni «..» ni contener esos segmentos.")
+    return value
+
+
+CustomFieldKey = Annotated[str, _trimmed(50, required=True), AfterValidator(_no_dot_segments)]
 CustomFieldValue = Annotated[str, _trimmed(255, required=False)]
 
 Email = Annotated[str, StringConstraints(max_length=254), AfterValidator(_email)]

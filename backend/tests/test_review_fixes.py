@@ -106,3 +106,13 @@ def test_seed_admin_skipped_sessions_untouched(client, make_user, session_factor
     # Sanity: sessions table exists and is empty before any login in this isolated database.
     with session_factory() as db:
         assert db.query(AuthSession).count() == 0
+
+
+def test_custom_field_keys_cannot_be_dot_segments(login_as) -> None:
+    client = login_as("operator")
+    for key in (".", "..", "a/../b"):
+        response = client.post(
+            "/api/v1/passengers/1000/1/custom-fields", json={"key": key, "value": "x"}
+        )
+        assert response.status_code == 422, key
+        assert response.json()["errors"][0]["field"] == "key"

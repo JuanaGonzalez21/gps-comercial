@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { Button, SearchIcon, SegmentedControl, SelectField, TextField, type SegmentOption, type SelectOption } from '@/ui'
-import { toNameSort, type AssignedFilter, type NameSort } from './listState'
+import { toRosterSort, type AssignedFilter, type RosterSort } from './listState'
 
 const ASSIGNED_OPTIONS: readonly SegmentOption<AssignedFilter>[] = [
   { value: '', label: 'Todos' },
@@ -9,8 +9,9 @@ const ASSIGNED_OPTIONS: readonly SegmentOption<AssignedFilter>[] = [
 ]
 
 const SORT_OPTIONS: readonly SelectOption[] = [
-  { value: 'name', label: 'A–Z' },
-  { value: '-name', label: 'Z–A' },
+  { value: 'name', label: 'Nombre (A–Z)' },
+  { value: '-name', label: 'Nombre (Z–A)' },
+  { value: '-created', label: 'Recién agregados' },
 ]
 
 interface RosterFiltersProps {
@@ -22,10 +23,9 @@ interface RosterFiltersProps {
   onSearchChange: (value: string) => void
   assigned: AssignedFilter
   onAssignedChange: (value: AssignedFilter) => void
-  sort: NameSort
-  onSortChange: (value: NameSort) => void
-  /** Cards have no sortable header, so small screens get a sort select instead. */
-  showSort: boolean
+  sort: RosterSort
+  /** Always visible: "Recién agregados" has no column header, and cards have no headers at all. */
+  onSortChange: (value: RosterSort) => void
   hasFilters: boolean
   onClear: () => void
   /** Extra filters owned by the page (for example the passenger's vehicle). */
@@ -43,7 +43,6 @@ export function RosterFilters({
   onAssignedChange,
   sort,
   onSortChange,
-  showSort,
   hasFilters,
   onClear,
   children,
@@ -69,15 +68,13 @@ export function RosterFilters({
         <SegmentedControl label="Asignación" options={ASSIGNED_OPTIONS} value={assigned} onChange={onAssignedChange} />
       </div>
       {children}
-      {showSort && (
-        <SelectField
-          label="Ordenar por nombre"
-          options={SORT_OPTIONS}
-          fieldClassName="roster-filters__select"
-          value={sort}
-          onChange={(event) => onSortChange(toNameSort(event.target.value))}
-        />
-      )}
+      <SelectField
+        label="Ordenar por"
+        options={SORT_OPTIONS}
+        fieldClassName="roster-filters__select"
+        value={sort}
+        onChange={(event) => onSortChange(toRosterSort(event.target.value))}
+      />
       {hasFilters && (
         <Button variant="ghost" className="roster-filters__clear" onClick={onClear}>
           Limpiar filtros

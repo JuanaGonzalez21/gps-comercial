@@ -18,7 +18,7 @@ _CSV_RESPONSE: dict[int | str, dict[str, object]] = {
     200: {"content": {"text/csv": {}}, "description": "CSV UTF-8 con BOM"}
 }
 VehicleSort = Literal["name", "-name", "status", "-status", "last_message_at", "-last_message_at"]
-NameSort = Literal["name", "-name"]
+NameSort = Literal["name", "-name", "-created"]  # same orders as the drivers/passengers lists
 
 
 def _csv(export: CsvExport) -> Response:

@@ -20,7 +20,8 @@ from app.services.passenger_service import PassengerService
 
 router = APIRouter(prefix="/passengers", tags=["passengers"], responses=PROBLEM_RESPONSES)
 
-PassengerSort = Literal["name", "-name"]
+# "-created": recently added first (see services.common.newest_first_key).
+PassengerSort = Literal["name", "-name", "-created"]
 _can_read = require_permission(Permission.PASSENGERS_READ)
 _can_write = require_permission(Permission.PASSENGERS_WRITE)
 _can_assign = require_permission(Permission.ASSIGNMENTS_WRITE)

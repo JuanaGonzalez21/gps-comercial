@@ -126,6 +126,19 @@ class AuditRepository:
     def add(self, entry: AuditLog) -> None:
         self._db.add(entry)
 
+    def latest_success_by_entity(self, action: str) -> dict[str, datetime]:
+        """When `action` last succeeded for each entity id, for example "driver.created"."""
+        query = (
+            select(AuditLog.entity_id, func.max(AuditLog.occurred_at))
+            .where(
+                AuditLog.action == action,
+                AuditLog.outcome == "success",
+                AuditLog.entity_id.is_not(None),
+            )
+            .group_by(AuditLog.entity_id)
+        )
+        return {entity_id: occurred_at for entity_id, occurred_at in self._db.execute(query)}
+
     def search(
         self,
         *,

@@ -183,7 +183,7 @@ def get_driver_service(
     audit: RequestAuditTrail = Depends(get_audit_trail),
     resources: ResourceService = Depends(get_resource_service),
 ) -> DriverService:
-    return DriverService(gateway, audit, resources)
+    return DriverService(gateway, audit, resources, creations=audit)
 
 
 def get_passenger_service(
@@ -191,7 +191,7 @@ def get_passenger_service(
     audit: RequestAuditTrail = Depends(get_audit_trail),
     resources: ResourceService = Depends(get_resource_service),
 ) -> PassengerService:
-    return PassengerService(gateway, audit, resources)
+    return PassengerService(gateway, audit, resources, creations=audit)
 
 
 def get_vehicle_custom_field_service(

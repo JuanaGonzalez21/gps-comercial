@@ -17,7 +17,8 @@ import type {
 // into the complete set, so editing one field or the basic data never loses the others.
 
 /** Sort keys accepted by GET /passengers (backend/app/api/v1/passengers.py). */
-export type PassengerSort = 'name' | '-name'
+/** "-created": recently added first (audit date, then Wialon id order). */
+export type PassengerSort = 'name' | '-name' | '-created'
 
 export interface PassengerQueryParams extends PassengerListParams {
   sort?: PassengerSort

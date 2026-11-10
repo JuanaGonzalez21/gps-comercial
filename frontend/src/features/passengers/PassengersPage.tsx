@@ -237,7 +237,6 @@ export default function PassengersPage() {
         onAssignedChange={list.setAssigned}
         sort={list.sort}
         onSortChange={list.setSort}
-        showSort={isCompact}
         hasFilters={list.hasFilters}
         onClear={clearFilters}
       >

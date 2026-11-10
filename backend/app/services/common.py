@@ -5,8 +5,9 @@ and paging happen here, in the backend, never in the browser (RF-10, RF-28).
 """
 
 import unicodedata
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from datetime import UTC, datetime
 
 from app.domain.ports import FleetGateway
 
@@ -56,6 +57,27 @@ def vehicle_ref(unit_id: int | None, names: dict[int, str]) -> VehicleRef | None
 def entity_key(resource_id: int, entity_id: int) -> str:
     """Audit identifier of drivers and passengers: their ids are only unique inside a resource."""
     return f"{resource_id}:{entity_id}"
+
+
+_NEVER = datetime.min.replace(tzinfo=UTC)
+
+NEWEST_FIRST = "-created"
+
+
+def newest_first_key(
+    created: Mapping[str, datetime], resource_id: int, entity_id: int
+) -> tuple[bool, datetime, int, int]:
+    """Sort key (with reverse=True) for "recién agregados" in drivers and passengers.
+
+    Wialon keeps no creation date for them, so the date comes from our audit log: what was created
+    through this application goes first, newest first. Items created elsewhere (directly in Wialon,
+    or before the audit log existed) follow by id, which Wialon assigns in increasing order inside
+    each resource, so they are newest first within their resource.
+    """
+    when = created.get(entity_key(resource_id, entity_id))
+    if when is not None and when.tzinfo is None:
+        when = when.replace(tzinfo=UTC)
+    return (when is not None, when or _NEVER, entity_id, resource_id)
 
 
 def changed_fields(before: dict[str, object], after: dict[str, object]) -> list[str]:

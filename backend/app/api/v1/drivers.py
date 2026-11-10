@@ -13,7 +13,8 @@ from app.services.driver_service import DriverService
 
 router = APIRouter(prefix="/drivers", tags=["drivers"], responses=PROBLEM_RESPONSES)
 
-DriverSort = Literal["name", "-name"]
+# "-created": recently added first (see services.common.newest_first_key).
+DriverSort = Literal["name", "-name", "-created"]
 _can_read = require_permission(Permission.DRIVERS_READ)
 _can_write = require_permission(Permission.DRIVERS_WRITE)
 _can_assign = require_permission(Permission.ASSIGNMENTS_WRITE)

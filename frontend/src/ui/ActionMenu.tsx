@@ -9,6 +9,7 @@ import {
   type KeyboardEvent,
   type ReactNode,
 } from 'react'
+import { layoutViewport, placeMenu } from './menuPosition'
 import { MoreVerticalIcon } from './panel-icons'
 import './controls.css'
 
@@ -27,7 +28,8 @@ interface ActionMenuProps {
 }
 
 const MENU_GAP = 4
-const MENU_MAX_HEIGHT = 280
+/** Until it is measured the menu is already fixed (never in the card's flow) and invisible. */
+const UNPLACED: CSSProperties = { position: 'fixed', top: 0, left: 0, visibility: 'hidden' }
 
 /**
  * "⋮" menu button (WAI-ARIA menu button pattern): Enter/Space/ArrowDown open it on the first item,
@@ -36,7 +38,7 @@ const MENU_MAX_HEIGHT = 280
  */
 export function ActionMenu({ label, items }: ActionMenuProps) {
   const [open, setOpen] = useState(false)
-  const [style, setStyle] = useState<CSSProperties>({})
+  const [style, setStyle] = useState<CSSProperties>(UNPLACED)
   const buttonRef = useRef<HTMLButtonElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([])
@@ -47,20 +49,23 @@ export function ActionMenu({ label, items }: ActionMenuProps) {
     if (returnFocus) buttonRef.current?.focus()
   }, [])
 
-  // Place the menu under the trigger, right-aligned; flip above when there is no room below.
+  // Measure the menu, place it under the trigger (right-aligned, above when there is no room) and
+  // only then move focus into it, without scrolling: a scroll would close it and move the trigger.
   useLayoutEffect(() => {
-    if (!open || !buttonRef.current) return
-    const rect = buttonRef.current.getBoundingClientRect()
-    const below = window.innerHeight - rect.bottom
-    const placeAbove = below < MENU_MAX_HEIGHT && rect.top > below
-    setStyle({
-      position: 'fixed',
-      right: Math.max(8, window.innerWidth - rect.right),
-      ...(placeAbove
-        ? { bottom: window.innerHeight - rect.top + MENU_GAP }
-        : { top: rect.bottom + MENU_GAP }),
-    })
-    itemRefs.current[0]?.focus()
+    const menu = menuRef.current
+    if (!open || !buttonRef.current || !menu) return
+    const { left, top } = placeMenu(
+      buttonRef.current.getBoundingClientRect(),
+      { width: menu.offsetWidth, height: menu.offsetHeight },
+      layoutViewport(),
+      MENU_GAP,
+    )
+    // Applied to the node right away so the focus below already sees the final position.
+    menu.style.left = `${left}px`
+    menu.style.top = `${top}px`
+    menu.style.visibility = ''
+    setStyle({ position: 'fixed', left, top })
+    itemRefs.current[0]?.focus({ preventScroll: true })
   }, [open])
 
   useEffect(() => {

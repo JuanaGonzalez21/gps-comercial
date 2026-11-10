@@ -7,7 +7,8 @@ import type { AssignmentInput, DriverInput, DriverListParams, DriverOut, Page } 
 // `drivers:write` / `assignments:write` and audits every change.
 
 /** Sort keys accepted by GET /drivers (backend/app/api/v1/drivers.py). */
-export type DriverSort = 'name' | '-name'
+/** "-created": recently added first (audit date, then Wialon id order). */
+export type DriverSort = 'name' | '-name' | '-created'
 
 export interface DriverQueryParams extends DriverListParams {
   sort?: DriverSort

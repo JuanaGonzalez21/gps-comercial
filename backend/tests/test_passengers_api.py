@@ -4,12 +4,16 @@ Simulated data: resource 1000, passengers 1..15; 1..12 bound to units 100..105 (
 odd ids carry {"Empresa": "Simulada"}.
 """
 
+from datetime import UTC, datetime, timedelta
+
 import pytest
 
 from app.domain.fleet import PassengerInput
 from app.infrastructure.db.models import AuditLog
 
 PASSENGERS = "/api/v1/passengers"
+
+T0 = datetime(2026, 11, 10, 15, 0, tzinfo=UTC)
 
 
 def _fields(fleet, passenger_id: int, resource_id: int = 1000) -> dict[str, str]:
@@ -31,6 +35,15 @@ def spy_updates(fleet, monkeypatch) -> list[PassengerInput]:
 
     monkeypatch.setattr(fleet, "update_passenger", spy)
     return sent
+
+
+def _set_created_at(session_factory, action: str, times: dict[str, datetime]) -> None:
+    """Pins the audit dates so the order does not depend on how fast the requests ran."""
+    with session_factory() as db:
+        for entry in db.query(AuditLog).filter_by(action=action):
+            if entry.entity_id in times:
+                entry.occurred_at = times[entry.entity_id]
+        db.commit()
 
 
 def test_list_filters_and_shape(login_as) -> None:
@@ -267,3 +280,22 @@ def test_delete(login_as, session_factory) -> None:
     with session_factory() as db:
         entry = db.query(AuditLog).filter_by(action="passenger.deleted").one()
         assert entry.entity_id == "1000:15" and entry.details == {"name": "Pasajero simulado 15"}
+
+
+def test_sort_newest_first_uses_audit_dates_across_resources(login_as, session_factory) -> None:
+    client = login_as("operator")
+    first = client.post(PASSENGERS, json={"name": "Primera", "resource_id": 1000}).json()
+    second = client.post(PASSENGERS, json={"name": "Segunda", "resource_id": 1001}).json()
+    _set_created_at(
+        session_factory,
+        "passenger.created",
+        {f"1000:{first['id']}": T0, f"1001:{second['id']}": T0 + timedelta(minutes=1)},
+    )
+    items = client.get(PASSENGERS, params={"sort": "-created", "page_size": 50}).json()["items"]
+    assert [(p["resource_id"], p["id"]) for p in items[:2]] == [
+        (1001, second["id"]),
+        (1000, first["id"]),
+    ]
+    assert [p["id"] for p in items[2:]] == list(range(15, 0, -1))
+    export = client.get("/api/v1/exports/passengers.csv", params={"sort": "-created"})
+    assert export.status_code == 200

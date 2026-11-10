@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, type ReactNode } from 'react'
 import { Button } from './Button'
+import { CloseIcon } from './icons'
 import './dialog.css'
 
 interface DialogProps {
@@ -56,7 +57,7 @@ export function Dialog({ open, title, description, onClose, children, footer, bu
           {title}
         </h2>
         <button type="button" className="dialog__close" onClick={onClose} disabled={busy} aria-label="Cerrar">
-          ×
+          <CloseIcon />
         </button>
       </div>
       {description && (

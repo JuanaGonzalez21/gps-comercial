@@ -379,3 +379,99 @@
     grid-column: 1 / -1;
   }
 }
+
+/* ---------- Public header v2: white, sticky, ~76 px, 1200 px grid, accessible mobile menu ---------- */
+.public-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.public-header__inner,
+.public-footer__inner {
+  width: min(100% - 2 * var(--space-4), 75rem);
+}
+
+.public-header__inner {
+  position: relative;
+  flex-wrap: nowrap;
+  min-height: 4.75rem;
+}
+
+.public-header__end {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+
+.public-header__toggle {
+  display: inline-grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.public-header__toggle svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* Small screens: the section links open as a panel under the header. */
+.public-header__nav[data-open] {
+  position: absolute;
+  top: 100%;
+  right: calc(-1 * var(--space-4));
+  left: calc(-1 * var(--space-4));
+  display: grid;
+  padding: var(--space-2) var(--space-4) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.public-header__nav[data-open] a {
+  display: block;
+  padding: var(--space-3) 0;
+  color: var(--color-text);
+  font-weight: var(--weight-medium);
+}
+
+@media (min-width: 48rem) {
+  .public-header__toggle {
+    display: none;
+  }
+
+  .public-header__end {
+    margin-left: 0;
+  }
+
+  .public-header__nav,
+  .public-header__nav[data-open] {
+    position: static;
+    display: flex;
+    gap: var(--space-8);
+    margin-left: auto;
+    padding: 0;
+    border: 0;
+    background: none;
+    box-shadow: none;
+  }
+
+  .public-header__nav a,
+  .public-header__nav[data-open] a {
+    padding-block: var(--space-2);
+    color: var(--color-text-secondary);
+    font-size: var(--text-base);
+  }
+}
+
+/* The brand never wraps next to the access button and the menu toggle (360 px). */
+.public-header__inner > :first-child {
+  flex: none;
+  white-space: nowrap;
+}

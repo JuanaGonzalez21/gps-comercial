@@ -56,8 +56,10 @@ El login copia el diseño de referencia: títulos, textos y fondos. Como logo se
     - ejemplo `nombre@empresa.com` en el correo;
     - botón con flecha;
     - ayuda "¿Olvidaste tu contraseña? Comunícate con el administrador de tu empresa para restablecerla.".
-- **Móvil:**
-  - banda oscura con el logo y "Tu flota en tiempo real.";
+- **Móvil y tablet (< 64 rem):**
+  - banda oscura con el logo y "Tu flota en tiempo real." (24 px a 360 px, hasta 30 px en tablet);
+  - el contenido de la banda empieza donde empieza la columna del formulario. Se midió en 10 tamaños,
+    de 320 a 1440 px, y el logo y el título comparten la coordenada x del formulario, sin desplazamiento horizontal;
   - debajo, el formulario sobre blanco y la nota "Solo para cuentas creadas por el administrador. En el primer
     ingreso deberás cambiar tu contraseña.".
 - **Textos que se retiraron:**

@@ -55,7 +55,7 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  min-height: 2.375rem; /* 38 px */
+  min-height: 2.5rem; /* 40 px touch target (the design draws 38) */
   padding: 0 0.875rem;
   flex: none;
   border: 1px solid var(--color-border-control);

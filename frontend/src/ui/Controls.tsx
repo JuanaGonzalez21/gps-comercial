@@ -75,7 +75,12 @@ export function FilterChip({ pressed, onClick, children, dotColor, count, tone =
     >
       {dotColor && <span className="chip__dot" style={{ background: dotColor }} aria-hidden="true" />}
       <span>{children}</span>
-      {count !== undefined && <span className="chip__count">{count}</span>}
+      {count !== undefined && (
+        <>
+          {' '}
+          <span className="chip__count">{count}</span>
+        </>
+      )}
     </button>
   )
 }

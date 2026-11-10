@@ -1,28 +1,90 @@
 # Estado actual y relevo
-Snapshot: 2026-11-09 18:40 America/Bogota. Verificar siempre Git, archivos y procesos antes de continuar.
+Snapshot: 2026-11-09 21:15 America/Bogota. Verificar siempre Git, archivos y procesos antes de continuar.
 
 ## Alcance vigente
 Desarrollo local autónomo autorizado (ver CLAUDE.md). Commits locales en `chore/bootstrap-base`, sin push ni despliegue.
 
-## Qué usa Wialon real, qué está simulado (actualizado 2026-11-09 19:40 Bogotá)
-| Pieza | Estado |
-|---|---|
-| Login, refresh, logout, cambio obligatorio, roles | Implementado; pytest; navegador (Playwright + Chrome) para login/logout; PostgreSQL 17 verificado |
-| Usuarios (crear, rol, activar/desactivar, restablecer) y auditoría (API) | Implementado; pytest; ciclo completo verificado en PostgreSQL 17. UI en construcción |
-| Vehículos: lista, filtros, paginación servidor, mapa con clusters, selección sincronizada | **Wialon real en navegador** (62 vehículos, 61 marcadores; e2e Playwright OK) |
-| Conductores, pasajeros, asignaciones, campos de vehículos y pasajeros | API implementada y probada (pytest); **escrituras verificadas en Wialon real** con datos propios (15/15); UI en construcción |
-| Dashboard, historial (RDP), CSV (anti-inyección) | API implementada y probada (pytest con Wialon simulado); UI en construcción |
-| Pruebas automáticas | 246 backend (Wialon **simulado**), 65 frontend, 1 e2e real |
-| Despliegue | Configuración y guía (`docs/deploy-guide.md`); nada publicado |
+## Relevo final del desarrollo local — 2026-11-09 21:15 America/Bogota
+Rama `chore/bootstrap-base`, 61 commits locales sobre `origin/main`, árbol limpio, **sin push ni despliegue**.
 
-## En ejecución ahora (si se cierra el panel)
-- Backend local en `http://localhost:8000` contra Wialon real (proceso en segundo plano de Claude; reiniciar con
-  `cd backend; uv run uvicorn app.main:app --port 8000`).
-- PostgreSQL temporal aislado en el puerto 55432 (scratchpad de la sesión; no es el servicio de Juana).
-- Vite de Juana en `http://localhost:5173`.
-- 4 agentes de frontend: detalle de vehículo + corrección de tabla; conductores y pasajeros; dashboard + historial;
-  usuarios + auditoría + landing + docs/design-system.md. Al terminar: verificar build/lint/test y commitear.
-- Siguiente: e2e ampliado por rol, Lighthouse de la landing, README final y checklist.
+### 1. Qué se puede abrir y probar ahora
+- Backend: `http://localhost:8000/health`, `/docs`. Lo dejó corriendo Claude en segundo plano; si no responde:
+  `cd backend; uv run uvicorn app.main:app --port 8000`.
+- Frontend: `http://localhost:5173` (Vite de Juana): `/`, `/login` y luego `/app/*`.
+- Login local: `ADMIN_EMAIL` y `ADMIN_PASSWORD` de `backend/.env`, que solo están en ese archivo.
+- Pruebas reales en navegador: en `frontend`, `npx playwright test` con `E2E_EMAIL`/`E2E_PASSWORD` en el entorno.
+
+### 2. Estado por módulo
+| Módulo | Implementado | Probado en navegador | Verificado con Wialon real | Pendiente |
+|---|---|---|---|---|
+| Landing | Sí | Sí (e2e, Lighthouse 98/100/100) | No aplica | Lighthouse sobre URL desplegada |
+| Login, refresh, logout, cambio obligatorio | Sí | Sí (e2e, también visualizador) | No aplica | — |
+| Roles y permisos (UI + API) | Sí | Sí (visualizador sin acciones; API 403) | No aplica | — |
+| Usuarios (Admin) | Sí | Pruebas de UI con API simulada; API con PostgreSQL real | No aplica | e2e de la pantalla de usuarios |
+| Vehículos: lista, filtros, paginación, mapa, clusters, selección | Sí | Sí (e2e) | **Sí** (62 vehículos, 61 marcadores) | — |
+| Detalle de vehículo y campos personalizados | Sí | Sí (e2e crea/edita/borra campo) | **Sí** (campos originales intactos) | — |
+| Conductores: CRUD | Sí | Sí (e2e crea/edita/borra) | **Sí** | — |
+| Asignación conductor/pasajero ↔ vehículo | Sí | Pruebas de UI con API simulada | **Sí** (`wialon_write_check.py` 15/15) | e2e de UI de asignación |
+| Pasajeros: CRUD y campos personalizados | Sí | Pruebas de UI con API simulada | **Sí** (sin perder campos) | e2e de UI de pasajeros |
+| Dashboard | Sí | Sí (e2e) | **Sí** | — |
+| Historial con reproducción | Sí | Sí (e2e) | **Sí** (3.502 puntos → 2.000) | — |
+| Exportación CSV | Sí | Sí (descarga e2e; visualizador 403) | **Sí** | — |
+| Auditoría | Sí | Visualizador → acceso denegado (e2e); UI con API simulada | Eventos reales persistidos | — |
+| Despliegue | Configuración y guía | — | — | Todo (cuentas de Juana) |
+
+### 3. Pruebas y problemas encontrados
+- Resultados:
+  - backend `uv run pytest` → 247 passed, cobertura 94 %;
+  - `ruff` OK;
+  - `pip-audit` sin vulnerabilidades;
+  - frontend: build OK, lint OK, `npm test` 161 passed (20 archivos), `npm audit` 0 vulnerabilidades;
+  - Playwright 5/5 con Wialon real;
+  - Lighthouse móvil local: 98/100/100 (SEO 91).
+- PostgreSQL 17 temporal y aislado (ya detenido):
+  - migraciones con upgrade, downgrade y `alembic check`;
+  - seed, usuarios, cambio obligatorio, desactivación 401 inmediata, reset que revoca sesiones y auditoría.
+- Hallazgos reales resueltos:
+  - los vínculos de Wialon son asíncronos (~2 s): ahora hay confirmación acotada a 8 s y error claro;
+  - un desvínculo en el mismo segundo no se aplica: se espera 2 s;
+  - el flag de pasajeros es `0x200000`;
+  - la revisión independiente encontró 1 bloqueante y 4 mayores, todos corregidos con pruebas:
+    - el arranque en Render se caía sin `ADMIN_PASSWORD`;
+    - el logout no revocaba si el access había caducado;
+    - Argon2 podía agotar la memoria;
+    - las fusiones se hacían sobre caché;
+    - un vínculo se daba por bueno sin confirmar;
+  - claves de campo `.`/`..` en la URL.
+- Limitaciones:
+  - Docker no se ejecutó porque Docker Desktop está apagado;
+  - no hay prueba con lector de pantalla real;
+  - las pantallas de pasajeros, asignación y usuarios se validaron con API simulada y con escrituras reales vía script, sin e2e de UI.
+
+### 4. Git
+61 commits locales Conventional Commits con `Co-Authored-By: Claude`, árbol limpio. No se hizo push.
+
+### 5. Requisitos que aún no se cumplen
+- **Despliegue público HTTPS y disponibilidad de 15 días** (DEP-01..04). Es criterio de descalificación: lo más urgente.
+- **Historial público en GitHub y PR hacia `main`** (GIT-01..03): requiere push.
+- **Comprobaciones que solo existen en producción:** Lighthouse sobre la URL desplegada (UX-07), HTTPS y cabeceras en producción (SEG-02, SEG-05).
+- **Opcionales no hechos:** CI (DEP-06), circuit breaker (INT-07), modo oscuro (UX-08).
+
+### 6. Despliegue
+- Elegido y verificado el 2026-11-09:
+  - frontend en Vercel Hobby;
+  - API en Render Free con Docker;
+  - base en Neon Free;
+  - ninguno requiere tarjeta.
+- Preparado: `render.yaml`, `backend/Dockerfile` + `scripts/start.sh` (migra, seed opcional, uvicorn), `frontend/vercel.json` (rewrite `/api` y `/health`, sin caché, CSP) y `docker-compose.yml`.
+- Guía paso a paso, incluido el subdominio sin tocar el portafolio: `docs/deploy-guide.md`.
+- Falta crear los servicios, cargar las variables, ajustar en `vercel.json` la URL real de Render si cambia, y añadir el registro `CNAME gpscomercial → cname.vercel-dns.com`.
+
+### 7. Acciones que necesita Juana (en orden)
+1. Autorizar el push de `chore/bootstrap-base` y abrir un PR hacia `main` (o pedir a Claude que lo haga).
+2. Crear o acceder a las cuentas: Neon, Render y Vercel (con GitHub). Ninguno pide tarjeta.
+3. Elegir el correo y la contraseña robusta del Admin de evaluación y escribirlos solo en el panel de Render.
+4. Seguir `docs/deploy-guide.md`: Neon → Render (variables) → Vercel → DNS del subdominio en Squarespace/Google Domains.
+5. Tras publicar: Claude puede verificar las URLs, el arranque en frío, las cookies y Lighthouse, y completar el README y el checklist.
+6. Preparar el correo de entrega con repositorio, URLs, Admin (por canal privado) y confirmación de 15 días; Claude no lo envía.
 
 ## Relevo 2026-11-09 tarde — desarrollo autónomo
 Comandos y resultados reales:

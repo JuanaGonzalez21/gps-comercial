@@ -1,55 +1,57 @@
-import type { ComponentType } from 'react'
 import { useServerWakeUp } from '@/api/system'
 import { useAuth } from '@/auth/useAuth'
 import { useDocumentTitle } from '@/lib/hooks'
-import {
-  ArrowRightIcon,
-  CheckIcon,
-  ClipboardCheckIcon,
-  EyeIcon,
-  LinkButton,
-  MapPinnedIcon,
-  RouteIcon,
-  ShieldCheckIcon,
-  UserCogIcon,
-  UsersIcon,
-  type ButtonVariant,
-  type IconProps,
-} from '@/ui'
-import coordinadora720 from './assets/coordinadora-tablet-720.webp'
-import coordinadora from './assets/coordinadora-tablet.webp'
+import { ArrowRightIcon, LinkButton, type ButtonVariant } from '@/ui'
+import conductor600 from './assets/coordinadora-conductor-600.webp'
+import conductor from './assets/coordinadora-conductor.webp'
 import flota720 from './assets/flota-furgoneta-camion-720.webp'
 import flota from './assets/flota-furgoneta-camion.webp'
+import patio600 from './assets/flota-patio-vertical-600.webp'
+import patio from './assets/flota-patio-vertical.webp'
 import './landing.css'
 
-const CAPABILITIES: { title: string; text: string; Icon: ComponentType<IconProps> }[] = [
-  { title: 'Ubica tu flota', text: 'Consulta posiciones y estados de tus vehículos.', Icon: MapPinnedIcon },
-  { title: 'Organiza tu operación', text: 'Gestiona conductores, pasajeros y sus asignaciones.', Icon: UsersIcon },
-  { title: 'Revisa cada recorrido', text: 'Consulta el historial y visualiza los trayectos.', Icon: RouteIcon },
-]
-
-const EDITORIAL_POINTS = [
-  'Ubicación y estado de los vehículos.',
-  'Conductores y pasajeros organizados.',
-  'Historial disponible para consulta.',
+// Layout and copy follow the Claude Design landing (2026-11-10). Every claim maps to a feature that exists today.
+const FEATURES = [
+  {
+    label: 'Ubicación',
+    title: 'Saber dónde está cada vehículo.',
+    text: 'Consulta en el mapa la ubicación y el estado de cada unidad, con la información que llega desde Wialon.',
+    points: ['Mapa de la flota', 'Búsqueda por nombre', 'Filtro por estado'],
+  },
+  {
+    label: 'Personas',
+    title: 'Conductores y pasajeros, en orden.',
+    text: 'Registra quién conduce cada vehículo y qué pasajeros tiene asignados, para que todo el equipo consulte los mismos datos.',
+    points: ['Conductor asignado', 'Pasajeros vinculados', 'Asignaciones por vehículo'],
+  },
+  {
+    label: 'Historial',
+    title: 'Recorridos con contexto.',
+    text: 'Elige un periodo y reproduce el trayecto de un vehículo cuando necesites entender qué ocurrió y en qué orden.',
+    points: ['Selección de periodo', 'Reproducción en el mapa'],
+  },
 ]
 
 const STEPS = [
-  { title: 'Encuentra un vehículo', text: 'Búscalo por nombre o filtra la lista por estado.' },
-  { title: 'Consulta su ubicación y detalle', text: 'Posición, estado, conductor y pasajeros asignados.' },
-  { title: 'Revisa su recorrido', text: 'Elige un periodo y reproduce el trayecto en el mapa.' },
+  { title: 'Accede a tu operación.', text: 'Inicia sesión con una cuenta autorizada.' },
+  { title: 'Consulta y organiza.', text: 'Revisa vehículos y gestiona la información según tu rol.' },
+  { title: 'Revisa el recorrido.', text: 'Consulta el historial para entender lo ocurrido.' },
 ]
 
-// Wording checked against ROLE_PERMISSIONS in backend/app/domain/permissions.py.
-// Operators edit people, assignments and vehicle custom fields; they cannot create vehicles in Wialon.
-const ROLES: { name: string; text: string; Icon: ComponentType<IconProps> }[] = [
-  { name: 'Administrador', text: 'Gestiona usuarios, permisos y operación.', Icon: ShieldCheckIcon },
+// Checked against the vehicle list (name search, status filter) and the vehicle detail page.
+const FLEET_CONTROL = [
   {
-    name: 'Operador',
-    text: 'Gestiona personas, asignaciones y campos de los vehículos según sus permisos.',
-    Icon: UserCogIcon,
+    title: 'Encuentra la unidad',
+    text: 'Busca por nombre y filtra por estado para localizar el vehículo que necesitas.',
   },
-  { name: 'Visualizador', text: 'Consulta la información sin modificarla.', Icon: EyeIcon },
+  {
+    title: 'Consulta su situación',
+    text: 'Revisa su posición, velocidad y última actualización. Identifica cuándo falta información o la unidad está sin señal.',
+  },
+  {
+    title: 'Abre su detalle',
+    text: 'Consulta el conductor, los pasajeros y los campos disponibles, y accede al historial del vehículo.',
+  },
 ]
 
 function AccessCta({ signedIn, variant = 'primary' }: { signedIn: boolean; variant?: ButtonVariant }) {
@@ -64,22 +66,10 @@ function AccessCta({ signedIn, variant = 'primary' }: { signedIn: boolean; varia
   )
 }
 
-/** Conceptual route sketch for the "how it works" block: not a map and not real data. */
-function RouteSketch() {
-  return (
-    <svg className="landing-route" viewBox="0 0 320 120" aria-hidden="true" focusable="false">
-      <path className="landing-route__path" d="M24 92 C 88 92, 96 28, 160 40 S 248 96, 296 28" />
-      <circle className="landing-route__start" cx="24" cy="92" r="7" />
-      <circle className="landing-route__end" cx="296" cy="28" r="9" />
-      <circle className="landing-route__end-dot" cx="296" cy="28" r="3.5" />
-    </svg>
-  )
-}
-
 export default function LandingPage() {
   useDocumentTitle(null)
   useServerWakeUp() // free hosting sleeps when idle: start waking it as soon as someone arrives
-  const { status, user } = useAuth()
+  const { status } = useAuth()
   const signedIn = status === 'authenticated'
 
   return (
@@ -89,181 +79,148 @@ export default function LandingPage() {
           <div className="landing-hero__copy">
             <p className="landing-kicker">Gestión y monitoreo de flotas</p>
             <h1 id="landing-title" className="landing-hero__title">
-              <span>Tu flota conectada.</span> <span>Tu operación bajo control.</span>
+              <span>Tu flota conectada.</span> <span>Tu equipo informado.</span>
             </h1>
             <p className="landing-hero__lead">
-              Consulta vehículos, organiza conductores y pasajeros, y revisa recorridos desde un mismo lugar.
+              Consulta dónde están tus vehículos, organiza conductores y pasajeros y revisa sus recorridos desde un mismo
+              lugar.
             </p>
             <div className="landing-hero__actions">
               <AccessCta signedIn={signedIn} />
               <a className="landing-link" href="#funcionalidades">
-                Explorar funcionalidades
+                Conocer la plataforma
+                <ArrowRightIcon aria-hidden="true" />
               </a>
             </div>
-          </div>
-          <div className="landing-hero__visual">
-            <div className="landing-hero__shape" aria-hidden="true" />
-            <img
-              className="landing-hero__vehicles"
-              src={flota}
-              srcSet={`${flota720} 720w, ${flota} 1400w`}
-              sizes="(min-width: 64rem) 40rem, calc(100vw - 2rem)"
-              width={1400}
-              height={660}
-              alt="Ilustración de una furgoneta y un camión de reparto blancos"
-              fetchPriority="high"
-            />
-            <p className="landing-hero__tag">Integración con Wialon</p>
+            <p className="landing-hero__note">Información de tus unidades integrada con Wialon.</p>
           </div>
         </div>
-      </section>
-
-      <section id="funcionalidades" className="landing-strip" aria-labelledby="funcionalidades-title">
-        <div className="landing-container">
-          <h2 id="funcionalidades-title" className="visually-hidden">
-            Funcionalidades
-          </h2>
-          <ul className="landing-strip__list" role="list">
-            {CAPABILITIES.map(({ title, text, Icon }) => (
-              <li key={title} className="landing-strip__item">
-                <span className="landing-icon" aria-hidden="true">
-                  <Icon />
-                </span>
-                <div>
-                  <h3 className="landing-strip__title">{title}</h3>
-                  <p>{text}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
-
-      <section className="landing-section landing-editorial" aria-labelledby="vision-title">
-        <div className="landing-container landing-editorial__grid">
+        <figure className="landing-hero__visual">
           <img
-            className="landing-editorial__photo"
-            src={coordinadora}
-            srcSet={`${coordinadora720} 720w, ${coordinadora} 1200w`}
-            sizes="(min-width: 56rem) 34rem, calc(100vw - 2rem)"
-            width={1200}
-            height={900}
-            alt="Fotografía ilustrativa: una coordinadora consulta una tablet junto a furgonetas de reparto"
-            loading="lazy"
-            decoding="async"
+            src={flota}
+            srcSet={`${flota720} 720w, ${flota} 1400w`}
+            sizes="(min-width: 64rem) 46vw, calc(100vw - 2rem)"
+            width={1400}
+            height={660}
+            alt="Ilustración de una furgoneta y un camión de reparto blancos"
+            fetchPriority="high"
           />
-          <div className="landing-editorial__copy">
-            <h2 id="vision-title" className="landing-section__title">
-              Una visión clara de lo que pasa en tu flota.
-            </h2>
-            <p className="landing-section__lead">
-              Reúne la información que necesitas para consultar tus vehículos y gestionar las personas asignadas a cada
-              operación.
-            </p>
-            <ul className="landing-points" role="list">
-              {EDITORIAL_POINTS.map((point) => (
-                <li key={point}>
-                  <CheckIcon aria-hidden="true" />
-                  {point}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
+          <figcaption className="landing-badge">Imagen ilustrativa</figcaption>
+        </figure>
       </section>
 
-      <section id="como-funciona" className="landing-section landing-section--dark" aria-labelledby="como-funciona-title">
-        <div className="landing-container landing-how">
-          <div>
-            <p className="landing-kicker landing-kicker--on-dark">Cómo funciona</p>
-            <h2 id="como-funciona-title" className="landing-section__title">
-              De una consulta a una decisión, en pocos pasos.
+      <section id="funcionalidades" className="landing-section" aria-labelledby="funcionalidades-title">
+        <div className="landing-container landing-features">
+          <div className="landing-features__intro">
+            <p className="landing-kicker">Funcionalidades</p>
+            <h2 id="funcionalidades-title" className="landing-title">
+              Lo que necesitas saber, en el momento en que lo necesitas.
             </h2>
-            <ol className="landing-steps" role="list">
-              {STEPS.map((step, index) => (
-                <li key={step.title}>
-                  <span className="landing-steps__number" aria-hidden="true">
-                    {index + 1}
-                  </span>
-                  <div>
-                    <h3 className="landing-steps__title">{step.title}</h3>
-                    <p>{step.text}</p>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </div>
-          <figure className="landing-sample" aria-label="Vista ilustrativa de la ficha de un vehículo y su recorrido">
-            <p className="landing-sample__label">Vista ilustrativa</p>
-            <div className="landing-sample__card">
-              <div className="landing-sample__head">
-                <p className="landing-sample__name">Vehículo de ejemplo</p>
-                <span className="landing-sample__status">En movimiento</span>
-              </div>
-              <dl className="landing-sample__facts">
-                <div>
-                  <dt>Conductor</dt>
-                  <dd>Conductor asignado</dd>
-                </div>
-                <div>
-                  <dt>Pasajeros</dt>
-                  <dd>Vinculados al vehículo</dd>
-                </div>
-              </dl>
-              <div className="landing-sample__route">
-                <RouteSketch />
-                <div className="landing-sample__ends">
-                  <span>Origen</span>
-                  <span>Destino</span>
-                </div>
-              </div>
-            </div>
-          </figure>
-        </div>
-      </section>
-
-      <section id="control-de-acceso" className="landing-section landing-access" aria-labelledby="acceso-title">
-        <div className="landing-container landing-access__grid">
-          <div>
-            <p className="landing-kicker">Control de acceso</p>
-            <h2 id="acceso-title" className="landing-section__title">
-              Un equipo conectado. Responsabilidades claras.
-            </h2>
-            <p className="landing-section__lead">Cada persona accede a las herramientas que necesita para su trabajo.</p>
-            <p className="landing-audit">
-              <ClipboardCheckIcon aria-hidden="true" />
-              Operaciones registradas para su consulta.
+            <p className="landing-lead">
+              Tres consultas que forman parte del día a día de quien coordina vehículos y equipos.
             </p>
+            <figure className="landing-features__photo">
+              <img
+                src={patio}
+                srcSet={`${patio600} 600w, ${patio} 1024w`}
+                sizes="(min-width: 56rem) 28rem, calc(100vw - 2rem)"
+                width={1024}
+                height={1536}
+                alt="Fotografía ilustrativa: furgonetas blancas estacionadas en fila frente a una bodega"
+                loading="lazy"
+                decoding="async"
+              />
+              <figcaption>Fotografía ilustrativa</figcaption>
+            </figure>
           </div>
-          <ul className="landing-roles" role="list">
-            {ROLES.map(({ name, text, Icon }) => (
-              <li key={name} className="landing-roles__row">
-                <span className="landing-icon" aria-hidden="true">
-                  <Icon />
+          <ol className="landing-features__list" role="list">
+            {FEATURES.map((feature, index) => (
+              <li key={feature.label} className="landing-feature">
+                <span className="landing-feature__number" aria-hidden="true">
+                  {String(index + 1).padStart(2, '0')}
                 </span>
-                <div>
-                  <h3 className="landing-roles__name">{name}</h3>
-                  <p>{text}</p>
-                </div>
+                <p className="landing-feature__label">{feature.label}</p>
+                <h3 className="landing-feature__title">{feature.title}</h3>
+                <p className="landing-feature__text">{feature.text}</p>
+                <ul className="landing-feature__points" role="list">
+                  {feature.points.map((point) => (
+                    <li key={point}>{point}</li>
+                  ))}
+                </ul>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      <section id="como-trabajamos" className="landing-section landing-section--dark" aria-labelledby="trabajo-title">
+        <div className="landing-container">
+          <div className="landing-work__header">
+            <div>
+              <p className="landing-kicker landing-kicker--on-dark">Cómo trabajamos</p>
+              <h2 id="trabajo-title" className="landing-title">
+                Una consulta, de principio a fin.
+              </h2>
+            </div>
+            <p className="landing-work__intro">
+              Así se recorre la plataforma en una jornada habitual, según el rol de cada persona.
+            </p>
+          </div>
+          <ol className="landing-work__steps" role="list">
+            {STEPS.map((step, index) => (
+              <li key={step.title}>
+                <span className="landing-work__number" aria-hidden="true">
+                  {index + 1}
+                </span>
+                <h3 className="landing-work__title">{step.title}</h3>
+                <p>{step.text}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      <section id="control-de-tu-flota" className="landing-control" aria-labelledby="control-title">
+        <img
+          className="landing-control__photo"
+          src={conductor}
+          srcSet={`${conductor600} 600w, ${conductor} 1024w`}
+          sizes="(min-width: 56rem) 50vw, 100vw"
+          width={1024}
+          height={1536}
+          alt="Fotografía ilustrativa: una coordinadora y un conductor revisan una tablet junto a una furgoneta"
+          loading="lazy"
+          decoding="async"
+        />
+        <div className="landing-control__content">
+          <p className="landing-kicker">Control de tu flota</p>
+          <h2 id="control-title" className="landing-title">
+            Cada vehículo, con su información a la vista.
+          </h2>
+          <p className="landing-lead">
+            Desde el monitoreo puedes localizar una unidad y consultar los datos disponibles para entender su situación.
+          </p>
+          <ul className="landing-control__list" role="list">
+            {FLEET_CONTROL.map((item) => (
+              <li key={item.title}>
+                <h3 className="landing-control__title">{item.title}</h3>
+                <p>{item.text}</p>
               </li>
             ))}
           </ul>
+          <p className="landing-control__note">Las acciones disponibles dependen de los permisos de tu cuenta.</p>
         </div>
       </section>
 
       <section className="landing-cta" aria-labelledby="cta-title">
         <div className="landing-container landing-cta__inner">
-          <div>
-            <h2 id="cta-title" className="landing-cta__title">
-              Tu próxima consulta empieza aquí.
-            </h2>
-            <p className="landing-cta__text">
-              {signedIn && user
-                ? `Iniciaste sesión como ${user.full_name}. Continúa con tu operación.`
-                : 'Accede a tu flota y continúa con tu operación.'}
-            </p>
+          <h2 id="cta-title" className="landing-cta__title">
+            Todo listo para consultar tu flota.
+          </h2>
+          <div className="landing-cta__side">
+            <p>Accede con tu cuenta autorizada y continúa con tu operación.</p>
+            <AccessCta signedIn={signedIn} variant="secondary" />
           </div>
-          <AccessCta signedIn={signedIn} variant="secondary" />
         </div>
       </section>
     </div>

@@ -1,7 +1,48 @@
 # Estado actual y relevo
-Snapshot: 2026-11-10 09:35 America/Bogota. Verificar siempre Git, archivos y procesos antes de continuar.
+Snapshot: 2026-11-10 12:05 America/Bogota. Verificar siempre Git, archivos y procesos antes de continuar.
 
-## Relevo — 2026-11-10 09:35 America/Bogota
+## Relevo — 2026-11-10 12:05 America/Bogota
+- **Landing, detalles de acabado (PR #12, commit `a22006d`, merge `42661a4`):**
+  - los enlaces del menú llevan al contenido;
+  - desplazamiento suave;
+  - menú móvil con líneas suaves;
+  - sin hueco en «Control de tu flota».
+  - Verificado en producción a las 09:50.
+- **Rediseño del panel y del login (PR #13), integrado por petición de Juana («commit, push y merge a producción»):**
+  - Origen: rama `feat/dashboard-redesign` del chat paralelo (24 commits, `71aaee2`…`526f614`), que incluye `style/panel-login-visual` (`ebe3ebe`).
+  - Rama de integración `feat/panel-redesign`, con `main` incorporado mediante merge, sin rebase ni reescritura. El único archivo tocado en ambos lados, `layouts.css`, se fusionó sin conflicto.
+  - Revisión del alcance:
+    - fuera de `frontend/src` solo cambian `docs/panel-theme.md` y `e2e/flows.spec.ts` (menú ⋮);
+    - sin backend, dependencias, `vercel.json` ni variables;
+    - las comprobaciones `hasPermission` se conservan en todos los archivos (mismo número o más);
+    - login y cambio de contraseña: mismo formulario, esquema y redirecciones. Cambios visibles: resumen de errores, aviso de coincidencia en vivo y «Cancelar y volver al panel» cuando la contraseña no es temporal (con contraseña temporal sigue «Cancelar y cerrar sesión»).
+  - El tema está acotado a `.app-shell` y `.auth-page`. Comprobado que la landing no usa Figtree. Las fuentes son propias y la CSP sigue en `font-src 'self'`.
+  - Comprobado en local sobre la rama integrada:
+    - `oxlint` sin avisos y `npm run build` (incluye `tsc`) correctos;
+    - Vitest: 21 archivos, 172 de 172 pruebas;
+    - instancia **simulada** (`FLEET_GATEWAY=fake`, puerto 8001) con la landing a 1440, 768 y 360 px y las 9 pantallas privadas a 1440, 834 y 390 px: sin desplazamiento horizontal y con 0 errores de consola;
+    - cerrar sesión lleva a `/login`, y sin sesión `/app/dashboard` también redirige a `/login`.
+  - `e2e/screenshots.spec.ts`: el panel nuevo muestra un mapa y nombres en «Requiere atención», que ahora se enmascaran. Comprobado con datos simulados.
+  - README:
+    - la captura del login muestra el diseño actual;
+    - las de Dashboard, Vehículos e Historial se marcan como «panel anterior» hasta regenerarlas con datos reales (`E2E_SCREENSHOTS=1`, credenciales en el entorno de Juana, nunca en el chat);
+    - `design-system.md` añade la sección del rediseño, que sustituye a la anterior en el área privada.
+  - No probado: lector de pantalla real y e2e contra Wialon (`flows.spec.ts` adaptado al menú ⋮, sin ejecutar).
+  - Decisiones pendientes de Juana (Historial):
+    - conservar o quitar la línea fina del gráfico de velocidad;
+    - mostrar «24 h» o «1 d 0 h».
+- **Sin confirmación todavía:**
+  - renovación del `WIALON_TOKEN`;
+  - envío del correo de entrega.
+- **Lighthouse de la landing actual: sin medir** (UX-07 EN CURSO).
+- **Procesos locales:**
+  - Vite en 5175 y 5176 (worktree `gps-comercial-landing`);
+  - API simulada en 8001;
+  - backend local en 8000;
+  - servidores temporales del chat paralelo en 5180.
+  - Se pueden detener sin pérdida.
+
+## Relevo anterior — 2026-11-10 09:35 America/Bogota
 - **Landing cerrada por Juana:** se queda como está. Diseño basado en Claude Design.
   - PR #9 (merge `7e61cb3`) adoptó el diseño.
   - PR #10 (merge `18ffe96`) aplicó tres ajustes pedidos por Juana:
@@ -16,7 +57,7 @@ Snapshot: 2026-11-10 09:35 America/Bogota. Verificar siempre Git, archivos y pro
   - No hay más cambios estéticos previstos en la landing.
 - **README:** se retiraron las capturas de la landing (Juana las veía muy cargadas) y se borraron los archivos `docs/screenshots/landing*.png`. `e2e/screenshots.spec.ts` ya no las genera. Las capturas del panel no cambian.
 - **Lighthouse de la landing actual: sin medir.** Las cifras del README corresponden a una versión anterior. UX-07 sigue EN CURSO hasta remedir.
-- **Dashboard/login: en curso en el chat paralelo.**
+- **Dashboard/login: en curso en el chat paralelo** (integrado después en PR #13; ver relevo superior).
   - Worktree `../gps-comercial-panel`, rama `style/panel-login-visual`, alcance exclusivamente visual.
   - A las 09:35 tenía 8 commits, de `71aaee2` a `bd8dcc2`.
     - Tocan `styles/panel-theme.css` (nuevo), `auth.css`, `dashboard.css`, `AppShell.tsx`, `ChangePasswordPage.tsx` (1 línea), `LoginPage.tsx` (64 líneas) y `docs/panel-theme.md`.

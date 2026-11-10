@@ -50,3 +50,8 @@ def configure_logging(level: str) -> None:
     # httpx-style clients log full URLs at INFO; keep them quiet.
     for noisy in ("httpx2", "httpcore2", "uvicorn.access"):
         logging.getLogger(noisy).setLevel(logging.WARNING)
+    # uvicorn installs its own plain-text handlers; route everything through the redacting one.
+    for name in ("uvicorn", "uvicorn.error", "uvicorn.access"):
+        server_logger = logging.getLogger(name)
+        server_logger.handlers.clear()
+        server_logger.propagate = True

@@ -7,6 +7,7 @@ PRODUCTION = {
     "app_env": "production",
     "jwt_secret": "x" * 48,
     "database_url": "postgresql://user@localhost/db",
+    "cors_origins": "https://app.example",
 }
 
 
@@ -66,3 +67,10 @@ def test_secrets_hidden_in_repr() -> None:
     text = repr(settings)
     assert "s" * 40 not in text
     assert "Admin-Password-123!" not in text
+
+
+def test_production_requires_https_cors_origins() -> None:
+    with pytest.raises(ValidationError):
+        make(**{**PRODUCTION, "cors_origins": ""})
+    with pytest.raises(ValidationError):
+        make(**{**PRODUCTION, "cors_origins": "http://app.example"})

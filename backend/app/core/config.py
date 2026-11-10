@@ -107,6 +107,13 @@ class Settings(BaseSettings):
                 raise ValueError("DATABASE_URL must point to PostgreSQL in production")
             if self.fleet_gateway == "fake":
                 raise ValueError("FLEET_GATEWAY=fake (simulated data) is not allowed in production")
+            if not self.cors_origins or any(
+                not origin.startswith("https://") for origin in self.cors_origins
+            ):
+                # Without them every login would fail the Origin check (403) with no startup error.
+                raise ValueError(
+                    "CORS_ORIGINS must list the https:// frontend origin(s) in production"
+                )
         elif not secret:
             self.jwt_secret = SecretStr(secrets.token_urlsafe(48))
         return self

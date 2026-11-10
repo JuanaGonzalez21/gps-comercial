@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 def create_db_engine(url: str) -> Engine:
     if url.startswith("sqlite"):
-        engine = create_engine(url, connect_args={"check_same_thread": False})
+        engine = create_engine(url, connect_args={"check_same_thread": False}, hide_parameters=True)
 
         @event.listens_for(engine, "connect")
         def _enable_foreign_keys(dbapi_connection: Any, _record: Any) -> None:
@@ -18,7 +18,14 @@ def create_db_engine(url: str) -> Engine:
 
         return engine
     # pool_pre_ping: serverless PostgreSQL (Neon) closes idle connections when it scales to zero.
-    return create_engine(url, pool_pre_ping=True, pool_size=5, max_overflow=5, pool_recycle=300)
+    return create_engine(
+        url,
+        pool_pre_ping=True,
+        pool_size=5,
+        max_overflow=5,
+        pool_recycle=300,
+        hide_parameters=True,  # emails or hashes must never reach logs via SQL errors
+    )
 
 
 def create_session_factory(engine: Engine) -> sessionmaker[Session]:

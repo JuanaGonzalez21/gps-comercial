@@ -9,7 +9,7 @@ FRONTEND_ORIGIN = "http://localhost:5173"
 
 
 def make_client(**overrides: object) -> TestClient:
-    settings = Settings(_env_file=None, cors_origins=FRONTEND_ORIGIN, **overrides)
+    settings = Settings(**{"_env_file": None, "cors_origins": FRONTEND_ORIGIN, **overrides})
     return TestClient(create_app(settings))
 
 
@@ -43,6 +43,7 @@ PRODUCTION = {
     "app_env": "production",
     "jwt_secret": "x" * 48,
     "database_url": "postgresql://user@localhost/db",
+    "cors_origins": "https://app.example",
 }
 
 

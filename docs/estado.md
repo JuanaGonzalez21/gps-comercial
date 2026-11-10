@@ -1,5 +1,5 @@
 # Estado actual y relevo
-Snapshot: 2026-11-10 12:05 America/Bogota. Verificar siempre Git, archivos y procesos antes de continuar.
+Snapshot: 2026-11-10 12:15 America/Bogota. Verificar siempre Git, archivos y procesos antes de continuar.
 
 ## Relevo — 2026-11-10 12:05 America/Bogota
 - **Landing, detalles de acabado (PR #12, commit `a22006d`, merge `42661a4`):**
@@ -27,6 +27,15 @@ Snapshot: 2026-11-10 12:05 America/Bogota. Verificar siempre Git, archivos y pro
     - la captura del login muestra el diseño actual;
     - las de Dashboard, Vehículos e Historial se marcan como «panel anterior» hasta regenerarlas con datos reales (`E2E_SCREENSHOTS=1`, credenciales en el entorno de Juana, nunca en el chat);
     - `design-system.md` añade la sección del rediseño, que sustituye a la anterior en el área privada.
+  - Fusionado como `2fee481`. Producción comprobada a las 12:15 (sin iniciar sesión y sin escrituras):
+    - sirve el mismo paquete que la compilación local (`index-Jg8fqGdl.js`) y la fuente Figtree como `font/woff2`;
+    - `/health` responde 200;
+    - landing a 1440, 768 y 360 px sin desbordamiento y sin Figtree;
+    - login a 1440, 834 y 390 px con Figtree cargada y sin desbordamiento;
+    - el envío vacío muestra «Revisa los campos marcados. Hay 2 errores.» sin llamar a la API;
+    - sin sesión, `/app/dashboard`, `/app/users` y `/change-password` llevan a `/login`;
+    - 0 errores de consola.
+  - **Falta que Juana entre al panel en producción con su cuenta**, porque no uso credenciales reales.
   - No probado: lector de pantalla real y e2e contra Wialon (`flows.spec.ts` adaptado al menú ⋮, sin ejecutar).
   - Decisiones pendientes de Juana (Historial):
     - conservar o quitar la línea fina del gráfico de velocidad;
@@ -36,8 +45,7 @@ Snapshot: 2026-11-10 12:05 America/Bogota. Verificar siempre Git, archivos y pro
   - envío del correo de entrega.
 - **Lighthouse de la landing actual: sin medir** (UX-07 EN CURSO).
 - **Procesos locales:**
-  - Vite en 5175 y 5176 (worktree `gps-comercial-landing`);
-  - API simulada en 8001;
+  - Vite en 5175 (worktree `gps-comercial-landing`; 5176 y la API simulada en 8001 ya se detuvieron);
   - backend local en 8000;
   - servidores temporales del chat paralelo en 5180.
   - Se pueden detener sin pérdida.

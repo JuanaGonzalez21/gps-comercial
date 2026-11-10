@@ -21,6 +21,9 @@
   border-bottom: 1px solid var(--color-border);
   background: rgb(255 255 255 / 0.94);
   backdrop-filter: blur(8px);
+  /* iOS Safari: maps move their tiles with 3D transforms and could paint over the sticky bar despite
+     its z-index; its own compositing layer keeps it on top. */
+  transform: translateZ(0);
 }
 
 .app-topbar__menu {

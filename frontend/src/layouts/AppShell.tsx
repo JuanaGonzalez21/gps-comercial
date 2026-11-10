@@ -7,6 +7,7 @@ import { useAuth } from '@/auth/useAuth'
 import { Brand, Button, CloseIcon, LogoutIcon, MenuIcon, useToast } from '@/ui'
 import { NAV_ITEMS, type NavItem } from './navigation'
 import './layouts.css'
+import '@/styles/panel-theme.css'
 
 const DRAWER_ID = 'app-navigation-drawer'
 
@@ -139,12 +140,12 @@ export default function AppShell() {
           <MenuIcon />
           <span className="visually-hidden">Abrir menú de navegación</span>
         </button>
-        <Brand to="/app/dashboard" tone="dark" />
+        <Brand to="/app/dashboard" tone="light" />
       </header>
 
       <div className="app-sidebar">
         <div className="app-sidebar__brand">
-          <Brand to="/app/dashboard" tone="dark" />
+          <Brand to="/app/dashboard" tone="light" />
         </div>
         <Navigation items={items} />
         {userPanel}
@@ -163,7 +164,7 @@ export default function AppShell() {
       >
         <div className="app-drawer__panel">
           <div className="app-drawer__header">
-            <Brand to="/app/dashboard" tone="dark" />
+            <Brand to="/app/dashboard" tone="light" />
             <button type="button" className="app-drawer__close" onClick={closeDrawer}>
               <CloseIcon />
               <span className="visually-hidden">Cerrar menú</span>

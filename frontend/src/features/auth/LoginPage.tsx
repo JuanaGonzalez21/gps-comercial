@@ -9,6 +9,7 @@ import { getPostLoginPath, wasLoggedOut } from '@/auth/redirect'
 import { useAuth } from '@/auth/useAuth'
 import { useDocumentTitle } from '@/lib/hooks'
 import { Alert, Brand, Button, Card, PasswordField, TextField } from '@/ui'
+import '@/styles/panel-theme.css'
 import './auth.css'
 
 const loginSchema = z.object({

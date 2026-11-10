@@ -1,0 +1,266 @@
+/* Panel and login theme: adaptation of the Claude Design reference (2026-11-10).
+
+   Scope: the authenticated area (.app-shell, including its native <dialog>s, which live inside it)
+   and the auth screens (.auth-page). Every selector starts with one of those roots, so the landing
+   keeps the global tokens and the result does not depend on stylesheet order (the extra class
+   always outranks the base rule).
+
+   Appearance only: colours, borders, radii, shadows, type weight and interaction states. No rule
+   here changes display, grid, order, breakpoints or box sizes; where a border changes width, the
+   padding compensates so content keeps its position.
+
+   Contrast (WCAG 2.x relative luminance) is noted next to each new pair. */
+
+/* ---------- Scoped tokens ---------- */
+:is(.app-shell, .auth-page) {
+  /* Form control boundary: the palette grey lightened and tinted lavender (same family as
+     --color-text-secondary). 3.96:1 on white, so inputs stay identifiable (>= 3:1). */
+  --color-border-strong: #857d8c;
+  /* Outline of text buttons and pagination: decorative, the visible label identifies the control. */
+  --color-border-control: #d6cfdc;
+  /* Pressed primary: #1e8c93 darkened further. White text 9.68:1. */
+  --color-primary-active: #0f4c50;
+
+  /* Softer, tinted elevation: cards barely lift off the lavender background. */
+  --shadow-sm: 0 1px 2px rgb(31 26 36 / 0.05), 0 1px 3px rgb(31 26 36 / 0.04);
+  --shadow-md: 0 4px 14px rgb(31 26 36 / 0.08);
+  --shadow-lg: 0 16px 40px rgb(31 26 36 / 0.16);
+}
+
+/* ---------- Shell: light top bar, sidebar and drawer ---------- */
+.app-shell .app-topbar {
+  background: var(--color-surface);
+  color: var(--color-text);
+  /* Bottom rule drawn as a shadow: the bar keeps its exact height. */
+  box-shadow:
+    0 1px 0 var(--color-border),
+    0 2px 8px rgb(31 26 36 / 0.04);
+}
+
+.app-shell .app-topbar__menu,
+.app-shell .app-drawer__close {
+  color: var(--color-text);
+}
+
+.app-shell .app-topbar__menu:hover,
+.app-shell .app-drawer__close:hover {
+  background: var(--color-surface-muted);
+}
+
+.app-shell .app-sidebar {
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: inset -1px 0 0 var(--color-border); /* divider without changing the column width */
+}
+
+.app-shell .app-drawer {
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+/* Navigation: secondary text at rest (7.59:1 on white), lavender pill when active
+   (#1f1a24 on #eee8f2 = 14.18:1) with the brand-red icon (3.73:1, non-text) and the red bar. */
+.app-shell .app-nav__link {
+  color: var(--color-text-secondary);
+  transition:
+    background-color var(--duration-fast) var(--easing-standard),
+    color var(--duration-fast) var(--easing-standard);
+}
+
+.app-shell .app-nav__link:hover {
+  background: var(--color-surface-muted);
+  color: var(--color-text);
+}
+
+.app-shell .app-nav__link[aria-current='page'] {
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.app-shell .app-nav__link[aria-current='page'] .app-nav__icon {
+  color: var(--color-brand);
+}
+
+/* User block */
+.app-shell .user-panel {
+  border-top-color: var(--color-border);
+}
+
+.app-shell .user-panel__avatar {
+  background: var(--color-dark); /* white initials 17.05:1 */
+  color: var(--color-on-dark);
+}
+
+.app-shell .user-panel__role {
+  color: var(--color-text-secondary);
+}
+
+.app-shell .user-panel__link {
+  color: var(--color-primary); /* 5.89:1 on white */
+}
+
+.app-shell .user-panel__link:hover {
+  color: var(--color-primary-hover);
+}
+
+.app-shell .user-panel .btn--ghost,
+.app-shell .user-panel .btn--ghost:hover:not(:disabled) {
+  color: var(--color-text);
+}
+
+.app-shell .user-panel .btn--ghost:hover:not(:disabled) {
+  background: var(--color-surface-muted);
+}
+
+/* Brand mark: white pin on a brand-red tile (4.48:1, non-text). Same box as before. */
+:is(.app-shell, .auth-page) .brand__mark {
+  padding: 0.3rem;
+  border-radius: var(--radius-md);
+  background: var(--color-brand);
+  color: var(--color-on-dark);
+}
+
+:is(.app-shell, .auth-page) .brand__mark circle {
+  fill: var(--color-brand);
+}
+
+/* ---------- Type ---------- */
+.app-shell .page-header__title {
+  letter-spacing: -0.02em;
+}
+
+/* ---------- Buttons ---------- */
+:is(.app-shell, .auth-page) .btn--primary {
+  box-shadow: 0 1px 2px rgb(18 90 95 / 0.25);
+}
+
+:is(.app-shell, .auth-page) .btn--primary:active:not(:disabled) {
+  background: var(--color-primary-active);
+}
+
+/* Secondary: white with a quiet outline and dark label (17.05:1); the icon keeps the action teal. */
+:is(.app-shell, .auth-page) .btn--secondary {
+  background: var(--color-surface);
+  border-color: var(--color-border-control);
+  color: var(--color-text);
+  box-shadow: var(--shadow-sm);
+}
+
+:is(.app-shell, .auth-page) .btn--secondary svg {
+  color: var(--color-primary);
+}
+
+:is(.app-shell, .auth-page) .btn--secondary:hover:not(:disabled) {
+  background: var(--color-surface-muted); /* label 15.64:1 */
+  border-color: var(--color-border-strong);
+  color: var(--color-text);
+}
+
+:is(.app-shell, .auth-page) .btn--secondary:active:not(:disabled) {
+  background: var(--color-bg);
+}
+
+:is(.app-shell, .auth-page) .btn--ghost:hover:not(:disabled) {
+  background: var(--color-surface-muted);
+}
+
+:is(.app-shell, .auth-page) .btn--ghost:active:not(:disabled) {
+  background: var(--color-bg);
+}
+
+:is(.app-shell, .auth-page) .btn--danger:active:not(:disabled) {
+  background: var(--color-danger-hover);
+}
+
+:is(.app-shell, .auth-page) .btn:disabled {
+  opacity: 0.55;
+  box-shadow: none;
+}
+
+/* ---------- Form fields ---------- */
+:is(.app-shell, .auth-page) .field__control:hover {
+  border-color: var(--color-text-secondary);
+}
+
+:is(.app-shell, .auth-page) .field__control:focus-visible {
+  border-color: var(--color-primary);
+}
+
+:is(.app-shell, .auth-page) .field__control[aria-invalid='true'] {
+  border-color: var(--color-danger);
+}
+
+:is(.app-shell, .auth-page) .field__control:disabled {
+  border-color: var(--color-border-control);
+  background: var(--color-surface-muted);
+  color: var(--color-text-secondary); /* 6.96:1 */
+  cursor: not-allowed;
+}
+
+:is(.app-shell, .auth-page) .field__toggle:hover {
+  background: var(--color-surface-muted);
+}
+
+/* ---------- Status badges: rounded rectangles instead of pills ---------- */
+.app-shell .status-badge,
+.app-shell .admin-badge,
+.app-shell .no-position-badge {
+  border-radius: var(--radius-sm);
+}
+
+/* ---------- Tables: quieter header labels (6.96:1 on the muted header) ---------- */
+.app-shell :is(.data-table, .roster-table, .admin-table, .history-table) thead th {
+  color: var(--color-text-secondary);
+}
+
+.app-shell :is(.data-table, .roster-table, .admin-table, .history-table) thead .sort-button:hover {
+  color: var(--color-primary);
+}
+
+/* ---------- Pagination: dark current page, quiet outlines ---------- */
+.app-shell .pagination__button {
+  border-color: var(--color-border-control);
+}
+
+.app-shell .pagination__button:hover:not(:disabled) {
+  background: var(--color-surface-muted);
+  border-color: var(--color-border-strong);
+  color: var(--color-text);
+}
+
+.app-shell .pagination__button[aria-current='page'] {
+  background: var(--color-dark); /* white number 17.05:1 */
+  border-color: var(--color-dark);
+  color: var(--color-on-dark);
+}
+
+/* ---------- Alerts: soft tinted outline, the 4 px accent stays on the left ---------- */
+:is(.app-shell, .auth-page) .alert--info,
+:is(.app-shell, .auth-page) .alert--success {
+  border-color: #b9dfe2;
+  border-left-color: var(--color-teal);
+}
+
+:is(.app-shell, .auth-page) .alert--warning {
+  border-color: #f3c3c9;
+  border-left-color: var(--color-brand);
+}
+
+:is(.app-shell, .auth-page) .alert--error {
+  border-color: #f0c4ca;
+  border-left-color: var(--color-danger);
+}
+
+/* ---------- Dialogs ---------- */
+.app-shell .dialog {
+  border-color: var(--color-border);
+}
+
+.app-shell .dialog::backdrop {
+  background: rgb(31 26 36 / 0.45);
+}
+
+.app-shell .dialog__close:hover {
+  background: var(--color-surface-muted);
+  color: var(--color-text);
+}

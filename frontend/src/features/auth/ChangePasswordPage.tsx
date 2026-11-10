@@ -9,6 +9,7 @@ import { useAuth } from '@/auth/useAuth'
 import { useDocumentTitle } from '@/lib/hooks'
 import { Alert, Brand, Button, Card, CheckIcon, CircleIcon, PasswordField, useToast } from '@/ui'
 import { passwordRules, type PasswordRule } from './passwordPolicy'
+import '@/styles/panel-theme.css'
 import './auth.css'
 
 const CHECKLIST_ID = 'new-password-rules'

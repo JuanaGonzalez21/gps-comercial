@@ -1,0 +1,496 @@
+/* Authenticated shell (design handoff "Estructura global").
+   < 47.5rem (760 px): sticky 60 px top bar + 288 px modal drawer.
+   47.5–73.75rem (760–1179 px): 88 px rail (icon + label under it).
+   ≥ 73.75rem (1180 px): 256 px sidebar. */
+
+.app-shell {
+  min-height: 100dvh;
+  background: var(--color-bg);
+}
+
+/* ---------- Top bar (phones) ---------- */
+.app-topbar {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 3.75rem; /* 60 px */
+  padding: 0 0.625rem;
+  border-bottom: 1px solid var(--color-border);
+  background: rgb(255 255 255 / 0.94);
+  backdrop-filter: blur(8px);
+}
+
+.app-topbar__menu {
+  width: 2.75rem;
+  height: 2.75rem;
+  color: var(--color-text);
+}
+
+.app-topbar__menu svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.app-topbar .brand {
+  flex: 1;
+  min-width: 0;
+  font-size: 1rem;
+}
+
+.app-topbar .brand__mark {
+  width: 1.875rem;
+  height: 1.875rem;
+  padding: 0.3rem;
+  border-radius: 0.5625rem;
+}
+
+.app-topbar__avatar {
+  display: inline-flex;
+  margin-right: var(--space-1);
+}
+
+/* ---------- Sidebar / rail ---------- */
+.app-sidebar {
+  display: none;
+}
+
+.app-content {
+  min-width: 0;
+}
+
+.app-main {
+  width: 100%;
+  max-width: 85rem; /* 1360 px */
+  margin: 0 auto;
+  padding: var(--space-4) var(--space-4) var(--space-10);
+}
+
+.app-main:focus {
+  outline: none;
+}
+
+/* Navigation (shared by sidebar, rail and drawer) */
+.app-nav {
+  flex: 1;
+}
+
+.app-nav__heading {
+  margin: 0;
+  padding: 0 0.75rem var(--space-2);
+  color: var(--color-text-muted);
+  font-size: 0.71875rem;
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.app-nav__list {
+  display: grid;
+  gap: 2px;
+}
+
+.app-nav__link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 2.75rem; /* 44 px */
+  padding: 0 0.75rem;
+  border-radius: var(--radius-md);
+  color: var(--color-text-nav); /* 9.30:1 */
+  font-size: 0.9375rem;
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+  transition: background-color var(--duration-fast) var(--easing-standard);
+}
+
+.app-nav__link:hover {
+  background: var(--color-nav-hover);
+  color: var(--color-text);
+}
+
+.app-nav__icon {
+  width: 1.3125rem;
+  height: 1.3125rem;
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}
+
+.app-nav__label {
+  flex: 1;
+  min-width: 0;
+}
+
+.app-nav__count {
+  font-size: 0.75rem;
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Active: lavender pill, bold dark text, teal icon and the brand-red bar (shape + weight). */
+.app-nav__link[aria-current='page'] {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-weight: var(--weight-bold);
+}
+
+.app-nav__link[aria-current='page'] .app-nav__icon {
+  color: var(--color-primary);
+}
+
+.app-nav__link[aria-current='page']::before {
+  content: '';
+  position: absolute;
+  top: 0.625rem;
+  bottom: 0.625rem;
+  left: 0;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--color-brand);
+}
+
+/* User block */
+.user-panel {
+  display: grid;
+  gap: 2px;
+  margin-top: var(--space-4);
+  padding-top: 0.875rem;
+  border-top: 1px solid var(--color-bg);
+}
+
+.user-panel__identity {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 0;
+  padding: 0.375rem 0.625rem 0.625rem;
+}
+
+.user-panel__text {
+  min-width: 0;
+}
+
+.user-panel__name {
+  overflow: hidden;
+  font-size: 0.90625rem;
+  font-weight: var(--weight-bold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-panel__role {
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+}
+
+.user-panel__action {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 2.5rem;
+  padding: 0 0.75rem;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-nav);
+  font-size: 0.875rem;
+  font-weight: var(--weight-medium);
+  text-align: left;
+  text-decoration: none;
+}
+
+.user-panel__action:hover:not(:disabled) {
+  background: var(--color-nav-hover);
+  color: var(--color-text);
+}
+
+.user-panel__action-icon,
+.user-panel__action .spinner {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}
+
+/* ---------- Mobile drawer: native modal <dialog> as a 288 px left panel ---------- */
+.app-drawer {
+  width: min(18rem, 86vw);
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-right: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-lg);
+}
+
+.app-drawer[open] {
+  animation: drawer-in 0.25s ease;
+}
+
+.app-drawer::backdrop {
+  background: rgb(31 26 36 / 0.45);
+}
+
+.app-drawer__panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  padding: var(--space-5) 0.875rem 1.125rem;
+}
+
+.app-drawer__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: 0 0 var(--space-6) var(--space-2);
+}
+
+@keyframes drawer-in {
+  from {
+    transform: translateX(-100%);
+  }
+}
+
+/* ---------- Tablet: 88 px rail ---------- */
+@media (min-width: 47.5rem) {
+  .app-shell {
+    display: grid;
+    grid-template-columns: 5.5rem minmax(0, 1fr);
+  }
+
+  .app-topbar,
+  .app-drawer {
+    display: none;
+  }
+
+  .app-sidebar {
+    position: sticky;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100dvh;
+    padding: 1.125rem var(--space-2);
+    border-right: 1px solid var(--color-border);
+    background: var(--color-surface);
+    overflow-y: auto;
+  }
+
+  .app-sidebar__brand {
+    margin-bottom: 1.125rem;
+  }
+
+  /* Rail: only the logo tile. The link keeps its accessible name (visually hidden wordmark). */
+  .app-sidebar .brand__name {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .app-sidebar .brand__mark {
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0.45rem;
+    border-radius: 0.75rem;
+  }
+
+  .app-sidebar .app-nav {
+    width: 100%;
+  }
+
+  .app-sidebar .app-nav__heading,
+  .app-sidebar .app-nav__count {
+    display: none;
+  }
+
+  .app-sidebar .app-nav__list {
+    gap: var(--space-1);
+  }
+
+  .app-sidebar .app-nav__link {
+    flex-direction: column;
+    justify-content: center;
+    gap: var(--space-1);
+    width: 4.5rem;
+    min-height: 3.75rem;
+    margin: 0 auto;
+    padding: 0.625rem 0.125rem 0.5rem;
+    border-radius: 0.75rem;
+    font-size: 0.6875rem;
+    letter-spacing: -0.01em;
+    text-align: center;
+  }
+
+  .app-sidebar .app-nav__label {
+    flex: none;
+    white-space: nowrap;
+  }
+
+  .app-sidebar .app-nav__icon {
+    width: 1.375rem;
+    height: 1.375rem;
+  }
+
+  .app-sidebar .app-nav__link[aria-current='page']::before {
+    display: none;
+  }
+
+  .app-sidebar .user-panel {
+    justify-items: center;
+    width: 100%;
+    border-top-color: var(--color-bg);
+  }
+
+  .app-sidebar .user-panel__identity {
+    order: 3;
+    justify-content: center;
+    padding: 0.375rem 0 0;
+  }
+
+  .app-sidebar .user-panel__text,
+  .app-sidebar .user-panel__action-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .app-sidebar .user-panel__action {
+    justify-content: center;
+    width: 2.75rem;
+    min-height: 2.75rem;
+    padding: 0;
+  }
+
+  .app-main {
+    padding: var(--space-6) 1.75rem var(--space-12);
+  }
+}
+
+/* ---------- Desktop: 256 px sidebar ---------- */
+@media (min-width: 73.75rem) {
+  .app-shell {
+    grid-template-columns: 16rem minmax(0, 1fr);
+  }
+
+  .app-sidebar {
+    align-items: stretch;
+    padding: 1.375rem 0.875rem 1.125rem;
+  }
+
+  .app-sidebar__brand {
+    margin-bottom: 0;
+    padding: 0 var(--space-2) 1.625rem;
+  }
+
+  .app-sidebar .brand__name {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+  }
+
+  .app-sidebar .brand__mark {
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0.4rem;
+    border-radius: var(--radius-md);
+  }
+
+  .app-sidebar .brand {
+    font-size: 1.125rem;
+  }
+
+  .app-sidebar .app-nav__heading,
+  .app-sidebar .app-nav__count {
+    display: block;
+  }
+
+  .app-sidebar .app-nav__list {
+    gap: 2px;
+  }
+
+  .app-sidebar .app-nav__link {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: var(--space-3);
+    width: auto;
+    min-height: 2.75rem;
+    margin: 0;
+    padding: 0 0.75rem;
+    border-radius: var(--radius-md);
+    font-size: 0.9375rem;
+    text-align: left;
+  }
+
+  .app-sidebar .app-nav__label {
+    flex: 1;
+  }
+
+  .app-sidebar .app-nav__icon {
+    width: 1.3125rem;
+    height: 1.3125rem;
+  }
+
+  .app-sidebar .app-nav__link[aria-current='page']::before {
+    display: block;
+  }
+
+  .app-sidebar .user-panel {
+    justify-items: stretch;
+  }
+
+  .app-sidebar .user-panel__identity {
+    order: 0;
+    justify-content: flex-start;
+    padding: 0.375rem 0.625rem 0.625rem;
+  }
+
+  .app-sidebar .user-panel__text,
+  .app-sidebar .user-panel__action-label {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+  }
+
+  .app-sidebar .user-panel__text {
+    min-width: 0;
+  }
+
+  .app-sidebar .user-panel__action {
+    justify-content: flex-start;
+    width: 100%;
+    min-height: 2.5rem;
+    padding: 0 0.75rem;
+  }
+
+  .app-main {
+    padding: 1.75rem 2.5rem 3.5rem;
+  }
+}
+
+/* ---------- Page rhythm ---------- */
+/* Simulated-data notice: above every page, closable. */
+.fleet-source-banner {
+  margin-bottom: var(--space-6);
+}

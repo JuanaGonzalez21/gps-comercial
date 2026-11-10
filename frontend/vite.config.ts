@@ -26,6 +26,7 @@ export default defineConfig(({ mode }) => {
       setupFiles: ['./src/test/setup.ts'],
       css: false,
       restoreMocks: true,
+      exclude: ['e2e/**', 'node_modules/**'],
     },
   }
 })

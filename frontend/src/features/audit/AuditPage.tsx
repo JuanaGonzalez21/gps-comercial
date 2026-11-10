@@ -146,7 +146,7 @@ export default function AuditPage() {
           <h2 id="audit-list-title" className="admin-panel__title">
             Eventos
           </h2>
-          <p className="admin-panel__meta" role="status">
+          <p className="admin-panel__meta admin-panel__meta--chip" role="status">
             {total === undefined ? '' : total === 1 ? '1 evento' : `${formatNumber(total)} eventos`}
           </p>
         </div>

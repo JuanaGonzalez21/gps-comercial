@@ -21,9 +21,9 @@ import {
   ErrorState,
   PageHeader,
   Pagination,
-  PlusIcon,
   SearchIcon,
   UserCogIcon,
+  UserPlusIcon,
   useToast,
 } from '@/ui'
 import { TemporaryPasswordDialog } from './TemporaryPasswordDialog'
@@ -222,7 +222,7 @@ export default function UsersPage() {
         title="Aún no hay usuarios"
         description="Crea el primer acceso para tu equipo."
         action={
-          <Button icon={<PlusIcon />} onClick={() => openDialog({ kind: 'create' })}>
+          <Button icon={<UserPlusIcon />} onClick={() => openDialog({ kind: 'create' })}>
             Crear usuario
           </Button>
         }
@@ -263,7 +263,7 @@ export default function UsersPage() {
         title="Usuarios"
         description="Crea accesos, asigna roles, activa o desactiva cuentas y restablece contraseñas. No hay registro público: solo un administrador crea usuarios."
         actions={
-          <Button icon={<PlusIcon />} onClick={() => openDialog({ kind: 'create' })}>
+          <Button icon={<UserPlusIcon />} onClick={() => openDialog({ kind: 'create' })}>
             Crear usuario
           </Button>
         }

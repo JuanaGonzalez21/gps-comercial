@@ -18,8 +18,39 @@
   }
 }
 
+/* Desktop: the five filters share one row; the note spans below (design "8. Auditoría") */
+@media (min-width: 64rem) {
+  .admin-filters--audit {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .admin-filters--audit .admin-filters__wide {
+    grid-column: auto;
+  }
+
+  .admin-filters--audit .admin-filters__actions:empty {
+    display: none;
+  }
+
+  .admin-filters--audit .admin-filters__actions {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+  }
+}
+
 .audit-table {
   min-width: 50rem;
+}
+
+.audit-table td,
+.audit-table th {
+  padding-block: 0.8125rem; /* compact density */
+}
+
+/* Failed entries: faint red row (#FFF8F9); the badge says "Fallo" in words */
+.audit-table tbody tr.audit-table__row--failure,
+.audit-table tbody tr.audit-table__row--failure:hover {
+  background: var(--color-danger-row);
 }
 
 .audit-table th[scope='row'] {
@@ -72,7 +103,7 @@
   padding: var(--space-3);
   overflow: auto;
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-tile);
   background: var(--color-surface);
   color: var(--color-text);
   font-family: var(--font-mono);

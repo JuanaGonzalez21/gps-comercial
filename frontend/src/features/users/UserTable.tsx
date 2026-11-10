@@ -1,6 +1,6 @@
 import type { UserSort } from '@/api/users'
 import type { UserOut } from '@/api/types'
-import { ArrowDownIcon, ArrowUpIcon, Skeleton, SortIcon } from '@/ui'
+import { ArrowDownIcon, ArrowUpIcon, Avatar, Skeleton, SortIcon } from '@/ui'
 import { SelfNote, UserActions, type UserAction } from './UserActions'
 import { ActiveBadge, LastLogin, PendingPasswordBadge } from './UserBadges'
 
@@ -58,11 +58,16 @@ export function UserTable({ items, currentUserId, sort, onSortChange, onAction, 
             return (
               <tr key={user.id}>
                 <th scope="row" className="users-table__user">
-                  <span className="admin-table__primary">
-                    {user.full_name} {isSelf && <span className="admin-tag">Tu cuenta</span>}
-                  </span>
-                  <span className="admin-table__secondary">{user.email}</span>
-                  {isSelf && <SelfNote id={selfNoteId} className="users-table__note" />}
+                  <div className="users-table__person">
+                    <Avatar name={user.full_name} tone="dark" size="lg" />
+                    <div className="users-table__identity">
+                      <span className="admin-table__primary">
+                        {user.full_name} {isSelf && <span className="admin-tag">Tu cuenta</span>}
+                      </span>
+                      <span className="users-table__email">{user.email}</span>
+                      {isSelf && <SelfNote id={selfNoteId} className="users-table__note" />}
+                    </div>
+                  </div>
                 </th>
                 <td>{user.role.name}</td>
                 <td>

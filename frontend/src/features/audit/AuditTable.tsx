@@ -46,7 +46,7 @@ export function AuditTable({ items, busy }: AuditTableProps) {
             const label = auditActionLabel(entry.action)
             return (
               <Fragment key={entry.id}>
-                <tr>
+                <tr className={entry.outcome === 'failure' ? 'audit-table__row--failure' : undefined}>
                   <th scope="row">
                     <time dateTime={entry.occurred_at} className="admin-table__primary">
                       {formatDateTime(entry.occurred_at)}

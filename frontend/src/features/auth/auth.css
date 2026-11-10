@@ -293,40 +293,94 @@
   }
 }
 
-/* ---------- Change password: rules checklist ---------- */
+/* ---------- Change password (design "9. Cambiar contraseña") ---------- */
+/* Lavender page, centred logo on top, 440 px card with a 20 px radius and 32 px padding. */
+.auth-page--password {
+  place-items: start center;
+  padding: var(--space-12) var(--space-4);
+}
+
+.auth-page--password .auth-page__panel {
+  gap: var(--space-6);
+  max-width: 27.5rem;
+}
+
+.auth-page--password .auth-card {
+  padding: var(--space-8);
+  border-radius: var(--radius-xl);
+}
+
+@media (max-width: 23.75rem) {
+  .auth-page--password .auth-card {
+    padding: var(--space-6) var(--space-5);
+  }
+}
+
+.auth-page--password .auth-card__title {
+  font-size: 1.5rem; /* 24 px */
+  font-weight: 800;
+}
+
+/* On white: #57525C (7.59:1) */
+.auth-page--password .auth-card__intro {
+  margin-top: calc(-1 * var(--space-3));
+}
+
+.auth-page--password .field__control {
+  min-height: 2.875rem; /* 46 px */
+}
+
+/* "Guardar contraseña": 48 px, full width. It stays fully opaque: it is always enabled
+   (validation runs on submit), so it must not look disabled. */
+.auth-page--password .btn--primary {
+  min-height: 3rem;
+}
+
+/* Live requirements box: #F7F4F9, radius 12 */
 .password-rules {
-  margin-top: calc(-1 * var(--space-2));
-  padding: var(--space-3);
-  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  border-radius: 0.75rem;
   background: var(--color-surface-muted);
 }
 
 .password-rules__title {
-  font-size: var(--text-sm);
-  font-weight: var(--weight-semibold);
+  font-size: 0.84375rem;
+  font-weight: var(--weight-bold);
 }
 
 .password-rules__list {
   display: grid;
-  gap: var(--space-1);
-  margin-top: var(--space-2);
+  gap: 0.5rem;
+  margin-top: 0.625rem;
 }
 
+/* Pending: grey ring + #57525C text (7.0:1 on #F7F4F9) */
 .password-rule {
   display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: var(--text-sm);
+  align-items: flex-start;
+  gap: 0.625rem;
+  font-size: 0.875rem;
+  line-height: 1.35;
   color: var(--color-text-secondary);
 }
 
+/* Met: filled teal check + teal 600 text (#176F75, 5.4:1 on #F7F4F9) */
 .password-rule.is-met {
-  color: var(--color-success-text);
-  font-weight: var(--weight-medium);
+  color: var(--color-primary);
+  font-weight: var(--weight-semibold);
 }
 
 .password-rule__icon {
-  width: 1rem;
-  height: 1rem;
+  width: 1.125rem;
+  height: 1.125rem;
+  margin-top: 0.0625rem;
   flex-shrink: 0;
+}
+
+.password-rule.is-met .password-rule__icon circle {
+  fill: currentColor;
+}
+
+.password-rule.is-met .password-rule__icon path {
+  stroke: var(--color-on-dark);
 }

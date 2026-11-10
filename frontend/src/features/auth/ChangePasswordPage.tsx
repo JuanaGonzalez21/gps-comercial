@@ -7,7 +7,7 @@ import { getErrorMessage, isApiError } from '@/api/errors'
 import { DEFAULT_APP_PATH } from '@/auth/redirect'
 import { useAuth } from '@/auth/useAuth'
 import { useDocumentTitle } from '@/lib/hooks'
-import { Alert, Brand, Button, Card, CheckIcon, CircleIcon, PasswordField, useToast } from '@/ui'
+import { Alert, Brand, Button, Card, CheckCircleIcon, CircleIcon, PasswordField, useToast } from '@/ui'
 import { passwordRules, type PasswordRule } from './passwordPolicy'
 import '@/styles/panel-theme.css'
 import './auth.css'
@@ -107,7 +107,7 @@ export default function ChangePasswordPage() {
   }
 
   return (
-    <main id="main" className="auth-page">
+    <main id="main" className="auth-page auth-page--password">
       <div className="auth-page__panel">
         <div className="auth-page__brand">
           <Brand to="/" />
@@ -155,7 +155,11 @@ export default function ChangePasswordPage() {
                   const met = rule.test(newPassword)
                   return (
                     <li key={rule.id} className={met ? 'password-rule is-met' : 'password-rule'}>
-                      {met ? <CheckIcon className="password-rule__icon" /> : <CircleIcon className="password-rule__icon" />}
+                      {met ? (
+                        <CheckCircleIcon className="password-rule__icon" />
+                      ) : (
+                        <CircleIcon className="password-rule__icon" />
+                      )}
                       <span>{rule.label}</span>
                       <span className="visually-hidden">{met ? ' (cumplido)' : ' (pendiente)'}</span>
                     </li>

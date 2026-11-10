@@ -2,12 +2,30 @@
 
 /* Columns: the person stays readable (e-mails wrap only when really long); actions wrap below */
 .users-table__user {
-  min-width: 13rem;
+  min-width: 15rem;
+}
+
+/* Dark initials avatar + name, "Tu cuenta" pill, e-mail and the self note */
+.users-table__person {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.users-table__identity {
+  min-width: 0;
+}
+
+.users-table__email {
+  display: block;
+  color: var(--color-text);
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
 }
 
 .users-table__note {
-  max-width: 18rem;
-  margin-top: var(--space-1);
+  max-width: 22rem;
+  margin-top: 0.125rem;
 }
 
 /* "Editar" and "Desactivar" share a line; the third action wraps below */

@@ -207,7 +207,7 @@ export function AssignVehicleDialog({
             )}
           />
         )}
-        <div role="status" className="roster-saving">
+        <div role="status" className="roster-saving roster-saving--form">
           {isSubmitting && (
             <>
               <Spinner size="sm" />

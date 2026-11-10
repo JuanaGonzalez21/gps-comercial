@@ -37,7 +37,9 @@
 }
 
 /* ---------- List card ---------- */
+/* Named container: the table adapts to the card's width, not the viewport (rail vs. sidebar). */
 .roster-panel {
+  container: roster / inline-size;
   min-width: 0;
   overflow: hidden;
 }
@@ -247,6 +249,7 @@ a.roster-vehicle:hover {
 .roster-assign svg {
   width: 1rem;
   height: 1rem;
+  flex-shrink: 0; /* a squeezed column must not collapse the icon to 0 px */
 }
 
 /* "N campos" chip: lavender pill, dark text (15.0:1). */
@@ -270,19 +273,52 @@ a.roster-vehicle:hover {
 }
 
 /* ---------- Actions ---------- */
-/* Button rows inside dialogs (custom fields editor). */
-.roster-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-}
-
 /* Row actions: edit + "⋮". */
 .roster-row-actions {
   display: inline-flex;
   align-items: center;
   justify-content: flex-end;
   gap: var(--space-1);
+}
+
+/* ---------- Narrow table (list card under 50rem: tablets with the rail) ---------- */
+/* Every column and action stays inside the card without horizontal scrolling: tighter cells, no
+   decorative avatar, names may wrap and the dashed button reads "Asignar" (its accessible name is
+   still "Asignar vehículo a …"; the column header already says "Vehículo"). */
+@container roster (max-width: 50rem) {
+  .roster-table {
+    min-width: 0;
+  }
+
+  .roster-table th,
+  .roster-table td {
+    padding-inline: 0.5rem;
+  }
+
+  .roster-table :is(th, td):first-child {
+    padding-left: var(--space-4);
+  }
+
+  .roster-table :is(th, td):last-child {
+    padding-right: var(--space-4);
+  }
+
+  .roster-table .avatar {
+    display: none;
+  }
+
+  .roster-table .roster-person {
+    min-width: 8rem;
+  }
+
+  .roster-table .roster-assign__more {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
 }
 
 /* ---------- Cards (below 48rem) ---------- */
@@ -366,4 +402,9 @@ a.roster-vehicle:hover {
 
 .roster-saving .spinner {
   color: var(--color-primary);
+}
+
+/* The live region stays in the form (so it is announced) but adds no empty gap while idle. */
+.roster-saving--form:empty {
+  margin-top: calc(var(--space-4) * -1);
 }

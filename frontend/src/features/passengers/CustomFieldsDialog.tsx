@@ -167,9 +167,9 @@ function CustomFieldRow({
 
   if (mode === 'edit') {
     return (
-      <li className="cf-row cf-row--active">
+      <li className="passenger-field passenger-field--active">
         <form
-          className="cf-row__form"
+          className="passenger-field__form"
           noValidate
           aria-label={`Editar el campo ${field.key}`}
           onSubmit={handleSubmit(save)}
@@ -186,7 +186,7 @@ function CustomFieldRow({
               onRetry={() => void handleSubmit(save)()}
             />
           )}
-          <div className="roster-actions">
+          <div className="passenger-field__actions">
             <Button type="submit" size="sm" loading={update.isPending} loadingText="Guardando…" disabled={locked && !update.isPending}>
               Guardar campo
             </Button>
@@ -201,12 +201,12 @@ function CustomFieldRow({
 
   if (mode === 'delete') {
     return (
-      <li className="cf-row cf-row--active">
-        <p ref={questionRef} tabIndex={-1} className="cf-row__question">
+      <li className="passenger-field passenger-field--active">
+        <p ref={questionRef} tabIndex={-1} className="passenger-field__question">
           ¿Eliminar el campo «{field.key}»? Los demás campos del pasajero se conservan.
         </p>
         {failure && <FailureAlert title="No se pudo eliminar el campo" failure={failure} onRetry={() => void confirmDelete()} />}
-        <div className="roster-actions">
+        <div className="passenger-field__actions">
           <Button
             size="sm"
             variant="danger"
@@ -226,13 +226,13 @@ function CustomFieldRow({
   }
 
   return (
-    <li className="cf-row">
-      <div className="cf-row__content">
-        <p className="cf-row__key">{field.key}</p>
-        <p className="cf-row__value">{field.value || <span className="roster-muted">Sin valor</span>}</p>
+    <li className="passenger-field">
+      <div className="passenger-field__content">
+        <p className="passenger-field__key">{field.key}</p>
+        <p className="passenger-field__value">{field.value || <span className="roster-muted">Sin valor</span>}</p>
       </div>
       {editable && (
-        <div className="roster-actions">
+        <div className="passenger-field__actions">
           <Button
             ref={editButtonRef}
             size="sm"
@@ -247,6 +247,7 @@ function CustomFieldRow({
             size="sm"
             variant="ghost"
             icon={<TrashIcon />}
+            className="passenger-field__delete"
             disabled={locked}
             onClick={() => {
               setFailure(null)
@@ -258,7 +259,7 @@ function CustomFieldRow({
         </div>
       )}
       {canEdit && !editable && (
-        <p className="roster-note">Esta clave no se puede editar desde la aplicación; usa Wialon.</p>
+        <p className="passenger-field__note">Esta clave no se puede editar desde la aplicación; usa Wialon.</p>
       )}
     </li>
   )
@@ -304,8 +305,8 @@ function AddCustomFieldForm({
   }
 
   return (
-    <form className="cf-add" noValidate aria-labelledby={titleId} onSubmit={handleSubmit(add)}>
-      <h3 id={titleId} className="cf-section-title">
+    <form className="passenger-fields__add" noValidate aria-labelledby={titleId} onSubmit={handleSubmit(add)}>
+      <h3 id={titleId} className="passenger-fields__title">
         Agregar campo
       </h3>
       {full ? (
@@ -391,9 +392,9 @@ export function CustomFieldsDialog({ passenger, canEdit, onClose }: CustomFields
         </Button>
       }
     >
-      <div className="cf-editor">
+      <div className="passenger-fields">
         {/* Live region present from the start, so every result is announced. */}
-        <div role="status" className="cf-editor__notice">
+        <div role="status" className="passenger-fields__notice">
           {notice && <Alert tone={notice.tone}>{notice.text}</Alert>}
         </div>
 
@@ -411,9 +412,9 @@ export function CustomFieldsDialog({ passenger, canEdit, onClose }: CustomFields
           </Alert>
         )}
 
-        <section aria-labelledby={listTitleId} className="cf-section">
-          <div className="cf-section__header">
-            <h3 id={listTitleId} ref={listTitleRef} tabIndex={-1} className="cf-section-title">
+        <section aria-labelledby={listTitleId} className="passenger-fields__section">
+          <div className="passenger-fields__header">
+            <h3 id={listTitleId} ref={listTitleRef} tabIndex={-1} className="passenger-fields__title">
               Campos actuales ({items.length})
             </h3>
             {fields.isFetching && (
@@ -430,7 +431,7 @@ export function CustomFieldsDialog({ passenger, canEdit, onClose }: CustomFields
               description={canEdit ? 'Agrega el primero con el formulario de abajo.' : undefined}
             />
           ) : (
-            <ul className="cf-list" role="list">
+            <ul className="passenger-fields__list" role="list">
               {items.map((field) => (
                 <CustomFieldRow
                   key={field.key}

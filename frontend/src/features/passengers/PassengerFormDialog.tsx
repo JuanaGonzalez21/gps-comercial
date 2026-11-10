@@ -213,6 +213,7 @@ export function PassengerFormDialog({ passenger, resources, onClose, onSaved }: 
               size="sm"
               variant="secondary"
               icon={<PlusIcon />}
+              className="passenger-new-fields__add"
               disabled={customFields.fields.length >= MAX_CUSTOM_FIELDS}
               onClick={() => customFields.append({ key: '', value: '' })}
             >

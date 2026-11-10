@@ -80,7 +80,11 @@ export function VehicleCell({ vehicle, linkable, personName, onAssign }: Vehicle
     return (
       <button type="button" className="roster-assign" onClick={onAssign}>
         <LinkIcon />
-        Asignar vehículo <span className="visually-hidden">a {personName}</span>
+        {/* One inline label, so the narrow table can hide " vehículo" visually and keep it for screen readers. */}
+        <span>
+          Asignar <span className="roster-assign__more">vehículo</span>
+        </span>{' '}
+        <span className="visually-hidden">a {personName}</span>
       </button>
     )
   }

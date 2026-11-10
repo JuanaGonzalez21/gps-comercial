@@ -18,8 +18,16 @@ from app.domain.permissions import Permission
 from app.domain.ports import FleetGateway
 from app.domain.vehicle_status import ThresholdStatusPolicy
 from app.infrastructure.db.models import AuthSession, User
-from app.services.audit_service import AuditService
+from app.services.audit_service import AuditService, RequestAuditTrail
 from app.services.auth_service import AuthService
+from app.services.dashboard_service import DashboardService
+from app.services.driver_service import DriverService
+from app.services.export_service import ExportService
+from app.services.history_service import HistoryService
+from app.services.passenger_service import PassengerService
+from app.services.resource_service import ResourceService
+from app.services.user_service import UserService
+from app.services.vehicle_custom_field_service import VehicleCustomFieldService
 from app.services.vehicle_service import VehicleService
 
 logger = logging.getLogger("app.security")
@@ -134,3 +142,70 @@ def require_permission(permission: Permission) -> Callable[..., Principal]:
 
     dependency.required_permission = permission  # type: ignore[attr-defined]  # route audit marker
     return dependency
+
+
+# ----- use cases (composition per request; FastAPI caches each dependency within a request) ---
+def get_audit_trail(
+    request: Request,
+    principal: Principal = Depends(get_active_principal),
+    db: Session = Depends(get_db),
+) -> RequestAuditTrail:
+    return RequestAuditTrail(db, actor=principal.user, ip_address=client_ip(request))
+
+
+def get_audit_service(db: Session = Depends(get_db)) -> AuditService:
+    return AuditService(db)
+
+
+def get_user_service(db: Session = Depends(get_db)) -> UserService:
+    return UserService(db)
+
+
+def get_resource_service(
+    gateway: FleetGateway = Depends(get_fleet_gateway),
+    settings: Settings = Depends(get_settings),
+) -> ResourceService:
+    return ResourceService(gateway, default_resource_id=settings.wialon_default_resource_id)
+
+
+def get_driver_service(
+    gateway: FleetGateway = Depends(get_fleet_gateway),
+    audit: RequestAuditTrail = Depends(get_audit_trail),
+    resources: ResourceService = Depends(get_resource_service),
+) -> DriverService:
+    return DriverService(gateway, audit, resources)
+
+
+def get_passenger_service(
+    gateway: FleetGateway = Depends(get_fleet_gateway),
+    audit: RequestAuditTrail = Depends(get_audit_trail),
+    resources: ResourceService = Depends(get_resource_service),
+) -> PassengerService:
+    return PassengerService(gateway, audit, resources)
+
+
+def get_vehicle_custom_field_service(
+    gateway: FleetGateway = Depends(get_fleet_gateway),
+    audit: RequestAuditTrail = Depends(get_audit_trail),
+) -> VehicleCustomFieldService:
+    return VehicleCustomFieldService(gateway, audit)
+
+
+def get_dashboard_service(
+    vehicles: VehicleService = Depends(get_vehicle_service),
+    gateway: FleetGateway = Depends(get_fleet_gateway),
+) -> DashboardService:
+    return DashboardService(vehicles, gateway)
+
+
+def get_history_service(gateway: FleetGateway = Depends(get_fleet_gateway)) -> HistoryService:
+    return HistoryService(gateway)
+
+
+def get_export_service(
+    vehicles: VehicleService = Depends(get_vehicle_service),
+    drivers: DriverService = Depends(get_driver_service),
+    passengers: PassengerService = Depends(get_passenger_service),
+    audit: RequestAuditTrail = Depends(get_audit_trail),
+) -> ExportService:
+    return ExportService(vehicles, drivers, passengers, audit)

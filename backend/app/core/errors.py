@@ -54,6 +54,21 @@ _VALIDATION_MESSAGES = {
     "string_pattern_mismatch": "El formato no es válido.",
     "value_error": "El valor no es válido.",
     "json_invalid": "El cuerpo de la petición no es JSON válido.",
+    "timezone_aware": "Debe incluir la zona horaria (por ejemplo, Z o -05:00).",
+    "uuid_parsing": "El identificador no es válido.",
+    "uuid_type": "El identificador no es válido.",
+    "model_attributes_type": "Debe ser un objeto.",
+    "dict_type": "Debe ser un objeto.",
+    "list_type": "Debe ser una lista.",
+}
+
+# Messages that can name the limit the user exceeded (Pydantic puts it in the error context).
+_CONTEXT_MESSAGES = {
+    "string_too_short": ("min_length", "Debe tener al menos {} caracteres."),
+    "string_too_long": ("max_length", "Debe tener como máximo {} caracteres."),
+    "too_long": ("max_length", "Admite como máximo {} elementos."),
+    "greater_than_equal": ("ge", "Debe ser mayor o igual a {}."),
+    "less_than_equal": ("le", "Debe ser menor o igual a {}."),
 }
 
 
@@ -92,6 +107,13 @@ def _validation_message(error: dict[str, Any]) -> str:
     message = str(error.get("msg", ""))
     if error_type == "value_error" and message.startswith("Value error, "):
         return message.removeprefix("Value error, ")
+    context = error.get("ctx") or {}
+    if error_type == "string_too_short" and context.get("min_length") == 1:
+        return "Este campo es obligatorio."  # blank after trimming
+    if error_type in _CONTEXT_MESSAGES:
+        key, template = _CONTEXT_MESSAGES[error_type]
+        if key in context:
+            return template.format(context[key])
     return _VALIDATION_MESSAGES.get(error_type, "El valor no es válido.")
 
 

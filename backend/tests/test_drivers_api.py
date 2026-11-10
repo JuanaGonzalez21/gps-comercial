@@ -3,6 +3,8 @@
 Simulated data: resource 1000, drivers 1..10 (codes C001..C010), 1..8 bound to units 100..107.
 """
 
+from datetime import UTC, datetime, timedelta
+
 import pytest
 
 from app.domain.errors import UpstreamUnavailableError
@@ -10,10 +12,21 @@ from app.infrastructure.db.models import AuditLog
 
 DRIVERS = "/api/v1/drivers"
 
+T0 = datetime(2026, 11, 10, 15, 0, tzinfo=UTC)
+
 
 def _audit(session_factory, action: str) -> list[AuditLog]:
     with session_factory() as db:
         return db.query(AuditLog).filter_by(action=action).order_by(AuditLog.id).all()
+
+
+def _set_created_at(session_factory, action: str, times: dict[str, datetime]) -> None:
+    """Pins the audit dates so the order does not depend on how fast the requests ran."""
+    with session_factory() as db:
+        for entry in db.query(AuditLog).filter_by(action=action):
+            if entry.entity_id in times:
+                entry.occurred_at = times[entry.entity_id]
+        db.commit()
 
 
 def test_list_search_filters_sort_and_paging(login_as) -> None:
@@ -236,3 +249,26 @@ def test_unassign_and_unassign_twice(login_as, session_factory) -> None:
         ("success", 101),
         ("failure", None),
     ]
+
+
+def test_sort_newest_first_uses_audit_dates_across_resources(login_as, session_factory) -> None:
+    client = login_as("operator")
+    first = client.post(DRIVERS, json={"name": "Primero", "resource_id": 1000}).json()
+    second = client.post(DRIVERS, json={"name": "Segundo", "resource_id": 1001}).json()
+    _set_created_at(
+        session_factory,
+        "driver.created",
+        {f"1000:{first['id']}": T0, f"1001:{second['id']}": T0 + timedelta(minutes=1)},
+    )
+    items = client.get(DRIVERS, params={"sort": "-created"}).json()["items"]
+    # Created here: audit date, newest first, even when the newest has the lower Wialon id.
+    assert [(d["resource_id"], d["id"]) for d in items[:2]] == [
+        (1001, second["id"]),
+        (1000, first["id"]),
+    ]
+    # Created elsewhere (the simulated seed): Wialon id order, newest first.
+    assert [d["id"] for d in items[2:]] == list(range(10, 0, -1))
+    export = client.get("/api/v1/exports/drivers.csv", params={"sort": "-created"})
+    assert export.status_code == 200
+    assert ",Segundo," in export.text.splitlines()[1]  # first data row
+    assert client.get(DRIVERS, params={"sort": "created"}).status_code == 422

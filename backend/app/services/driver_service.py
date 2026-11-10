@@ -10,13 +10,15 @@ from dataclasses import dataclass
 from app.domain.errors import ConflictError, NotFoundError
 from app.domain.fleet import Driver, DriverInput
 from app.domain.ports import FleetGateway
-from app.services.audit_service import AuditSink, audit_failures
+from app.services.audit_service import AuditSink, CreationLog, audit_failures
 from app.services.common import (
+    NEWEST_FIRST,
     ResultPage,
     VehicleRef,
     changed_fields,
     entity_key,
     matches,
+    newest_first_key,
     paginate,
     sort_key,
     vehicle_names,
@@ -44,10 +46,17 @@ def _editable(driver: Driver | DriverInput) -> dict[str, object]:
 
 
 class DriverService:
-    def __init__(self, gateway: FleetGateway, audit: AuditSink, resources: ResourceService) -> None:
+    def __init__(
+        self,
+        gateway: FleetGateway,
+        audit: AuditSink,
+        resources: ResourceService,
+        creations: CreationLog | None = None,
+    ) -> None:
         self._gateway = gateway
         self._audit = audit
         self._resources = resources
+        self._creations = creations
 
     # ----- reads -------------------------------------------------------------------------
     def list_all(
@@ -60,6 +69,13 @@ class DriverService:
             if (assigned is None or (d.unit_id is not None) == assigned)
             and matches(search, d.name, d.code, d.phone)
         ]
+        if sort == NEWEST_FIRST:
+            created = self._creations.created_at("driver.created") if self._creations else {}
+            views.sort(
+                key=lambda v: newest_first_key(created, v.driver.resource_id, v.driver.id),
+                reverse=True,
+            )
+            return views
         views.sort(
             key=lambda v: (sort_key(v.driver.name), v.driver.resource_id, v.driver.id),
             reverse=sort.startswith("-"),

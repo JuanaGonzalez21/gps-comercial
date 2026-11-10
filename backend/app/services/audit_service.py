@@ -1,6 +1,6 @@
 """Audit trail (RF-26): who did what, when, and with which outcome."""
 
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 from datetime import datetime
 from typing import Any, Protocol
@@ -29,9 +29,18 @@ def _sanitize(details: dict[str, Any] | None) -> dict[str, Any] | None:
     return clean
 
 
+class CreationLog(Protocol):
+    """When each driver or passenger was created through this application (from the audit log)."""
+
+    def created_at(self, action: str) -> Mapping[str, datetime]: ...
+
+
 class AuditService:
     def __init__(self, db: Session) -> None:
         self._repository = AuditRepository(db)
+
+    def created_at(self, action: str) -> Mapping[str, datetime]:
+        return self._repository.latest_success_by_entity(action)
 
     def record(
         self,
@@ -127,6 +136,9 @@ class RequestAuditTrail:
             details=details,
         )
         self._db.commit()
+
+    def created_at(self, action: str) -> Mapping[str, datetime]:
+        return self._service.created_at(action)
 
 
 @contextmanager

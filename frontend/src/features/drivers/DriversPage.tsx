@@ -191,7 +191,6 @@ export default function DriversPage() {
         onAssignedChange={list.setAssigned}
         sort={list.sort}
         onSortChange={list.setSort}
-        showSort={isCompact}
         hasFilters={list.hasFilters}
         onClear={list.clearFilters}
       />

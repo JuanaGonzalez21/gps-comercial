@@ -8,11 +8,12 @@ import {
   EditIcon,
   LinkIcon,
   Skeleton,
+  SortIcon,
   TruckIcon,
   initialsOf,
   type ActionMenuItem,
 } from '@/ui'
-import type { NameSort } from './listState'
+import type { RosterSort } from './listState'
 
 // Building blocks shared by the drivers and passengers lists (design handoff "4. Conductores y
 // 5. Pasajeros"): sortable name header, person cell, vehicle cell, row actions and skeletons (UX-06).
@@ -25,12 +26,16 @@ function rosterInitials(name: string): string {
   return initialsOf(name)
 }
 
-/** The current order is exposed with aria-sort; the table caption also states it. */
-export function NameSortHeader({ sort, onSort }: { sort: NameSort; onSort: (sort: NameSort) => void }) {
+/**
+ * The current order is exposed with aria-sort; the table caption also states it. With "Recién
+ * agregados" the name column is not the sort key: aria-sort is "none" and a click sorts A–Z.
+ */
+export function NameSortHeader({ sort, onSort }: { sort: RosterSort; onSort: (sort: RosterSort) => void }) {
   const ascending = sort === 'name'
-  const Icon = ascending ? ArrowUpIcon : ArrowDownIcon
+  const descending = sort === '-name'
+  const Icon = ascending ? ArrowUpIcon : descending ? ArrowDownIcon : SortIcon
   return (
-    <th scope="col" aria-sort={ascending ? 'ascending' : 'descending'}>
+    <th scope="col" aria-sort={ascending ? 'ascending' : descending ? 'descending' : 'none'}>
       <button type="button" className="roster-sort-button" onClick={() => onSort(ascending ? '-name' : 'name')}>
         <span>Nombre</span>
         <Icon />

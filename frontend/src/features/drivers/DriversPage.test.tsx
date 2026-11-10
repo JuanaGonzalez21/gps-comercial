@@ -137,6 +137,25 @@ describe('DriversPage — list', () => {
     expect(screen.getByRole('columnheader', { name: 'Nombre' })).toHaveAttribute('aria-sort', 'descending')
   })
 
+  it('sorts by recently added from the "Ordenar por" select, also next to the table', async () => {
+    const { calls } = mockApi()
+    renderDrivers()
+    const user = userEvent.setup()
+    await screen.findByRole('table')
+
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Ordenar por' }), 'Recién agregados')
+
+    await waitFor(() =>
+      expect(
+        calls.some((call) => call.url.startsWith('/api/v1/drivers?') && call.url.includes('sort=-created')),
+      ).toBe(true),
+    )
+    // The name column is no longer the sort key; clicking it goes back to A–Z.
+    expect(screen.getByRole('columnheader', { name: 'Nombre' })).toHaveAttribute('aria-sort', 'none')
+    await user.click(screen.getByRole('button', { name: 'Nombre' }))
+    expect(screen.getByRole('combobox', { name: 'Ordenar por' })).toHaveValue('name')
+  })
+
   it('shows an error with retry when the list cannot be loaded', async () => {
     let fail = true
     mockFetch((call) => {
@@ -189,8 +208,8 @@ describe('DriversPage — list', () => {
       }),
     ).toBeInTheDocument()
     expect(screen.queryByRole('table')).not.toBeInTheDocument()
-    // Without sortable headers, sorting is a select.
-    expect(screen.getByRole('combobox', { name: 'Ordenar por nombre' })).toBeInTheDocument()
+    // Cards have no sortable headers: the select carries every order.
+    expect(screen.getByRole('combobox', { name: 'Ordenar por' })).toBeInTheDocument()
   })
 })
 

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import type { DriverOut } from '@/api/types'
-import { sortCaption, type NameSort } from './shared/listState'
+import { sortCaption, type RosterSort } from './shared/listState'
 import { NameSortHeader, OptionalText, RosterPerson, VehicleCell } from './shared/RosterTable'
 
 interface DriverListProps {
@@ -15,8 +15,8 @@ interface DriverListProps {
 }
 
 interface DriverTableProps extends DriverListProps {
-  sort: NameSort
-  onSortChange: (sort: NameSort) => void
+  sort: RosterSort
+  onSortChange: (sort: RosterSort) => void
   busy: boolean
 }
 

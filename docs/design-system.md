@@ -236,3 +236,7 @@ Dirección: producto de flotas sobrio y preciso. La personalidad viene de la com
 - **Cierre y pie:** cierre turquesa y pie compacto.
 - **Tipografía:** la pila del sistema del producto. La fuente del diseño exigiría cargar una fuente externa y ampliar la CSP, así que se aproxima con peso 800 y espaciado negativo en titulares.
 - **Imágenes:** las fotografías bajo el hero cargan en diferido y todas declaran sus dimensiones. Se retiró la fotografía anterior de la coordinadora sola.
+- **Ajustes posteriores (2026-11-10, a petición de Juana):**
+  - la imagen del hero vuelve a la composición anterior (forma turquesa con borde izquierdo redondeado, vehículos sobresaliendo y sin etiqueta);
+  - en «Funcionalidades» las dos columnas comparten altura: la foto ocupa el espacio bajo la introducción (mínimo 34 rem) y los tres bloques se reparten la altura, así que no queda hueco bajo la lista;
+  - aparición única de los bloques bajo el hero al hacer scroll (opacidad y 24 px de desplazamiento, 600 ms, escalonado de 90 ms). No se aplica con «reducir movimiento» ni sin `IntersectionObserver`, y nunca al hero.

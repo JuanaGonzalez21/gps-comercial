@@ -1,3 +1,4 @@
+import { useEffect, useRef, type RefObject } from 'react'
 import { useServerWakeUp } from '@/api/system'
 import { useAuth } from '@/auth/useAuth'
 import { useDocumentTitle } from '@/lib/hooks'
@@ -66,14 +67,46 @@ function AccessCta({ signedIn, variant = 'primary' }: { signedIn: boolean; varia
   )
 }
 
+/**
+ * One-time reveal of the blocks below the hero as they enter the viewport. Without IntersectionObserver
+ * or with "reduce motion" every block is shown at once; the hero is never hidden (it holds the LCP).
+ */
+function useScrollReveal(root: RefObject<HTMLDivElement | null>) {
+  useEffect(() => {
+    const element = root.current
+    if (!element) return
+    const targets = [...element.querySelectorAll<HTMLElement>('[data-reveal]')]
+    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+    if (reduceMotion || typeof IntersectionObserver === 'undefined') {
+      for (const target of targets) target.dataset.reveal = 'in'
+      return
+    }
+    element.classList.add('landing--reveal')
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue
+          ;(entry.target as HTMLElement).dataset.reveal = 'in'
+          observer.unobserve(entry.target)
+        }
+      },
+      { rootMargin: '0px 0px -8% 0px', threshold: 0.12 },
+    )
+    for (const target of targets) observer.observe(target)
+    return () => observer.disconnect()
+  }, [root])
+}
+
 export default function LandingPage() {
   useDocumentTitle(null)
   useServerWakeUp() // free hosting sleeps when idle: start waking it as soon as someone arrives
   const { status } = useAuth()
   const signedIn = status === 'authenticated'
+  const rootRef = useRef<HTMLDivElement>(null)
+  useScrollReveal(rootRef)
 
   return (
-    <div className="landing">
+    <div className="landing" ref={rootRef}>
       <section className="landing-hero" aria-labelledby="landing-title">
         <div className="landing-container landing-hero__grid">
           <div className="landing-hero__copy">
@@ -94,24 +127,26 @@ export default function LandingPage() {
             </div>
             <p className="landing-hero__note">Información de tus unidades integrada con Wialon.</p>
           </div>
+          {/* Same image composition as the previous landing (Juana's choice): vehicles over one flat teal shape. */}
+          <div className="landing-hero__visual">
+            <div className="landing-hero__shape" aria-hidden="true" />
+            <img
+              className="landing-hero__vehicles"
+              src={flota}
+              srcSet={`${flota720} 720w, ${flota} 1400w`}
+              sizes="(min-width: 64rem) 40rem, calc(100vw - 2rem)"
+              width={1400}
+              height={660}
+              alt="Ilustración de una furgoneta y un camión de reparto blancos"
+              fetchPriority="high"
+            />
+          </div>
         </div>
-        <figure className="landing-hero__visual">
-          <img
-            src={flota}
-            srcSet={`${flota720} 720w, ${flota} 1400w`}
-            sizes="(min-width: 64rem) 46vw, calc(100vw - 2rem)"
-            width={1400}
-            height={660}
-            alt="Ilustración de una furgoneta y un camión de reparto blancos"
-            fetchPriority="high"
-          />
-          <figcaption className="landing-badge">Imagen ilustrativa</figcaption>
-        </figure>
       </section>
 
       <section id="funcionalidades" className="landing-section" aria-labelledby="funcionalidades-title">
         <div className="landing-container landing-features">
-          <div className="landing-features__intro">
+          <div className="landing-features__intro" data-reveal="">
             <p className="landing-kicker">Funcionalidades</p>
             <h2 id="funcionalidades-title" className="landing-title">
               Lo que necesitas saber, en el momento en que lo necesitas.
@@ -135,7 +170,7 @@ export default function LandingPage() {
           </div>
           <ol className="landing-features__list" role="list">
             {FEATURES.map((feature, index) => (
-              <li key={feature.label} className="landing-feature">
+              <li key={feature.label} className="landing-feature" data-reveal="">
                 <span className="landing-feature__number" aria-hidden="true">
                   {String(index + 1).padStart(2, '0')}
                 </span>
@@ -155,7 +190,7 @@ export default function LandingPage() {
 
       <section id="como-trabajamos" className="landing-section landing-section--dark" aria-labelledby="trabajo-title">
         <div className="landing-container">
-          <div className="landing-work__header">
+          <div className="landing-work__header" data-reveal="">
             <div>
               <p className="landing-kicker landing-kicker--on-dark">Cómo trabajamos</p>
               <h2 id="trabajo-title" className="landing-title">
@@ -168,7 +203,7 @@ export default function LandingPage() {
           </div>
           <ol className="landing-work__steps" role="list">
             {STEPS.map((step, index) => (
-              <li key={step.title}>
+              <li key={step.title} data-reveal="">
                 <span className="landing-work__number" aria-hidden="true">
                   {index + 1}
                 </span>
@@ -192,7 +227,7 @@ export default function LandingPage() {
           loading="lazy"
           decoding="async"
         />
-        <div className="landing-control__content">
+        <div className="landing-control__content" data-reveal="">
           <p className="landing-kicker">Control de tu flota</p>
           <h2 id="control-title" className="landing-title">
             Cada vehículo, con su información a la vista.
@@ -213,7 +248,7 @@ export default function LandingPage() {
       </section>
 
       <section className="landing-cta" aria-labelledby="cta-title">
-        <div className="landing-container landing-cta__inner">
+        <div className="landing-container landing-cta__inner" data-reveal="">
           <h2 id="cta-title" className="landing-cta__title">
             Todo listo para consultar tu flota.
           </h2>

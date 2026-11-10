@@ -76,6 +76,8 @@ describe('LandingPage', () => {
       expect(photo).toHaveAttribute('loading', 'lazy')
     }
     expect(screen.getByRole('img', { name: /furgoneta y un camión/ })).not.toHaveAttribute('loading')
+    // Scroll reveal never hides content when IntersectionObserver is unavailable (jsdom, old browsers).
+    expect(document.querySelectorAll('[data-reveal]:not([data-reveal="in"])')).toHaveLength(0)
 
     const sections = within(screen.getByRole('navigation', { name: 'Secciones' }))
     expect(sections.getByRole('link', { name: 'Funcionalidades' })).toHaveAttribute('href', '/#funcionalidades')

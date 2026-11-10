@@ -62,7 +62,7 @@ const MARKERS: VehicleMarker[] = [
 ]
 
 function page(items: VehicleSummary[], total = 41): Page<VehicleSummary> {
-  return { items, total, page: 1, page_size: 20, pages: Math.ceil(total / 20) }
+  return { items, total, page: 1, page_size: 8, pages: Math.ceil(total / 8) }
 }
 
 function positions(items = MARKERS): VehiclePositions {
@@ -101,7 +101,7 @@ function renderPage(user: Me = makeUser()) {
 
 describe('VehiclesPage', () => {
   it('lists the server page and maps every position, independent of paging', async () => {
-    mockFetch(({ url }) =>
+    const { calls } = mockFetch(({ url }) =>
       url.startsWith('/api/v1/vehicles/positions') ? jsonResponse(positions()) : jsonResponse(page(VEHICLES)),
     )
     renderPage()
@@ -115,9 +115,11 @@ describe('VehiclesPage', () => {
     expect(screen.getByText('41 vehículos')).toBeInTheDocument()
     // 2 rows on this page, 3 markers on the map.
     expect(await screen.findByText('3 marcadores')).toBeInTheDocument()
-    expect(screen.getByText('Última actualización 14:33:11')).toBeInTheDocument()
+    expect(screen.getByText('14:33:11').closest('p')).toHaveTextContent('Última actualización 14:33:11')
+    // Design: 8 rows per server page.
+    expect(calls.some((call) => call.url.startsWith('/api/v1/vehicles?') && call.url.includes('page_size=8'))).toBe(true)
     expect(screen.getByRole('navigation', { name: 'Paginación de vehículos' })).toHaveTextContent(
-      'Mostrando 1–20 de 41 vehículos',
+      'Mostrando 1–8 de 41 vehículos',
     )
   })
 

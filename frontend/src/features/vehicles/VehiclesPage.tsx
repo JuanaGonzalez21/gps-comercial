@@ -7,6 +7,7 @@ import { ExportCsvButton } from '@/features/exports/ExportCsvButton'
 import { isVehicleStatus } from '@/lib/vehicleStatus'
 import { formatNumber, formatTime } from '@/lib/format'
 import { useDebouncedValue, useDocumentTitle, useMediaQuery, usePrefersReducedMotion } from '@/lib/hooks'
+import { MapLegend } from '@/map/MapLegend'
 import { VehicleMap } from '@/map/VehicleMap'
 import {
   Alert,
@@ -17,7 +18,6 @@ import {
   MapIcon,
   PageHeader,
   Pagination,
-  RefreshIcon,
   SearchIcon,
   Spinner,
   TruckIcon,
@@ -27,7 +27,7 @@ import { VehicleFilters, type DriverFilter } from './VehicleFilters'
 import { VehicleTable, VehicleTableSkeleton } from './VehicleTable'
 import './vehicles.css'
 
-const PAGE_SIZE = 20
+const PAGE_SIZE = 8 // design: 8 rows per page (server-side paging, RF-10)
 const SEARCH_DEBOUNCE_MS = 350
 /** Below 48rem: cards plus a List/Map toggle. From 80rem: list and map side by side. */
 const COMPACT_QUERY = '(max-width: 47.99rem)'
@@ -273,14 +273,17 @@ export default function VehiclesPage() {
     <>
       <PageHeader
         title="Vehículos"
-        description="Posición y estado de la flota. Se actualiza cada 15 segundos mientras ves esta página."
+        description="Posición y estado de la flota. Se actualiza cada 15 segundos."
         actions={
           <>
-            <p className="freshness">
-              {positions.isFetching ? <Spinner size="sm" /> : <RefreshIcon className="freshness__icon" />}
-              <span>
-                {generatedAt ? `Última actualización ${formatTime(generatedAt)}` : 'Esperando datos…'}
-              </span>
+            <p className="live-indicator">
+              {generatedAt ? (
+                <>
+                  Última actualización <time dateTime={generatedAt}>{formatTime(generatedAt)}</time>
+                </>
+              ) : (
+                'Esperando datos…'
+              )}
             </p>
             {/* Same filters and order as the list; hidden for roles without exports:csv (RF-25). */}
             <ExportCsvButton entity="vehicles" filters={exportFilters} />
@@ -397,7 +400,7 @@ export default function VehiclesPage() {
             </h2>
             <p className="vehicles-panel__meta">
               {positions.data
-                ? `${formatNumber(markers.length)} con posición · agrupados cuando están cerca`
+                ? `${formatNumber(markers.length)} con posición`
                 : ''}
             </p>
           </div>
@@ -413,20 +416,7 @@ export default function VehiclesPage() {
               {mapOverlay}
             </VehicleMap>
           </div>
-          <ul className="map-legend" role="list" aria-label="Leyenda del mapa">
-            <li>
-              <span className="map-legend__swatch map-legend__swatch--moving" aria-hidden="true" />
-              En movimiento (círculo con flecha de rumbo)
-            </li>
-            <li>
-              <span className="map-legend__swatch map-legend__swatch--stopped" aria-hidden="true" />
-              Detenido (cuadrado)
-            </li>
-            <li>
-              <span className="map-legend__swatch map-legend__swatch--no_signal" aria-hidden="true" />
-              Sin señal (rombo con exclamación)
-            </li>
-          </ul>
+          <MapLegend />
         </section>
       </div>
     </>

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { VehicleSort, VehicleStatus } from '@/api/types'
 import { VEHICLE_STATUSES, VEHICLE_STATUS_LABELS, isVehicleStatus } from '@/lib/vehicleStatus'
-import { Button, SelectField, TextField, type SelectOption } from '@/ui'
+import { Button, SearchIcon, SelectField, TextField, type SelectOption } from '@/ui'
 
 export type DriverFilter = '' | 'with' | 'without'
 
@@ -79,7 +79,8 @@ export function VehicleFilters({
       <TextField
         type="search"
         label="Buscar vehículo"
-        placeholder="Nombre del vehículo"
+        placeholder="Nombre o conductor"
+        leadingIcon={<SearchIcon />}
         autoComplete="off"
         value={search}
         onChange={(event) => onSearchChange(event.target.value)}

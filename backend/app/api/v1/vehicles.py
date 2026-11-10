@@ -1,12 +1,15 @@
-"""Vehicle endpoints: paginated list, map positions and detail (RF-10, RF-11, RF-12, RF-13)."""
+"""Vehicle endpoints: paginated list, map positions, detail and route history
+(RF-10, RF-11, RF-12, RF-13, RF-24)."""
 
 from datetime import UTC, datetime
 from typing import Literal
 
 from fastapi import APIRouter, Depends, Query
+from pydantic import AwareDatetime
 
-from app.api.deps import get_vehicle_service, require_permission
+from app.api.deps import get_history_service, get_vehicle_service, require_permission
 from app.api.schemas.common import PROBLEM_RESPONSES, Page
+from app.api.schemas.history import TrackOut
 from app.api.schemas.vehicles import (
     VehicleDetailOut,
     VehicleMarkerOut,
@@ -15,6 +18,12 @@ from app.api.schemas.vehicles import (
 )
 from app.domain.fleet import VehicleStatus
 from app.domain.permissions import Permission
+from app.services.history_service import (
+    DEFAULT_POINTS,
+    MAX_POINTS,
+    MIN_POINTS,
+    HistoryService,
+)
 from app.services.vehicle_service import VehicleService
 
 router = APIRouter(prefix="/vehicles", tags=["vehicles"], responses=PROBLEM_RESPONSES)
@@ -78,3 +87,26 @@ def vehicle_detail(
     vehicle_id: int, service: VehicleService = Depends(get_vehicle_service)
 ) -> VehicleDetailOut:
     return VehicleDetailOut.from_view(service.get(vehicle_id))
+
+
+@router.get(
+    "/{vehicle_id}/track",
+    response_model=TrackOut,
+    dependencies=[Depends(require_permission(Permission.HISTORY_READ))],
+    summary="Recorrido de un vehículo en un rango (máx. 7 días), simplificado con RDP",
+)
+def vehicle_track(
+    vehicle_id: int,
+    time_from: AwareDatetime = Query(alias="from", description="Inicio, ISO-8601 con zona"),
+    time_to: AwareDatetime = Query(alias="to", description="Fin, ISO-8601 con zona"),
+    max_points: int = Query(
+        default=DEFAULT_POINTS,
+        ge=MIN_POINTS,
+        le=MAX_POINTS,
+        description="Máximo de puntos devueltos tras simplificar",
+    ),
+    service: HistoryService = Depends(get_history_service),
+) -> TrackOut:
+    return TrackOut.from_result(
+        service.track(vehicle_id, time_from, time_to, max_points=max_points)
+    )

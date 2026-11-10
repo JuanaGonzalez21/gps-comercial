@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 from app.domain.fleet import Driver, Passenger, Unit, VehicleStatus
 from app.domain.ports import FleetGateway
 from app.domain.vehicle_status import StatusPolicy
+from app.services.common import sort_key
 
 SORT_FIELDS = ("name", "status", "last_message_at")
 _STATUS_ORDER = {VehicleStatus.MOVING: 0, VehicleStatus.STOPPED: 1, VehicleStatus.NO_SIGNAL: 2}
@@ -92,7 +93,7 @@ class VehicleService:
     def _sort(views: list[VehicleView], sort: str) -> list[VehicleView]:
         descending = sort.startswith("-")
         field = sort.lstrip("-")
-        by_name = sorted(views, key=lambda v: (v.unit.name.lower(), v.unit.id))
+        by_name = sorted(views, key=lambda v: (sort_key(v.unit.name), v.unit.id))
         if field == "status":
             return sorted(by_name, key=lambda v: _STATUS_ORDER[v.status], reverse=descending)
         if field == "last_message_at":
@@ -101,6 +102,18 @@ class VehicleService:
             with_time.sort(key=lambda v: v.unit.last_message_at, reverse=descending)  # type: ignore[arg-type,return-value]
             return with_time + without_time  # missing timestamps always last
         return list(reversed(by_name)) if descending else by_name
+
+    def list_all(
+        self,
+        *,
+        search: str | None = None,
+        status: VehicleStatus | None = None,
+        has_driver: bool | None = None,
+        sort: str = "name",
+    ) -> list[VehicleView]:
+        """Every vehicle matching the filters, sorted (dashboard and CSV export use it unpaged)."""
+        views = self._filter(self._views(), search=search, status=status, has_driver=has_driver)
+        return self._sort(views, sort)
 
     def search(
         self,
@@ -112,8 +125,7 @@ class VehicleService:
         page: int = 1,
         page_size: int = 20,
     ) -> VehiclePage:
-        views = self._filter(self._views(), search=search, status=status, has_driver=has_driver)
-        views = self._sort(views, sort)
+        views = self.list_all(search=search, status=status, has_driver=has_driver, sort=sort)
         start = (page - 1) * page_size
         return VehiclePage(items=views[start : start + page_size], total=len(views))
 

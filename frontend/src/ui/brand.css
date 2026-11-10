@@ -1,0 +1,26 @@
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 2.75rem;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+  letter-spacing: -0.01em;
+  text-decoration: none;
+}
+
+.brand--light,
+.brand--light:hover {
+  color: var(--color-text);
+}
+
+.brand--dark,
+.brand--dark:hover {
+  color: var(--color-on-dark);
+}
+
+.brand__mark {
+  width: 1.75rem;
+  height: 1.75rem;
+  color: var(--color-brand);
+}

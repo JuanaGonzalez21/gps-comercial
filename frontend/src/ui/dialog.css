@@ -107,7 +107,11 @@
     padding: var(--space-4) var(--space-5);
   }
 
+  /* The sheet scrolls as a whole: keep its actions in reach at the bottom. */
   .dialog__footer {
+    position: sticky;
+    bottom: 0;
     padding: var(--space-4) var(--space-5) var(--space-5);
+    background: var(--color-surface);
   }
 }

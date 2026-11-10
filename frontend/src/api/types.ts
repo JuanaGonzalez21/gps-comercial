@@ -37,6 +37,16 @@ export interface AuthResponse {
   user: Me
 }
 
+export interface LoginInput {
+  email: string
+  password: string
+}
+
+export interface ChangePasswordInput {
+  current_password: string
+  new_password: string
+}
+
 export interface Page<T> {
   items: T[]
   total: number
@@ -213,6 +223,21 @@ export interface VehicleListParams extends PageParams {
   has_driver?: boolean
 }
 
+/** Sort keys accepted by GET /vehicles ("-" prefix = descending). */
+export type VehicleSort =
+  | 'name'
+  | '-name'
+  | 'status'
+  | '-status'
+  | 'last_message_at'
+  | '-last_message_at'
+
+/** GET /vehicles/positions takes no paging: the map shows every vehicle with a valid position. */
+export interface VehiclePositionsParams {
+  search?: string
+  status?: VehicleStatus
+}
+
 export interface CustomFieldInput {
   name: string
   value: string
@@ -334,6 +359,11 @@ export interface DashboardSummary {
 export interface SystemInfo {
   fleet_source: 'wialon' | 'fake'
   environment: 'development' | 'test' | 'production'
+}
+
+/** GET /health (outside /api/v1): process liveness only. */
+export interface HealthStatus {
+  status: 'ok'
 }
 
 export type ExportEntity = 'vehicles' | 'drivers' | 'passengers'

@@ -1,0 +1,62 @@
+import { useState } from 'react'
+import { useDebouncedValue } from '@/lib/hooks'
+
+// UI state of a drivers/passengers list (search, assignment filter, sort, page) turned into the
+// query params of the server-side list (RF-18, RF-28, UX-06).
+
+export type AssignedFilter = '' | 'yes' | 'no'
+export type NameSort = 'name' | '-name'
+
+export const ROSTER_PAGE_SIZE = 20
+const SEARCH_DEBOUNCE_MS = 350
+
+export function toAssigned(filter: AssignedFilter): boolean | undefined {
+  return filter === '' ? undefined : filter === 'yes'
+}
+
+export function toAssignedFilter(value: string): AssignedFilter {
+  return value === 'yes' || value === 'no' ? value : ''
+}
+
+export function toNameSort(value: string): NameSort {
+  return value === '-name' ? '-name' : 'name'
+}
+
+/** Table caption fragment, for example "Conductores ordenados por nombre, de la A a la Z". */
+export function sortCaption(sort: NameSort): string {
+  return sort === 'name' ? 'ordenados por nombre, de la A a la Z' : 'ordenados por nombre, de la Z a la A'
+}
+
+/**
+ * `extraFilterKey` identifies filters owned by the page (for example the vehicle of the
+ * passengers list): any filter change goes back to page 1 without an extra render.
+ */
+export function useRosterListState(extraFilterKey = '') {
+  const [searchInput, setSearchInput] = useState('')
+  const search = useDebouncedValue(searchInput.trim(), SEARCH_DEBOUNCE_MS)
+  const [assigned, setAssigned] = useState<AssignedFilter>('')
+  const [sort, setSort] = useState<NameSort>('name')
+
+  const filterKey = `${search}|${assigned}|${sort}|${extraFilterKey}`
+  const [paging, setPaging] = useState({ key: filterKey, page: 1 })
+  const page = paging.key === filterKey ? paging.page : 1
+  const goToPage = (next: number) => setPaging({ key: filterKey, page: next })
+
+  return {
+    searchInput,
+    setSearchInput,
+    assigned,
+    setAssigned,
+    sort,
+    setSort,
+    page,
+    goToPage,
+    /** Filters shared by the list and its CSV export (same rows as on screen). */
+    filters: { search: search || undefined, assigned: toAssigned(assigned), sort },
+    hasFilters: searchInput.trim() !== '' || assigned !== '' || extraFilterKey !== '',
+    clearFilters: () => {
+      setSearchInput('')
+      setAssigned('')
+    },
+  }
+}

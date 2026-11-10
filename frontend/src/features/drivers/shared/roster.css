@@ -1,0 +1,266 @@
+/* Shared by the drivers and passengers screens ("roster" = people managed in Wialon).
+   Mobile first: cards below 48rem, a table from there on (UX-01, UX-06). */
+
+/* ---------- Filters ---------- */
+.roster-filters {
+  display: grid;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.roster-filters__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-3);
+}
+
+.roster-filters__row > :only-child {
+  grid-column: 1 / -1;
+}
+
+.roster-filters__clear {
+  justify-self: start;
+}
+
+@media (min-width: 48rem) {
+  .roster-filters {
+    grid-template-columns: minmax(14rem, 2fr) minmax(0, 3fr) auto;
+    align-items: end;
+  }
+
+  /* auto-fill keeps empty tracks, so a single select does not stretch across the row */
+  .roster-filters__row {
+    grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  }
+
+  .roster-filters__row > :only-child {
+    grid-column: auto;
+  }
+
+  .roster-filters__clear {
+    justify-self: end;
+  }
+}
+
+/* ---------- Panel around the list ---------- */
+.roster-panel {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.roster-panel__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-3);
+}
+
+.roster-panel__title {
+  font-size: var(--text-lg);
+}
+
+.roster-panel__title:focus {
+  outline: none;
+}
+
+.roster-panel__meta {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+/* ---------- Table (48rem and up) ---------- */
+.roster-table-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.roster-table {
+  width: 100%;
+  min-width: 46rem;
+  font-size: var(--text-sm);
+}
+
+.roster-table th,
+.roster-table td {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.roster-table thead th {
+  background: var(--color-surface-muted);
+  font-weight: var(--weight-semibold);
+  white-space: nowrap;
+}
+
+.roster-table tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
+.roster-table tbody tr:hover {
+  background: var(--color-surface-muted);
+}
+
+.roster-table tbody th {
+  font-weight: var(--weight-semibold);
+}
+
+.roster-table__actions {
+  text-align: right !important;
+}
+
+.roster-sort-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) 0;
+  border: 0;
+  background: transparent;
+  font-weight: var(--weight-semibold);
+}
+
+.roster-sort-button:hover {
+  color: var(--color-primary);
+}
+
+.roster-sort-button svg {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+.roster-note {
+  display: block;
+  max-width: 22rem;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-regular);
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.roster-muted {
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+.roster-vehicle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-weight: var(--weight-semibold);
+}
+
+.roster-vehicle svg {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  color: var(--color-teal);
+}
+
+/* ---------- Row / card actions ---------- */
+.roster-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+/* Actions keep their text (icons alone would be ambiguous); at most two rows on narrow tables */
+.roster-table .roster-actions {
+  justify-content: flex-end;
+  min-width: 19rem;
+  gap: var(--space-1);
+}
+
+/* ---------- Cards (below 48rem) ---------- */
+.roster-cards {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.roster-card {
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.roster-card__name {
+  font-size: var(--text-base);
+  overflow-wrap: anywhere;
+}
+
+.roster-card__details {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  font-size: var(--text-sm);
+}
+
+.roster-card__details > div {
+  display: grid;
+  grid-template-columns: 7rem minmax(0, 1fr);
+  gap: var(--space-2);
+}
+
+.roster-card__details dt {
+  color: var(--color-text-secondary);
+}
+
+.roster-card__details dd {
+  overflow-wrap: anywhere;
+}
+
+.roster-card .roster-actions {
+  margin-top: var(--space-3);
+}
+
+/* ---------- Dialog forms ---------- */
+.roster-form {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.roster-form__pair {
+  display: grid;
+  gap: var(--space-4);
+}
+
+@media (min-width: 36rem) {
+  .roster-form__pair {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+.roster-textarea {
+  min-height: 5.5rem;
+  resize: vertical;
+}
+
+.roster-saving {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-text);
+}
+
+.roster-saving .spinner {
+  color: var(--color-primary);
+}
+
+.roster-alert {
+  margin-bottom: var(--space-4);
+}

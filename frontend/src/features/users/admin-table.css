@@ -1,0 +1,366 @@
+/* Admin lists (users and audit): filter bar, table for tablet/desktop, cards for phones.
+   Colours come from tokens.css; measured contrast in docs/design-system.md. */
+
+/* ---------- Filter bar ---------- */
+.admin-filters {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.admin-filters__wide {
+  grid-column: 1 / -1;
+}
+
+.admin-filters__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--space-2);
+  grid-column: 1 / -1;
+}
+
+@media (min-width: 48rem) {
+  .admin-filters {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    align-items: start;
+  }
+
+  .admin-filters__wide {
+    grid-column: span 2;
+  }
+
+  .admin-filters__actions {
+    grid-column: auto;
+    align-self: end;
+  }
+}
+
+@media (min-width: 80rem) {
+  .admin-filters--users {
+    grid-template-columns: minmax(16rem, 2fr) repeat(3, minmax(10rem, 1fr)) auto;
+  }
+
+  .admin-filters--users .admin-filters__wide {
+    grid-column: auto;
+  }
+}
+
+/* ---------- Panel that holds the list ---------- */
+.admin-panel {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.admin-panel__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-3);
+}
+
+.admin-panel__title {
+  font-size: var(--text-lg);
+}
+
+.admin-panel__meta {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+/* ---------- Table ---------- */
+.admin-table-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.admin-table {
+  width: 100%;
+  min-width: 44rem;
+  font-size: var(--text-sm);
+}
+
+.admin-table th,
+.admin-table td {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.admin-table thead th {
+  background: var(--color-surface-muted);
+  font-weight: var(--weight-semibold);
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.admin-table tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
+.admin-table tbody tr:hover {
+  background: var(--color-surface-muted);
+}
+
+.admin-table tbody th {
+  font-weight: var(--weight-regular);
+}
+
+.admin-table time {
+  white-space: nowrap;
+}
+
+.admin-table__primary {
+  display: block;
+  font-weight: var(--weight-semibold);
+  color: var(--color-text);
+}
+
+.admin-table__secondary {
+  display: block;
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.admin-table__mono {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  overflow-wrap: anywhere;
+}
+
+/* The expanded details row reads as part of the row above it */
+.admin-table tr.admin-table__details-row,
+.admin-table tr.admin-table__details-row:hover {
+  background: var(--color-surface-muted);
+}
+
+.admin-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 2rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-weight: var(--weight-semibold);
+}
+
+.admin-sort:hover {
+  color: var(--color-primary);
+}
+
+.admin-sort svg {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+/* ---------- Cards (phones) ---------- */
+.admin-cards {
+  display: grid;
+  gap: var(--space-3);
+}
+
+/* Tablets and small laptops: two cards per row */
+@media (min-width: 48rem) {
+  .admin-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+}
+
+.admin-card {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.admin-card__header {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.admin-card__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-base);
+}
+
+.admin-card__subtitle {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.admin-card__details {
+  display: grid;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+}
+
+.admin-card__details > div {
+  display: grid;
+  grid-template-columns: 6.25rem minmax(0, 1fr);
+  gap: var(--space-2);
+  align-items: start;
+}
+
+.admin-card__details dt {
+  color: var(--color-text-secondary);
+}
+
+.admin-card__details dd {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Phones: less nested padding leaves room for e-mails and badges inside the cards */
+@media (max-width: 47.99rem) {
+  .admin-panel,
+  .admin-card {
+    padding: var(--space-3);
+  }
+}
+
+/* ---------- Badges, tags and notes ---------- */
+.admin-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.125rem 0.625rem 0.125rem 0.5rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.admin-badge__icon {
+  display: inline-flex;
+}
+
+.admin-badge__icon svg {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+.admin-badge--success {
+  background: var(--color-success-bg);
+  border-color: #b9dfe2;
+  color: var(--color-success-text);
+}
+
+.admin-badge--success .admin-badge__icon {
+  color: var(--color-teal);
+}
+
+.admin-badge--neutral {
+  background: var(--color-neutral-bg);
+  border-color: #d6d6d6;
+  color: var(--color-neutral-text);
+}
+
+.admin-badge--neutral .admin-badge__icon {
+  color: var(--color-neutral);
+}
+
+.admin-badge--warning {
+  background: var(--color-warning-bg);
+  border-color: #f3b9c0;
+  color: var(--color-text);
+}
+
+.admin-badge--warning .admin-badge__icon {
+  color: var(--color-danger);
+}
+
+.admin-badge--danger {
+  background: var(--color-danger-bg);
+  border-color: #f0c4ca;
+  color: var(--color-danger-text);
+}
+
+.admin-badge--danger .admin-badge__icon {
+  color: var(--color-danger);
+}
+
+/* In narrow card cells a long badge wraps instead of overflowing the card */
+.admin-card__details .admin-badge {
+  align-items: flex-start;
+  white-space: normal;
+}
+
+.admin-card__details .admin-badge__icon {
+  margin-top: 0.2rem;
+}
+
+.admin-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.admin-badges--stack {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+/* "Tu cuenta" marker: dark text on the app background tint, brand bar as accent */
+.admin-tag {
+  display: inline-block;
+  white-space: nowrap;
+  padding: 0 var(--space-2);
+  border-left: 3px solid var(--color-brand);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  line-height: 1.6;
+  vertical-align: middle;
+}
+
+.admin-note {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+}
+
+.admin-muted {
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+.admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.admin-actions__note {
+  flex-basis: 100%;
+  max-width: 22rem;
+}
+
+.admin-alert {
+  margin-bottom: var(--space-4);
+}

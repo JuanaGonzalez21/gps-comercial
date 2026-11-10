@@ -1,0 +1,49 @@
+# Secrets and local context
+.env
+.env.*
+!.env.example
+!.env.*.example
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env.*.example
+.local-context/
+.claude/settings.local.json
+.claude/worktrees/
+*.pem
+*.key
+# JavaScript
+node_modules/
+dist/
+dist-ssr/
+build/
+coverage/
+.vite/
+*.tsbuildinfo
+*.local
+npm-debug.log*
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.egg-info/
+# Local runtime
+*.log
+*.sqlite
+*.sqlite3
+*.db
+.DS_Store
+Thumbs.db
+# Editors
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+# Keep lockfiles, migrations and .env.example in Git
+

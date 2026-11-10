@@ -1,0 +1,38 @@
+# Render Blueprint for the API (free plan). Validate in the Render dashboard before applying.
+# Secrets use sync: false (entered in the dashboard, never committed).
+services:
+  - type: web
+    name: gps-comercial-api
+    runtime: docker
+    plan: free
+    region: virginia
+    dockerContext: ./backend
+    dockerfilePath: ./backend/Dockerfile
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: FLEET_GATEWAY
+        value: wialon
+      - key: LOG_LEVEL
+        value: INFO
+      # Public, read-only contract; every endpoint still requires a session (decision in README).
+      - key: API_DOCS_ENABLED
+        value: "true"
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGINS        # exact frontend origin(s), e.g. https://gps-comercial.vercel.app
+        sync: false
+      - key: DATABASE_URL        # Neon connection string with sslmode=require
+        sync: false
+      - key: WIALON_TOKEN
+        sync: false
+      - key: WIALON_BASE_URL
+        value: https://hst-api.wialon.com/wialon/ajax.html
+      - key: ADMIN_EMAIL         # remove ADMIN_PASSWORD after the first successful deploy
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: ADMIN_FULL_NAME
+        sync: false

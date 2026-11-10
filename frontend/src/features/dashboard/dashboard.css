@@ -1,0 +1,353 @@
+/* Dashboard (RF-23). Mobile first: two KPI columns, charts stacked; four KPIs per row from
+   48rem and charts side by side from 64rem. Status colours follow tokens.css (teal moving,
+   grey stopped, dark red no signal) and always come with an icon and a text label. */
+
+/* ---------- Freshness ---------- */
+.dashboard-freshness {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+}
+
+.dashboard-freshness__text {
+  font-size: var(--text-sm);
+  color: var(--color-text);
+}
+
+.dashboard-freshness__text time {
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.dashboard-alert {
+  margin-bottom: var(--space-4);
+}
+
+/* ---------- KPIs ---------- */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin: 0 0 var(--space-6);
+}
+
+@media (min-width: 48rem) {
+  .kpi-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-4);
+  }
+}
+
+.kpi {
+  --kpi-accent: var(--color-brand);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--kpi-accent);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.kpi--moving {
+  --kpi-accent: var(--color-teal);
+}
+
+.kpi--stopped,
+.kpi--without {
+  --kpi-accent: var(--color-neutral);
+}
+
+.kpi--no_signal {
+  --kpi-accent: var(--color-danger);
+}
+
+.kpi--with {
+  --kpi-accent: var(--color-primary);
+}
+
+.kpi--people {
+  --kpi-accent: var(--color-dark);
+}
+
+.kpi dd {
+  margin: 0;
+}
+
+.kpi__label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text);
+}
+
+.kpi__icon {
+  width: 1.125rem;
+  height: 1.125rem;
+  flex-shrink: 0;
+  color: var(--kpi-accent);
+}
+
+.kpi__value {
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-tight);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text);
+}
+
+@media (min-width: 48rem) {
+  .kpi__value {
+    font-size: var(--text-3xl);
+  }
+}
+
+.kpi__hint {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+}
+
+.kpi__link {
+  margin-top: auto;
+  padding-top: var(--space-1);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+}
+
+.kpi__link a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2rem;
+}
+
+/* ---------- Chart cards ---------- */
+.dashboard-charts {
+  display: grid;
+  gap: var(--space-4);
+}
+
+@media (min-width: 64rem) {
+  .dashboard-charts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-6);
+  }
+}
+
+.chart-card {
+  display: grid;
+  gap: var(--space-4);
+  align-content: start;
+}
+
+.chart-card__title {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+}
+
+.chart-card__description {
+  margin-top: var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+.chart-card__footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+/* ---------- Tables used as legends and text alternatives ---------- */
+.dashboard-table {
+  width: 100%;
+  font-size: var(--text-sm);
+}
+
+.dashboard-table th,
+.dashboard-table td {
+  padding: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.dashboard-table thead th {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.dashboard-table tbody th {
+  font-weight: var(--weight-medium);
+}
+
+.dashboard-table tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
+.dashboard-table .dashboard-table__number {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.dashboard-table tbody .dashboard-table__number {
+  font-weight: var(--weight-semibold);
+}
+
+.legend-label {
+  --legend-color: var(--color-neutral);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Colour swatch matching the chart, then the status icon: colour + shape + text */
+.legend-label::before {
+  content: '';
+  width: 0.75rem;
+  height: 0.75rem;
+  flex-shrink: 0;
+  border-radius: 2px;
+  background: var(--legend-color);
+}
+
+.legend-label__icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  color: var(--legend-color);
+}
+
+.legend-label--moving {
+  --legend-color: var(--color-teal);
+}
+
+.legend-label--stopped,
+.legend-label--without {
+  --legend-color: var(--color-neutral);
+}
+
+.legend-label--no_signal {
+  --legend-color: var(--color-danger);
+}
+
+.legend-label--with {
+  --legend-color: var(--color-primary);
+}
+
+/* ---------- Status donut ---------- */
+.status-donut {
+  display: grid;
+  gap: var(--space-4);
+  justify-items: center;
+}
+
+@media (min-width: 30rem) {
+  .status-donut {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    justify-items: stretch;
+  }
+}
+
+.status-donut__svg {
+  display: block;
+  width: 10rem;
+  height: 10rem;
+}
+
+@media (min-width: 48rem) {
+  .status-donut__svg {
+    width: 11.5rem;
+    height: 11.5rem;
+  }
+}
+
+.status-donut__track,
+.status-donut__segment {
+  fill: none;
+  stroke-width: 6;
+}
+
+.status-donut__track {
+  stroke: var(--color-bg);
+}
+
+.status-donut__segment--moving {
+  stroke: var(--color-teal);
+}
+
+.status-donut__segment--stopped {
+  stroke: var(--color-neutral);
+}
+
+.status-donut__segment--no_signal {
+  stroke: var(--color-danger);
+}
+
+/* SVG text sizes are in viewBox units (42 x 42) */
+.status-donut__value {
+  font-size: 9px;
+  font-weight: var(--weight-bold);
+  fill: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.status-donut__caption {
+  font-size: 3.6px;
+  fill: var(--color-text-secondary);
+}
+
+/* ---------- Driver coverage bars ---------- */
+.coverage-chart {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.coverage-chart__headline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+  color: var(--color-text);
+}
+
+.coverage-chart__headline-value {
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-tight);
+  color: var(--color-primary);
+}
+
+.coverage-chart__label-cell {
+  width: 100%;
+}
+
+.coverage-chart__bar {
+  display: block;
+  width: 100%;
+  height: 0.75rem;
+  margin-top: var(--space-2);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.coverage-chart__bar-track {
+  fill: var(--color-bg);
+}
+
+.coverage-chart__bar-value--with {
+  fill: var(--color-primary);
+}
+
+.coverage-chart__bar-value--without {
+  fill: var(--color-neutral);
+}

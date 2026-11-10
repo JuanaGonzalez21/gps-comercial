@@ -1,0 +1,43 @@
+[project]
+name = "gps-comercial-api"
+version = "0.1.0"
+description = "GPS Comercial API: fleet monitoring backend integrating Wialon"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "alembic>=1.20.1",
+    "argon2-cffi>=25.1.0",
+    "email-validator>=2.3.0",
+    "fastapi>=0.162.2",
+    "httpx2>=2.16.0",
+    "psycopg[binary]>=3.3.8",
+    "pydantic-settings>=2.16.2",
+    "pyjwt>=2.15.1",
+    "sqlalchemy>=2.1.8",
+    "uvicorn[standard]>=0.54.0",
+]
+
+[dependency-groups]
+dev = [
+    "pip-audit>=2.10.1",
+    "pytest>=9.2.0",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.17.4",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "S"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "S105", "S106"]
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI declares dependencies and parameters as default values by design.
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Query", "fastapi.Path", "fastapi.Body"]

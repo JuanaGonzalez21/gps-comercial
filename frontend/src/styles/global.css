@@ -1,0 +1,151 @@
+@import './tokens.css';
+
+/* Minimal reset */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  color: var(--color-text);
+  background: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4,
+p,
+figure,
+blockquote,
+dl,
+dd {
+  margin: 0;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  line-height: var(--leading-tight);
+  font-weight: var(--weight-bold);
+}
+
+/* :where() keeps specificity at 0 so component classes can still set margins. */
+:where(ul[role='list'], ol[role='list']) {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+input,
+button,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+a {
+  color: var(--color-primary);
+  text-underline-offset: 0.15em;
+}
+
+a:hover {
+  color: var(--color-primary-hover);
+}
+
+table {
+  border-collapse: collapse;
+}
+
+/* The hidden attribute always wins over component display rules (list/map toggle). */
+[hidden] {
+  display: none !important;
+}
+
+/* Visible focus for keyboard users everywhere (UX-03) */
+:focus-visible {
+  outline: var(--focus-ring-width) solid var(--color-brand);
+  outline-offset: var(--focus-ring-offset);
+}
+
+/* Programmatic focus targets (main landmark, alerts) do not need a ring */
+[tabindex='-1']:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0 0 0 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+.skip-link {
+  position: absolute;
+  top: var(--space-2);
+  left: var(--space-2);
+  z-index: var(--z-banner);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-weight: var(--weight-semibold);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-200%);
+}
+
+.skip-link:focus {
+  transform: none;
+}
+
+/* Respect users who ask for less motion (UX-03 / UX-08) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Vertical rhythm utility for simple content blocks */
+.stack {
+  display: grid;
+  gap: var(--space-3);
+  justify-items: start;
+}

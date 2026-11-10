@@ -144,8 +144,9 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section id="funcionalidades" className="landing-section" aria-labelledby="funcionalidades-title">
-        <div className="landing-container landing-features">
+      <section className="landing-section" aria-labelledby="funcionalidades-title">
+        {/* Anchor on the content, not the section, so the link lands on the text instead of the top padding. */}
+        <div id="funcionalidades" className="landing-container landing-features">
           <div className="landing-features__intro" data-reveal="">
             <p className="landing-kicker">Funcionalidades</p>
             <h2 id="funcionalidades-title" className="landing-title">
@@ -188,8 +189,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section id="como-trabajamos" className="landing-section landing-section--dark" aria-labelledby="trabajo-title">
-        <div className="landing-container">
+      <section className="landing-section landing-section--dark" aria-labelledby="trabajo-title">
+        <div id="como-trabajamos" className="landing-container">
           <div className="landing-work__header" data-reveal="">
             <div>
               <p className="landing-kicker landing-kicker--on-dark">Cómo trabajamos</p>
@@ -216,17 +217,19 @@ export default function LandingPage() {
       </section>
 
       <section id="control-de-tu-flota" className="landing-control" aria-labelledby="control-title">
-        <img
-          className="landing-control__photo"
-          src={conductor}
-          srcSet={`${conductor600} 600w, ${conductor} 1024w`}
-          sizes="(min-width: 56rem) 50vw, 100vw"
-          width={1024}
-          height={1536}
-          alt="Fotografía ilustrativa: una coordinadora y un conductor revisan una tablet junto a una furgoneta"
-          loading="lazy"
-          decoding="async"
-        />
+        <div className="landing-control__media">
+          <img
+            className="landing-control__photo"
+            src={conductor}
+            srcSet={`${conductor600} 600w, ${conductor} 1024w`}
+            sizes="(min-width: 56rem) 50vw, 100vw"
+            width={1024}
+            height={1536}
+            alt="Fotografía ilustrativa: una coordinadora y un conductor revisan una tablet junto a una furgoneta"
+            loading="lazy"
+            decoding="async"
+          />
+        </div>
         <div className="landing-control__content" data-reveal="">
           <p className="landing-kicker">Control de tu flota</p>
           <h2 id="control-title" className="landing-title">

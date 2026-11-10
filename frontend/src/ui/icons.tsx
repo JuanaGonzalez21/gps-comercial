@@ -253,3 +253,58 @@ export const PinIcon = (props: IconProps) => (
     <circle cx="12" cy="9" r="2.8" fill="#ffffff" />
   </Svg>
 )
+
+export const DownloadIcon = (props: IconProps) => (
+  <Svg {...props}>
+    <path d="M12 4v11M7 10l5 5 5-5M5 20h14" />
+  </Svg>
+)
+
+export const PlusIcon = (props: IconProps) => (
+  <Svg {...props}>
+    <path d="M12 5v14M5 12h14" />
+  </Svg>
+)
+
+export const EditIcon = (props: IconProps) => (
+  <Svg {...props}>
+    <path d="M4 20h4L19 9l-4-4L4 16v4zM14 6l4 4" />
+  </Svg>
+)
+
+export const TrashIcon = (props: IconProps) => (
+  <Svg {...props}>
+    <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6" />
+  </Svg>
+)
+
+export const PlayIcon = (props: IconProps) => (
+  <Svg {...props}>
+    <path d="M7 4l13 8-13 8V4z" fill="currentColor" />
+  </Svg>
+)
+
+export const PauseIcon = (props: IconProps) => (
+  <Svg {...props}>
+    <path d="M7 4h3v16H7zM14 4h3v16h-3z" fill="currentColor" />
+  </Svg>
+)
+
+export const LinkIcon = (props: IconProps) => (
+  <Svg {...props}>
+    <path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" />
+  </Svg>
+)
+
+export const UnlinkIcon = (props: IconProps) => (
+  <Svg {...props}>
+    <path d="M15 9l3-3M6 18l3-3M14 4l1 2M4 14l2 1M18 10l2 1M10 20l1-2M9 9l6 6" />
+  </Svg>
+)
+
+export const KeyIcon = (props: IconProps) => (
+  <Svg {...props}>
+    <circle cx="8" cy="15" r="4" />
+    <path d="M11 12l9-9M17 6l3 3M14 9l2 2" />
+  </Svg>
+)

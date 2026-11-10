@@ -21,6 +21,8 @@ export interface ApiRequestOptions {
   /** Serialised as JSON. */
   body?: unknown
   signal?: AbortSignal
+  /** 'response' returns the raw Response (file downloads such as CSV); default parses JSON. */
+  responseType?: 'json' | 'response'
 }
 
 export const CSRF_COOKIE = 'gc_csrf'
@@ -93,7 +95,7 @@ export function hasSessionCookie(): boolean {
 export async function apiFetch<T>(path: string, options: ApiRequestOptions = {}): Promise<T> {
   const method = options.method ?? 'GET'
   const response = await send(path, method, options)
-  if (response.ok) return readBody<T>(response, method)
+  if (response.ok) return readBody<T>(response, method, options.responseType)
 
   const error = await toApiError(response)
   if (error.status === 401 && error.code === 'not_authenticated' && !NO_REFRESH_PATHS.has(path)) {
@@ -117,7 +119,7 @@ async function retryAfterRefresh<T>(
   // Repeating once is safe even for writes: a 401 means the server rejected the request
   // before running it.
   const response = await send(path, method, options)
-  if (response.ok) return readBody<T>(response, method)
+  if (response.ok) return readBody<T>(response, method, options.responseType)
   const error = await toApiError(response)
   if (error.status === 401) emitAuthEvent({ type: 'session_expired' })
   throw reportAuthError(error)
@@ -197,7 +199,10 @@ async function send(path: string, method: HttpMethod, options: ApiRequestOptions
   try {
     for (;;) {
       const attempt = await attemptFetch(url, buildInit(method, options))
-      if (attempt.kind === 'response' && !(await isColdStartResponse(attempt.response, method))) {
+      const answered =
+        attempt.kind === 'response' &&
+        !(await isColdStartResponse(attempt.response, method, options.responseType))
+      if (answered) {
         markBackendAnswered()
         return attempt.response
       }
@@ -239,9 +244,15 @@ async function attemptFetch(url: string, init: RequestInit): Promise<Attempt> {
   }
 }
 
-async function isColdStartResponse(response: Response, method: HttpMethod): Promise<boolean> {
+async function isColdStartResponse(
+  response: Response,
+  method: HttpMethod,
+  responseType: ApiRequestOptions['responseType'] = 'json',
+): Promise<boolean> {
   const { status } = response
   if (status >= 400 && status < 500) return false // a definitive answer
+  // A file download is non-JSON by design; only an HTML host page means the backend is booting.
+  if (responseType === 'response' && response.ok) return isHtml(response)
   if (method === 'HEAD' || status === 204) return status >= 500 // no body to inspect
   // A non-JSON answer is a proxy or host page shown while the backend boots.
   if (!isJson(response)) return true
@@ -251,7 +262,8 @@ async function isColdStartResponse(response: Response, method: HttpMethod): Prom
 }
 
 function buildInit(method: HttpMethod, options: ApiRequestOptions): RequestInit {
-  const headers = new Headers({ Accept: 'application/json, application/problem+json' })
+  const accept = options.responseType === 'response' ? 'text/csv, application/problem+json' : 'application/json, application/problem+json'
+  const headers = new Headers({ Accept: accept })
   let body: string | undefined
   if (options.body !== undefined) {
     headers.set('Content-Type', 'application/json')
@@ -279,7 +291,16 @@ function buildUrl(path: string, query?: object): string {
   return search ? `${base}?${search}` : base
 }
 
-async function readBody<T>(response: Response, method: HttpMethod): Promise<T> {
+function isHtml(response: Response): boolean {
+  return (response.headers.get('content-type') ?? '').toLowerCase().includes('text/html')
+}
+
+async function readBody<T>(
+  response: Response,
+  method: HttpMethod,
+  responseType: ApiRequestOptions['responseType'] = 'json',
+): Promise<T> {
+  if (responseType === 'response') return response as T
   if (response.status === 204 || method === 'HEAD') return undefined as T
   if (!isJson(response)) throw clientError('invalid_response', response.status)
   try {

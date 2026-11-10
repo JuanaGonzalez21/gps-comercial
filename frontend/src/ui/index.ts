@@ -11,6 +11,7 @@ export {
   type SelectOption,
   type TextFieldProps,
 } from './Field'
+export { ConfirmDialog, Dialog } from './Dialog'
 export * from './icons'
 export { Pagination } from './Pagination'
 export { Skeleton } from './Skeleton'

@@ -70,22 +70,27 @@ def seed_admin(settings: Settings, *, reset_password: bool = False) -> int:
                     details={"source": "seed-admin", "role": "admin"},
                 )
                 message = f"Administrador creado: {email}"
+            elif not reset_password:
+                # Restarts must not undo what admins changed later (role, active state).
+                print(f"El administrador ya existe: {email} (sin cambios)")
+                return 0
             else:
                 user.role = role
                 user.is_active = True
-                if reset_password:
-                    user.password_hash = passwords.hash_password(password)
-                    user.password_changed_at = now
-                    user.failed_login_attempts = 0
-                    user.locked_until = None
+                user.password_hash = passwords.hash_password(password)
+                user.password_changed_at = now
+                user.failed_login_attempts = 0
+                user.locked_until = None
                 AuditService(db).record(
                     "user.updated",
                     entity_type="user",
                     entity_id=str(user.id),
                     actor_email="seed-admin",
-                    details={"source": "seed-admin", "password_reset": reset_password},
+                    details={"source": "seed-admin", "credential_reset": True},
                 )
-                message = f"El administrador ya existía: {email} (rol admin y activo garantizados)"
+                message = (
+                    f"Administrador restablecido: {email} (rol admin, activo y nueva contraseña)"
+                )
             db.commit()
     finally:
         engine.dispose()

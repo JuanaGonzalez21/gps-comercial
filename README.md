@@ -12,31 +12,57 @@ Prueba técnica Fullstack para GPS Control. Backend en **FastAPI (Python 3.13)**
 El estado verificado de cada requisito, con evidencia, está en [docs/checklist.md](docs/checklist.md). El relevo de trabajo está en [docs/estado.md](docs/estado.md).
 
 ## 1. Capturas
-Capturas reales tomadas por las pruebas end-to-end (Playwright con Chrome) contra la cuenta Wialon `demoApps`:
+Capturas reales con datos de la cuenta Wialon `demoApps`, tomadas con Playwright y Chrome. Por privacidad, los nombres o
+IMEI de los vehículos, los conductores y el mapa del recorrido aparecen **enmascarados** en magenta. El mapa general se
+muestra a escala de país.
 
-| Landing | Vehículos: lista y mapa con clustering | Selección sincronizada |
+| Landing | Dashboard | Vehículos: lista y mapa con clustering |
 |---|---|---|
-| ![Landing](docs/screenshots/landing.png) | ![Vehículos](docs/screenshots/vehiculos-mapa.png) | ![Selección](docs/screenshots/seleccion-sincronizada.png) |
+| ![Landing](docs/screenshots/landing.png) | ![Dashboard](docs/screenshots/dashboard.png) | ![Vehículos](docs/screenshots/vehiculos-mapa.png) |
 
-| Dashboard | Historial con reproducción | Móvil 360 px |
+| Historial con reproducción y velocidad | Móvil 360 px: landing | Móvil 360 px: dashboard |
 |---|---|---|
-| ![Dashboard](docs/screenshots/dashboard.png) | ![Historial](docs/screenshots/historial.png) | ![Móvil](docs/screenshots/movil-360.png) |
+| ![Historial](docs/screenshots/historial.png) | ![Landing móvil](docs/screenshots/landing-movil.png) | ![Dashboard móvil](docs/screenshots/dashboard-movil.png) |
 
-| Campos personalizados | Visualizador (solo lectura) | Lighthouse móvil de la landing |
-|---|---|---|
-| ![Campos](docs/screenshots/campos-personalizados.png) | ![Visualizador](docs/screenshots/visualizador.png) | ![Lighthouse](docs/screenshots/lighthouse-landing-movil.png) |
+**Lighthouse móvil** sobre la URL de producción `https://gpscomercial.juanagonzalez.dev` (2026-11-10, dos ejecuciones con el
+mismo resultado):
 
-Lighthouse móvil sobre el build de producción servido en local (`vite preview`): **Rendimiento 98, Accesibilidad 100,
-Buenas prácticas 100**, SEO 91 (LCP 2,1 s, TBT 50 ms, CLS 0). Se repetirá sobre la URL desplegada.
+| Rendimiento | Accesibilidad | Buenas prácticas | SEO | LCP | TBT | CLS |
+|---|---|---|---|---|---|---|
+| **99** | **100** | **100** | 100 | 1,7 s | 20 ms | 0 |
+
+![Lighthouse producción](docs/screenshots/lighthouse-produccion-movil.png)
 
 ## 2. Enlaces
 | Recurso | URL |
 |---|---|
-| Aplicación (frontend) | *pendiente de despliegue* (`https://gpscomercial.juanagonzalez.dev`) |
-| API | https://gps-comercial-ygq0.onrender.com (Render Free; `/health`) |
+| Aplicación (frontend) | https://gpscomercial.juanagonzalez.dev (alternativa: https://gps-comercial.vercel.app) |
+| API | https://gps-comercial-ygq0.onrender.com (`/health`) |
 | Swagger / OpenAPI | https://gps-comercial-ygq0.onrender.com/docs y `/openapi.json` |
+| Repositorio | https://github.com/JuanaGonzalez21/gps-comercial |
 
-El procedimiento de despliegue está en [docs/deploy-guide.md](docs/deploy-guide.md).
+**Despliegue:**
+
+| Pieza | Servicio |
+|---|---|
+| Frontend | Vercel Hobby |
+| API | Render Free (Docker, región Virginia) |
+| Base de datos | Neon Free (PostgreSQL, AWS us-east-1) |
+
+- Ninguno de los tres planes requiere tarjeta ni caduca.
+- Procedimiento completo en [docs/deploy-guide.md](docs/deploy-guide.md).
+- Las credenciales de Administrador se entregan por correo privado, nunca en el repositorio.
+
+**Comprobado en producción (2026-11-10):**
+- HTTPS con HSTS y cabeceras de seguridad (CSP, `nosniff`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`) en los dos dominios del frontend y en la API.
+- Vercel reenvía `/api/*` y `/health` a Render sin caché (`x-vercel-cache: MISS`, `Cache-Control: no-store`).
+- Las rutas directas (`/app/vehicles`, `/login`) cargan la aplicación y los recursos estáticos se sirven tal cual.
+- CORS y CSRF: un `POST` con `Origin` ajeno → 403 `csrf_failed`, porque Vercel reenvía el `Origin`. Sin sesión → 401.
+- Neon conectado: migraciones aplicadas al arrancar y Admin creado desde las variables de Render.
+- La autora confirmó en el navegador el login, la consulta de flota y la edición.
+- Lighthouse móvil: 99/100/100/100.
+- Arranque tras inactividad: el aviso "Iniciando el servidor" y los reintentos están probados en local. La medición en producción del 2026-11-10 encontró el servicio ya activo (`/health` en 1,0 s), así que no se observó un arranque en frío real; se comprueba abriendo la web tras 15 min sin uso.
+- Prueba autenticada de solo lectura `e2e/production.spec.ts` (cookies `HttpOnly`/`Secure`/`SameSite=Lax`, CSRF, refresh, datos reales, rutas directas, logout y, opcionalmente, rol Visualizador): la ejecuta la autora con sus credenciales en su terminal.
 
 ## 3. Ejecutar en local
 Requisitos:
@@ -72,6 +98,10 @@ cd backend  && uv run pytest && uv run ruff check . && uv run pip-audit   # cobe
 cd frontend && npm run build && npm run lint && npm test && npm audit
 cd frontend && npx playwright test   # e2e reales: requiere backend + Vite y E2E_EMAIL/E2E_PASSWORD
 ```
+Pruebas bajo demanda contra producción (sin escrituras):
+- `E2E_PRODUCTION=1 E2E_BASE_URL=https://gpscomercial.juanagonzalez.dev npx playwright test e2e/production.spec.ts`
+- `E2E_COLDSTART=1 E2E_BASE_URL=… npx playwright test e2e/coldstart.spec.ts`, después de 15 min sin tráfico.
+- `E2E_SCREENSHOTS=1 npx playwright test e2e/screenshots.spec.ts` regenera las capturas enmascaradas del README.
 
 Scripts contra Wialon real (necesitan `WIALON_TOKEN` en `backend/.env`):
 - `uv run python scripts/wialon_probe.py`: solo lectura. Imprime conteos, claves JSON y permisos, nunca secretos.
@@ -270,8 +300,12 @@ La IA intervino en:
 Los commits hechos con IA llevan la línea `Co-Authored-By: Claude`. La autora revisa el código para poder explicarlo en la defensa técnica.
 
 ## 11. Limitaciones conocidas y mejoras futuras
-- **Despliegue:** pendiente; requiere las cuentas de la autora en Neon, Render y Vercel, y el registro DNS del subdominio. Hasta entonces no hay URLs públicas ni Lighthouse sobre producción.
-- **Arranque en frío:** el plan gratuito de Render duerme tras 15 min. La primera petición tarda alrededor de 1 minuto y la UI muestra "Iniciando el servidor".
+- **Arranque en frío:** el plan gratuito de Render duerme tras 15 min sin tráfico. La primera petición tarda alrededor de 1 minuto y la UI muestra "Iniciando el servidor"; las lecturas se reintentan solas.
+- **Cuotas de los planes gratuitos** (consultadas el 2026-11-09/10):
+  - Render: 750 h/mes de instancia, más que un mes completo encendida.
+  - Neon: 100 CU-h por proyecto al mes; el compute se suspende tras 5 min y se reanuda en milisegundos.
+  - Vercel Hobby: uso personal no comercial, 100 GB de transferencia al mes.
+  - Las tres cubren con margen la disponibilidad exigida de 15 días.
 - **Límite de intentos por IP:** vive en memoria del proceso; basta con una instancia. El bloqueo por cuenta está en la base de datos.
 - **Cuenta demo compartida:** otros usuarios pueden modificar datos de Wialon a la vez. La caché de 15 s se invalida en cada escritura y el conflicto de edición de campos se detecta (409).
 - **Historial:** el máximo es de 7 días por consulta y 20.000 mensajes. Si hay más, se avisa de que el resultado está truncado.

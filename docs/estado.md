@@ -1,8 +1,46 @@
 # Estado actual y relevo
-Snapshot: 2026-11-09 21:15 America/Bogota. Verificar siempre Git, archivos y procesos antes de continuar.
+Snapshot: 2026-11-09 23:40 America/Bogota. Verificar siempre Git, archivos y procesos antes de continuar.
 
 ## Alcance vigente
-Desarrollo local autónomo autorizado (ver CLAUDE.md). Commits locales en `chore/bootstrap-base`, sin push ni despliegue.
+Aplicación desplegada (Vercel + Render + Neon). Push, PR y fusión a `main` autorizados por Juana; sin force push.
+
+## Relevo de producción — 2026-11-09 23:40 America/Bogota
+| Pieza | URL / estado |
+|---|---|
+| Frontend | https://gpscomercial.juanagonzalez.dev (alternativa https://gps-comercial.vercel.app), Vercel Hobby |
+| API | https://gps-comercial-ygq0.onrender.com (Render Free, Docker, Virginia) |
+| Base de datos | Neon Free, proyecto `gps-comercial`, rama `production`, AWS us-east-1 |
+| Código | `main` en GitHub; PR #1 y #2 fusionados con merge commit; PR #3 con la documentación de entrega |
+
+### Comprobado en producción
+- HTTPS y cabeceras en ambos dominios y en la API.
+- El proxy de Vercel envía `/api` y `/health` a Render sin caché.
+- Las rutas directas cargan la aplicación.
+- CORS y CSRF: un `Origin` ajeno recibe 403 (Vercel reenvía `Origin`).
+- Neon conectado; migraciones y Admin aplicados al arrancar.
+- Lighthouse móvil 99/100/100/100.
+- Arranque tras inactividad: no observado (medición a las 04:31 UTC tras 18 min sin tráfico propio: el servicio ya estaba activo (/health en 1,0 s, sin aviso), probablemente por el redespliegue y el login de comprobación; arranque en frío real aún no observado).
+- Comprobado por Juana en el navegador: login, flota real y edición.
+
+### Pendiente de producción (requiere a Juana)
+- Ejecutar `e2e/production.spec.ts` con sus credenciales en su terminal: cookies, CSRF autenticado, refresh, logout y rol opcional.
+- Confirmar el login tras retirar `ADMIN_PASSWORD` en Render.
+- Fijar el compute de Neon en 0,25 CU para cuidar las 100 CU-h/mes.
+
+### Incidente de credenciales (captura del `.env` local, 2026-11-09)
+- Rotado por Claude:
+  - `JWT_SECRET` y `ADMIN_PASSWORD` locales, con nuevos valores en `backend/.env`;
+  - `seed-admin --reset-password` en la SQLite local;
+  - login local verificado.
+- No afectados:
+  - `DATABASE_URL` local, que es SQLite;
+  - Neon y el `JWT_SECRET` de Render, que no estaban en el `.env` local, salvo que se hubieran copiado.
+- Pendiente (Juana): renovar `WIALON_TOKEN` con quien lo emitió y actualizarlo en `backend/.env` y en Render.
+  Mientras tanto el token expuesto sigue activo.
+
+### Siguiente paso
+Enviar el correo de entrega desde el borrador privado `.local-context/correo-entrega-borrador.md`, sustituyendo los
+marcadores por el Admin de producción, sin incluirlo nunca en Git.
 
 ## Relevo final del desarrollo local — 2026-11-09 21:15 America/Bogota
 Rama `chore/bootstrap-base`, 61 commits locales sobre `origin/main`, árbol limpio, **sin push ni despliegue**.

@@ -12,23 +12,26 @@ Prueba técnica Fullstack para GPS Control. Backend en **FastAPI (Python 3.13)**
 El estado verificado de cada requisito, con evidencia, está en [docs/checklist.md](docs/checklist.md). El relevo de trabajo está en [docs/estado.md](docs/estado.md).
 
 ## 1. Capturas
-Capturas reales tomadas con Playwright y Chrome. Las de la landing muestran la aplicación con datos simulados; las demás usan la cuenta Wialon `demoApps`. Por privacidad, los nombres o
-IMEI de los vehículos, los conductores y el mapa del recorrido aparecen **enmascarados** en magenta. El mapa general se
-muestra a escala de país.
+Capturas reales de la aplicación tomadas con Playwright y Chrome sobre la cuenta Wialon `demoApps`. Por privacidad, los
+nombres o IMEI de los vehículos, los conductores y el mapa del recorrido aparecen **enmascarados** en magenta. El mapa
+general se muestra a escala de país.
 
-| Landing | Dashboard | Vehículos: lista y mapa con clustering |
-|---|---|---|
-| ![Landing](docs/screenshots/landing.png) | ![Dashboard](docs/screenshots/dashboard.png) | ![Vehículos](docs/screenshots/vehiculos-mapa.png) |
+La landing pública se consulta directamente en https://gpscomercial.juanagonzalez.dev. Su diseño final, basado en Claude
+Design (PR #9 y #10, 2026-11-10), está descrito en [docs/design-system.md](docs/design-system.md).
 
-| Login | Historial con reproducción y velocidad | Móvil 360 px: landing |
-|---|---|---|
-| ![Login](docs/screenshots/login.png) | ![Historial](docs/screenshots/historial.png) | ![Landing móvil](docs/screenshots/landing-movil.png) |
+| Dashboard | Vehículos: lista y mapa con clustering |
+|---|---|
+| ![Dashboard](docs/screenshots/dashboard.png) | ![Vehículos](docs/screenshots/vehiculos-mapa.png) |
 
-> Las capturas de la landing y la tabla de Lighthouse corresponden a la **versión anterior de la landing**. El rediseño
-> publicado el 2026-11-10 (PR #7) todavía no se ha medido con Lighthouse; estas cifras no son resultados del diseño actual.
+| Historial con reproducción y velocidad | Login |
+|---|---|
+| ![Historial](docs/screenshots/historial.png) | ![Login](docs/screenshots/login.png) |
 
-**Lighthouse móvil** sobre la URL de producción `https://gpscomercial.juanagonzalez.dev`, landing anterior al PR #7
-(2026-11-10 12:42 UTC, dos ejecuciones):
+> La tabla de Lighthouse corresponde a una **versión anterior de la landing**. El diseño actual (PR #9 y #10) todavía no
+> se ha medido con Lighthouse; estas cifras no son resultados del diseño actual.
+
+**Lighthouse móvil** sobre la URL de producción `https://gpscomercial.juanagonzalez.dev`, landing anterior a los
+rediseños del 2026-11-10 (2026-11-10 12:42 UTC, dos ejecuciones):
 
 | Ejecución | Rendimiento | Accesibilidad | Buenas prácticas | SEO | LCP | TBT | CLS |
 |---|---|---|---|---|---|---|---|

@@ -1,19 +1,38 @@
 # Estado actual y relevo
-Snapshot: 2026-11-10 08:55 America/Bogota. Verificar siempre Git, archivos y procesos antes de continuar.
+Snapshot: 2026-11-10 09:35 America/Bogota. Verificar siempre Git, archivos y procesos antes de continuar.
 
-## Relevo — 2026-11-10 08:55 America/Bogota
-- **Landing rediseñada y publicada:** PR #7, merge `6274689`.
-  - Comprobado en https://gpscomercial.juanagonzalez.dev a las 08:51: landing, login y `/health` con 200; sin desbordamiento ni errores de consola a 1440, 768 y 360 px; menú móvil funcional.
-- **Cambios estéticos en pausa:** por decisión de Juana, hasta que entregue la nueva propuesta de Claude Design. Se conserva lo publicado.
-- **Lighthouse de la landing actual: sin medir.** Las cifras del README (98/97 y 99) corresponden a versiones anteriores de la landing, no al diseño del PR #7. UX-07 queda EN CURSO hasta remedir.
-- **Dashboard/login:** el chat paralelo trabaja en el worktree `../gps-comercial-panel`, rama `style/panel-login-visual`, con alcance exclusivamente visual. Al recibir sus hashes:
-  - revisar que solo toque estilos;
-  - integrarlo en un PR separado;
-  - verificar el despliegue, el login y la navegación.
+## Relevo — 2026-11-10 09:35 America/Bogota
+- **Landing cerrada por Juana:** se queda como está. Diseño basado en Claude Design.
+  - PR #9 (merge `7e61cb3`) adoptó el diseño.
+  - PR #10 (merge `18ffe96`) aplicó tres ajustes pedidos por Juana:
+    - la imagen del hero vuelve a la composición anterior, sin etiqueta;
+    - en «Funcionalidades» las columnas tienen la misma altura;
+    - animación única de aparición al hacer scroll, respetando «reducir movimiento».
+  - Comprobado en https://gpscomercial.juanagonzalez.dev a las 09:28:
+    - landing, login y `/health` con 200;
+    - sin desbordamiento ni errores de consola a 1440, 768 y 360 px;
+    - menú móvil funcional y animación sin contenido oculto tras el scroll;
+    - sin sesión, el botón del hero lleva al login y `/app/dashboard` redirige a `/login`.
+  - No hay más cambios estéticos previstos en la landing.
+- **README:** se retiraron las capturas de la landing (Juana las veía muy cargadas) y se borraron los archivos `docs/screenshots/landing*.png`. `e2e/screenshots.spec.ts` ya no las genera. Las capturas del panel no cambian.
+- **Lighthouse de la landing actual: sin medir.** Las cifras del README corresponden a una versión anterior. UX-07 sigue EN CURSO hasta remedir.
+- **Dashboard/login: en curso en el chat paralelo.**
+  - Worktree `../gps-comercial-panel`, rama `style/panel-login-visual`, alcance exclusivamente visual.
+  - A las 09:35 tenía 8 commits, de `71aaee2` a `bd8dcc2`.
+    - Tocan `styles/panel-theme.css` (nuevo), `auth.css`, `dashboard.css`, `AppShell.tsx`, `ChangePasswordPage.tsx` (1 línea), `LoginPage.tsx` (64 líneas) y `docs/panel-theme.md`.
+    - No tocan ningún archivo de la landing.
+  - No integrar hasta que Juana entregue los hashes definitivos. Entonces:
+    - revisar que los cambios en `.tsx`, sobre todo el rediseño de `LoginPage.tsx`, sean solo visuales: mismo formulario, validación, errores, cambio de contraseña obligatorio y redirecciones;
+    - integrar en un PR separado;
+    - verificar el despliegue, el login y la navegación.
 - **Confirmado por Juana (2026-11-10):** el login en producción funciona después de retirar `ADMIN_PASSWORD` de Render.
 - **Sin confirmación todavía:**
   - renovación del `WIALON_TOKEN`;
   - envío del correo de entrega.
+- **Procesos locales:**
+  - Vite de la landing en el puerto 5175 (worktree `gps-comercial-landing`);
+  - backend local en el puerto 8000.
+  - Se pueden detener sin pérdida.
 
 ## Alcance vigente
 Aplicación desplegada (Vercel + Render + Neon). Push, PR y fusión a `main` autorizados por Juana; sin force push.

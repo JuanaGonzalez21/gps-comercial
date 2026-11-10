@@ -17,11 +17,7 @@ async function login(page: Page) {
 }
 
 test('capturas públicas con datos enmascarados', async ({ page }) => {
-  await page.goto('/')
-  await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
-  await page.screenshot({ path: `${out}/landing.png` })
-  await page.setViewportSize({ width: 360, height: 780 })
-  await page.screenshot({ path: `${out}/landing-movil.png`, fullPage: true })
+  // The README no longer shows the landing (it is visited at the public URL), so it is not captured here.
   await page.setViewportSize({ width: 1366, height: 860 })
 
   await login(page)

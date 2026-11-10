@@ -12,7 +12,7 @@ Prueba técnica Fullstack para GPS Control. Backend en **FastAPI (Python 3.13)**
 El estado verificado de cada requisito, con evidencia, está en [docs/checklist.md](docs/checklist.md). El relevo de trabajo está en [docs/estado.md](docs/estado.md).
 
 ## 1. Capturas
-Capturas reales con datos de la cuenta Wialon `demoApps`, tomadas con Playwright y Chrome. Por privacidad, los nombres o
+Capturas reales tomadas con Playwright y Chrome. Las de la landing muestran la aplicación con datos simulados; las demás usan la cuenta Wialon `demoApps`. Por privacidad, los nombres o
 IMEI de los vehículos, los conductores y el mapa del recorrido aparecen **enmascarados** en magenta. El mapa general se
 muestra a escala de país.
 
@@ -20,9 +20,9 @@ muestra a escala de país.
 |---|---|---|
 | ![Landing](docs/screenshots/landing.png) | ![Dashboard](docs/screenshots/dashboard.png) | ![Vehículos](docs/screenshots/vehiculos-mapa.png) |
 
-| Historial con reproducción y velocidad | Móvil 360 px: landing | Móvil 360 px: dashboard |
+| Login | Historial con reproducción y velocidad | Móvil 360 px: landing |
 |---|---|---|
-| ![Historial](docs/screenshots/historial.png) | ![Landing móvil](docs/screenshots/landing-movil.png) | ![Dashboard móvil](docs/screenshots/dashboard-movil.png) |
+| ![Login](docs/screenshots/login.png) | ![Historial](docs/screenshots/historial.png) | ![Landing móvil](docs/screenshots/landing-movil.png) |
 
 **Lighthouse móvil** sobre la URL de producción `https://gpscomercial.juanagonzalez.dev` (2026-11-10, dos ejecuciones con el
 mismo resultado):

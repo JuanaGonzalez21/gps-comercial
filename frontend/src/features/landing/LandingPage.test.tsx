@@ -44,30 +44,27 @@ describe('LandingPage', () => {
     renderLanding('anonymous')
 
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
-    expect(screen.getByRole('heading', { level: 1, name: 'Tu flota, en tiempo real y bajo control' })).toBeInTheDocument()
-    // Hero, value proposition, features, how it works, call to action (+ footer below).
-    expect(screen.getByRole('region', { name: 'Tu flota, en tiempo real y bajo control' })).toBeInTheDocument()
-    expect(screen.getByRole('region', { name: 'Toda la operación de tu flota en un solo lugar' })).toBeInTheDocument()
-    const features = screen.getByRole('region', { name: 'Módulos pensados para el día a día' })
-    expect(screen.getByRole('region', { name: 'De Wialon a tu pantalla en cuatro pasos' })).toBeInTheDocument()
-    expect(screen.getByRole('region', { name: '¿Listo para ver tu flota?' })).toBeInTheDocument()
+    const title = 'Tu flota, clara. Tu operación, bajo control.'
+    expect(screen.getByRole('heading', { level: 1, name: title })).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: title })).toBeInTheDocument()
+    const features = screen.getByRole('region', { name: 'Lo que resuelve en el día a día' })
+    for (const capability of ['Ubicación y estado de la flota', 'Conductores y pasajeros', 'Historial de recorridos']) {
+      expect(within(features).getByRole('heading', { level: 3, name: capability })).toBeInTheDocument()
+    }
+    expect(screen.getByRole('region', { name: 'De la lista al mapa en un clic' })).toBeInTheDocument()
+    const trust = screen.getByRole('region', { name: 'Cada acceso, con su rol y su registro' })
+    expect(within(trust).getAllByRole('heading', { level: 3 })).toHaveLength(4)
+    expect(screen.getByRole('region', { name: 'Entra a tu panel de flota' })).toBeInTheDocument()
     expect(screen.getByRole('contentinfo')).toBeInTheDocument()
     expect(screen.getByRole('main')).toBeInTheDocument()
-
-    for (const module of [
-      'Mapa en vivo',
-      'Conductores y pasajeros',
-      'Historial y reproducción',
-      'Panel de indicadores',
-      'Exportación CSV',
-      'Auditoría y roles',
-    ]) {
-      expect(within(features).getByRole('heading', { level: 3, name: module })).toBeInTheDocument()
+    // Every product image declares its size (no layout shift) and says the data is simulated.
+    for (const image of screen.getAllByRole('img')) {
+      if (image.tagName !== 'IMG') continue
+      expect(image).toHaveAttribute('width')
+      expect(image).toHaveAttribute('height')
     }
-    const steps = within(screen.getByRole('region', { name: 'De Wialon a tu pantalla en cuatro pasos' })).getAllByRole(
-      'listitem',
-    )
-    expect(steps.length).toBeGreaterThanOrEqual(4)
+    expect(screen.getAllByText(/datos simulados/i).length).toBeGreaterThan(0)
+    expect(screen.getByRole('link', { name: 'Explorar funcionalidades' })).toHaveAttribute('href', '#funcionalidades')
   })
 
   it('offers login (and no public sign-up) to anonymous visitors and wakes the backend', async () => {
@@ -81,7 +78,7 @@ describe('LandingPage', () => {
     expect(screen.queryByRole('link', { name: /registr|crear cuenta/i })).not.toBeInTheDocument()
     expect(calls.some((call) => call.url === '/health')).toBe(true)
 
-    const hero = screen.getByRole('region', { name: 'Tu flota, en tiempo real y bajo control' })
+    const hero = screen.getByRole('region', { name: 'Tu flota, clara. Tu operación, bajo control.' })
     await user.click(within(hero).getByRole('link', { name: 'Iniciar sesión' }))
     expect(router.state.location.pathname).toBe('/login')
   })

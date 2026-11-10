@@ -84,7 +84,20 @@ export default function LoginPage() {
   const loggedOut = wasLoggedOut(location.state)
 
   return (
-    <main id="main" className="auth-page">
+    <main id="main" className="auth-page auth-page--split">
+      {/* Product context next to the form on wide screens; hidden on small ones to keep the form first. */}
+      <aside className="auth-aside" aria-label="Sobre GPS Comercial">
+        <Brand to="/" tone="dark" />
+        <div className="auth-aside__body">
+          <p className="auth-aside__title">Monitoreo de flotas sobre Wialon</p>
+          <ul className="auth-aside__facts" role="list">
+            <li>Ubicación y estado de cada vehículo</li>
+            <li>Conductores, pasajeros y asignaciones</li>
+            <li>Historial de recorridos con reproducción</li>
+          </ul>
+        </div>
+        <p className="auth-aside__note">Las horas se muestran en la zona horaria de Bogotá.</p>
+      </aside>
       <div className="auth-page__panel">
         <div className="auth-page__brand">
           <Brand to="/" />

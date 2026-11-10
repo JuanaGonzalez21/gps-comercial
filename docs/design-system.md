@@ -183,3 +183,31 @@ cuando la sesión principal lo decida.
   del hero), CLS 0, tiempo de bloqueo ≈ 225–256 ms. Es una referencia, no una puntuación: la captura de
   Lighthouse debe tomarse sobre la URL desplegada (con compresión) y adjuntarse al README.
 - Revisión con lector de pantalla real (NVDA/VoiceOver) y con un analizador automático (axe): no realizadas.
+
+## Pulido visual final (2026-11-10)
+Dirección: producto de flotas sobrio y preciso. La personalidad viene de la composición y la jerarquía, no de efectos.
+
+**Landing**
+- Superficies planas, sin gradientes ni ilustraciones abstractas:
+  - lavanda `--color-bg` en el hero y el cierre;
+  - blanco y `--color-surface-muted` en las secciones de contenido;
+  - banda oscura `--color-dark` (la misma superficie de la barra lateral de la app) en "Confianza y control".
+- Una sola retícula de 72 rem para cabecera, secciones y pie. En escritorio el hero usa 5/12 de texto y 7/12 de producto.
+- Vista de producto real:
+  - capturas de la aplicación tomadas con datos **simulados** (`FLEET_GATEWAY=fake`), indicadas en el pie de imagen;
+  - nada de nombres, IMEI, teléfonos, coordenadas ni recorridos reales;
+  - WebP con `width`/`height` declarados y versión de 720 px para móvil;
+  - la imagen del hero lleva `fetchpriority="high"`; el resto, carga diferida.
+- Funcionalidades en filas alternas separadas por líneas (no tarjetas idénticas), numeradas en turquesa oscuro con cifras tabulares.
+- Rojo de marca solo como marca corta junto a los antetítulos y en el logotipo. Las acciones usan `#176F75`.
+- En la banda oscura los iconos usan un tono claro de `#1E8C93` (`#7FD3D8`, 9,92:1) y el anillo de foco pasa a blanco.
+- Cabecera con navegación a secciones reales (oculta por debajo de 48 rem, donde el pie y el enlace del hero la cubren). Pie con marca, enlaces reales y atribución de OpenStreetMap. Sin formularios ni registro.
+
+**Login**
+- Fondo plano lavanda (se retiraron los gradientes radiales).
+- En escritorio, panel oscuro con la marca y tres capacidades reales. En móvil, solo el formulario.
+- La tarjeta del formulario tiene borde discreto y sombra ligera.
+- Etiquetas visibles, foco, carga y errores se mantienen del componente compartido.
+
+**Transversal**
+- Cifras tabulares en tablas e indicadores (`font-variant-numeric: tabular-nums`) para comparar velocidades, fechas y conteos.

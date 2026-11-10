@@ -1,6 +1,16 @@
 # Estado actual y relevo
 Snapshot: 2026-11-10 12:15 America/Bogota. Verificar siempre Git, archivos y procesos antes de continuar.
 
+## Relevo — 2026-11-10 14:10 America/Bogota
+- **PR #16 (merge `4d2e962`), publicado y comprobado:** Vercel sirve la misma compilación que la local, y Render acepta `sort=-created` en conductores, pasajeros y sus CSV. Falta que Juana lo confirme en su iPhone.
+- **Rama `feat/vehicle-detail-assignments`:** en el detalle del vehículo, Admin y Operador pueden:
+  - asignar conductor (solo si el vehículo no tiene uno) o pasajero, buscándolo en un diálogo. No se ofrecen los que ya están en el vehículo, y si alguien viene de otro vehículo se avisa antes de guardar;
+  - desvincular el conductor o cada pasajero con el icono de desvincular y una confirmación.
+  - Sin cambios de backend: usa los endpoints de asignación existentes. El Visualizador no ve estas acciones.
+  - Pruebas:
+    - Vitest: 182 de 182; tsc y oxlint limpios;
+    - con datos simulados, a 390 y 1440 px: desvincular, asignar y mover un pasajero funcionan, sin desbordamiento ni errores de consola.
+
 ## Relevo — 2026-11-10 13:10 America/Bogota
 - **PR #15 (merge `5b2e3d1`), publicado:** arreglos de iPhone. El mapa ya no tapa la barra superior, el pellizco amplía solo el mapa y las fechas de Historial y Auditoría caben en su tarjeta. Pendiente de confirmar por Juana en su iPhone.
 - **Rama `feat/roster-newest-sort`:**

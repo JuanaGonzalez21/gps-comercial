@@ -48,6 +48,17 @@ class UserRepository:
         self._db.add(user)
         return user
 
+    def register_failed_login(self, user_id: uuid.UUID) -> int:
+        """Atomic increment (UPDATE ... RETURNING): parallel attempts cannot get lost."""
+        statement = (
+            update(User)
+            .where(User.id == user_id)
+            .values(failed_login_attempts=User.failed_login_attempts + 1)
+            .returning(User.failed_login_attempts)
+            .execution_options(synchronize_session=False)
+        )
+        return int(self._db.execute(statement).scalar_one())
+
     def search(
         self,
         *,

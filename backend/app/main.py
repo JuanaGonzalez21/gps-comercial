@@ -80,6 +80,8 @@ def create_app(
     app.state.login_limiter = SlidingWindowRateLimiter(
         settings.login_rate_limit_per_minute, window_seconds=60
     )
+    # Current-password guesses through change-password are bounded per user as well.
+    app.state.password_change_limiter = SlidingWindowRateLimiter(5, window_seconds=300)
 
     register_error_handlers(app)
 

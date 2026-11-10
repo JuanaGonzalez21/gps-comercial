@@ -2,6 +2,7 @@
 
 import secrets
 import string
+import threading
 
 from argon2 import PasswordHasher
 from argon2.exceptions import InvalidHashError, VerificationError, VerifyMismatchError
@@ -12,18 +13,24 @@ MIN_LENGTH = 12
 MAX_LENGTH = 128
 _SYMBOLS = "!#$%&*+-.:;=?@_~"
 
-_hasher = PasswordHasher()  # Argon2id with the library's recommended parameters.
+# Argon2id with OWASP's minimum profile (19 MiB, t=2, p=1): the library default uses 64 MiB per
+# hash, and a burst of logins would exceed the 512 MB of the free hosting instance.
+_hasher = PasswordHasher(time_cost=2, memory_cost=19_456, parallelism=1)
+# At most two hashes at a time: bounds memory and CPU under a login burst.
+_slots = threading.BoundedSemaphore(2)
 # Checked when the e-mail does not exist, so both paths cost the same (no user enumeration).
 _DUMMY_HASH = _hasher.hash(secrets.token_urlsafe(16))
 
 
 def hash_password(password: str) -> str:
-    return _hasher.hash(password)
+    with _slots:
+        return _hasher.hash(password)
 
 
 def verify_password(password_hash: str, password: str) -> bool:
     try:
-        return _hasher.verify(password_hash, password)
+        with _slots:
+            return _hasher.verify(password_hash, password)
     except (VerifyMismatchError, VerificationError, InvalidHashError):
         return False
 

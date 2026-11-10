@@ -3,6 +3,7 @@
 Tests replace any of these with `app.dependency_overrides` or by passing them to create_app.
 """
 
+import ipaddress
 import logging
 import secrets
 from collections.abc import Callable, Iterator
@@ -53,7 +54,13 @@ def get_db(request: Request) -> Iterator[Session]:
 
 
 def client_ip(request: Request) -> str | None:
-    return request.client.host if request.client else None
+    # Behind proxies the value comes from X-Forwarded-For: keep it only if it is a real IP
+    # (it is stored in VARCHAR(45) columns and used as a rate-limit key).
+    host = request.client.host if request.client else None
+    try:
+        return str(ipaddress.ip_address(host)) if host else None
+    except ValueError:
+        return None
 
 
 def get_fleet_gateway(request: Request) -> FleetGateway:
@@ -99,7 +106,10 @@ def get_principal(
     settings: Settings = Depends(get_settings),
 ) -> Principal:
     user, session = AuthService(db, settings).authenticate(request.cookies.get(ACCESS_COOKIE))
-    return Principal(user=user, session=session, permissions=user.permission_codes)
+    principal = Principal(user=user, session=session, permissions=user.permission_codes)
+    # End the read transaction now: a slow Wialon call must not hold a pooled DB connection.
+    db.commit()
+    return principal
 
 
 def get_active_principal(principal: Principal = Depends(get_principal)) -> Principal:

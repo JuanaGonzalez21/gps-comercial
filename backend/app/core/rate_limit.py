@@ -32,5 +32,7 @@ class SlidingWindowRateLimiter:
                 return max(1, math.ceil(self._window - (now - hits[0])))
             hits.append(now)
             if len(self._hits) > 10_000:  # bound memory under a flood of distinct keys
-                self._hits = {k: v for k, v in self._hits.items() if v}
+                self._hits = {
+                    k: v for k, v in self._hits.items() if v and now - v[-1] < self._window
+                }
             return None

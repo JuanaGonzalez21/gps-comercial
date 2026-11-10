@@ -114,12 +114,14 @@ def refresh(
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT, summary="Cerrar sesión")
 def logout(
     request: Request,
-    principal: Principal = Depends(get_principal),
     db: Session = Depends(get_db),
     settings: Settings = Depends(get_settings),
 ) -> Response:
+    # No get_principal here: an expired access cookie must not prevent revoking the session.
     AuthService(db, settings).logout(
-        principal.user, principal.session, ip_address=client_ip(request)
+        request.cookies.get(ACCESS_COOKIE),
+        request.cookies.get(REFRESH_COOKIE),
+        ip_address=client_ip(request),
     )
     response = Response(status_code=status.HTTP_204_NO_CONTENT)
     _clear_session_cookies(response, settings)
@@ -139,6 +141,12 @@ def change_password(
     db: Session = Depends(get_db),
     settings: Settings = Depends(get_settings),
 ) -> AuthResponse:
+    retry_after = request.app.state.password_change_limiter.hit(str(principal.user.id))
+    if retry_after is not None:
+        raise RateLimitedError(
+            "Demasiados intentos de cambio de contraseña. Espera unos minutos.",
+            retry_after_seconds=retry_after,
+        )
     # The principal was loaded with this same request-scoped DB session, so it can be updated here.
     AuthService(db, settings).change_password(
         principal.user,

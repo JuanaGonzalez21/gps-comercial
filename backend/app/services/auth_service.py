@@ -65,12 +65,14 @@ class AuthService:
             self._fail(normalized, None, "unknown_email", ip_address)
 
         if user.locked_until and user.locked_until > now:
+            passwords.burn_verification_time(password)  # same timing as a wrong password
             self._fail(normalized, user, "locked", ip_address)
 
         if not passwords.verify_password(user.password_hash, password):
-            user.failed_login_attempts += 1
+            attempts = self._users.register_failed_login(user.id)
+            user.failed_login_attempts = attempts
             reason = "wrong_password"
-            if user.failed_login_attempts >= self._settings.login_max_attempts:
+            if attempts >= self._settings.login_max_attempts:
                 user.locked_until = now + timedelta(minutes=self._settings.login_lockout_minutes)
                 user.failed_login_attempts = 0
                 reason = "wrong_password_account_locked"
@@ -197,13 +199,32 @@ class AuthService:
             raise AuthenticationError(SESSION_EXPIRED)
         return user, session
 
-    def logout(self, user: User, session: AuthSession, *, ip_address: str | None) -> None:
+    def logout(
+        self, access_token: str | None, refresh_token: str | None, *, ip_address: str | None
+    ) -> None:
+        """Revoke the session behind whichever cookie is still valid.
+
+        The access cookie lives 15 minutes; after that only the refresh cookie identifies the
+        session, and it must be revoked too or a reload would sign the user back in.
+        """
+        session: AuthSession | None
+        try:
+            _user, session = self.authenticate(access_token)
+        except AuthenticationError:
+            session = (
+                self._sessions.get_by_refresh_hash(tokens.hash_token(refresh_token))
+                if refresh_token
+                else None
+            )
+        if session is None or session.revoked_at is not None:
+            return
         session.revoked_at = self._clock()
+        user = self._users.get(session.user_id)
         self._audit.record(
             "auth.logout",
             actor=user,
             entity_type="user",
-            entity_id=str(user.id),
+            entity_id=str(session.user_id),
             ip_address=ip_address,
         )
         self._db.commit()

@@ -718,8 +718,44 @@
 
 .person__text {
   display: grid;
+  flex: 1 1 auto;
   gap: 0.125rem;
   min-width: 0;
+}
+
+/* "Desvincular" at the end of each person row (Admin and Operador only). On phones only its icon
+   shows, so names keep the width; the aria-label still says "Desvincular a …". */
+.person__action {
+  flex: none;
+  margin-left: auto;
+}
+
+@media (max-width: 35.99rem) {
+  .person__action {
+    min-width: 2.5rem;
+    padding-inline: 0.5rem;
+  }
+
+  .person__action > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+/* "Asignar conductor" / "Asignar pasajero" under the card content, like "Agregar campo". */
+.vehicle-detail__card-action {
+  justify-self: start;
+}
+
+/* Assign dialog: says before saving that the person moves from another vehicle. Always in the
+   DOM (empty takes no space) so the live region announces the text when it appears. */
+.assign-person__note {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
 }
 
 .person__name {

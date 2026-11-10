@@ -1,8 +1,9 @@
 """Vehicle contracts and their mapping from domain views (no Wialon JSON ever reaches here)."""
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.api.schemas.common import UtcDateTime
+from app.api.schemas.fields import CustomFieldKey, CustomFieldValue
 from app.domain.fleet import CustomField, Passenger, Position, VehicleStatus
 from app.services.vehicle_service import VehicleView
 
@@ -142,6 +143,22 @@ class VehicleMarkerOut(BaseModel):
 class VehiclePositionsOut(BaseModel):
     items: list[VehicleMarkerOut]
     generated_at: UtcDateTime
+
+
+class CustomFieldIn(BaseModel):
+    name: CustomFieldKey
+    value: CustomFieldValue
+
+
+class CustomFieldUpdateIn(CustomFieldIn):
+    expected_value: str | None = Field(
+        default=None,
+        max_length=255,
+        description=(
+            "Valor que el usuario vio al empezar a editar. Si Wialon ya tiene otro, "
+            "la API responde 409 en lugar de sobrescribir un cambio hecho en otro lugar."
+        ),
+    )
 
 
 class SystemInfoOut(BaseModel):

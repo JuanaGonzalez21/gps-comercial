@@ -24,12 +24,13 @@ muestra a escala de país.
 |---|---|---|
 | ![Login](docs/screenshots/login.png) | ![Historial](docs/screenshots/historial.png) | ![Landing móvil](docs/screenshots/landing-movil.png) |
 
-**Lighthouse móvil** sobre la URL de producción `https://gpscomercial.juanagonzalez.dev` (2026-11-10, dos ejecuciones con el
-mismo resultado):
+**Lighthouse móvil** sobre la URL de producción `https://gpscomercial.juanagonzalez.dev`, tras el pulido visual
+(2026-11-10 12:42 UTC, dos ejecuciones):
 
-| Rendimiento | Accesibilidad | Buenas prácticas | SEO | LCP | TBT | CLS |
-|---|---|---|---|---|---|---|
-| **99** | **100** | **100** | 100 | 1,7 s | 20 ms | 0 |
+| Ejecución | Rendimiento | Accesibilidad | Buenas prácticas | SEO | LCP | TBT | CLS |
+|---|---|---|---|---|---|---|---|
+| 1 | **98** | **100** | **100** | 100 | 2,0 s | 70 ms | 0 |
+| 2 | **97** | **100** | **100** | 100 | 2,0 s | 130 ms | 0 |
 
 ![Lighthouse producción](docs/screenshots/lighthouse-produccion-movil.png)
 

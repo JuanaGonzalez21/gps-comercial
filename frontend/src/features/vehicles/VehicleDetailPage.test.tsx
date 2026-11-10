@@ -3,7 +3,15 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
-import type { CustomField, CustomFieldInput, CustomFieldUpdateInput, Me, VehicleDetail } from '@/api/types'
+import type {
+  CustomField,
+  CustomFieldInput,
+  CustomFieldUpdateInput,
+  Me,
+  Page,
+  PassengerOut,
+  VehicleDetail,
+} from '@/api/types'
 import { AuthContext, type AuthContextValue } from '@/auth/useAuth'
 import { jsonResponse, makeUser, mockFetch, problemResponse, VIEWER_PERMISSIONS, type FetchCall } from '@/test/http'
 import { ToastProvider } from '@/ui'
@@ -222,12 +230,11 @@ describe('VehicleDetailPage', () => {
 
     const driver = screen.getByRole('region', { name: 'Conductor asignado' })
     expect(within(driver).getByText('Sin conductor asignado')).toBeInTheDocument()
-    expect(within(driver).getByRole('link', { name: 'Asignar un conductor desde Conductores' })).toHaveAttribute(
-      'href',
-      '/app/drivers',
-    )
+    // Assigning happens right here, without going to Conductores or Pasajeros.
+    expect(within(driver).getByRole('button', { name: 'Asignar conductor' })).toBeInTheDocument()
     const passengers = screen.getByRole('region', { name: 'Pasajeros asignados' })
     expect(within(passengers).getByText('Sin pasajeros asignados')).toBeInTheDocument()
+    expect(within(passengers).getByRole('button', { name: 'Asignar pasajero' })).toBeInTheDocument()
 
     const position = screen.getByRole('region', { name: 'Posición actual' })
     expect(within(position).getByText('Sin posición')).toBeInTheDocument()
@@ -281,6 +288,129 @@ describe('VehicleDetailPage', () => {
     expect(within(section).queryByRole('button')).not.toBeInTheDocument()
     expect(within(section).getByText(/Solo los roles Administrador y Operador pueden editarlos/)).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: /Asignar/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Asignar|Desvincular/ })).not.toBeInTheDocument()
+  })
+
+  describe('assignments from the vehicle (RF-09, RF-17)', () => {
+    const MARTA: PassengerOut = {
+      resource_id: 10,
+      id: 9,
+      name: 'Marta Gil',
+      code: 'P-9',
+      phone: null,
+      vehicle: { id: 3, name: 'Van 03' },
+      custom_fields: [],
+    }
+    const ANA_ON_THIS_VEHICLE: PassengerOut = {
+      resource_id: 10,
+      id: 7,
+      name: 'Ana Ruiz',
+      code: null,
+      phone: null,
+      vehicle: { id: 1, name: 'Camión 01' },
+      custom_fields: [],
+    }
+    const PASSENGER_PAGE: Page<PassengerOut> = {
+      items: [ANA_ON_THIS_VEHICLE, MARTA],
+      total: 2,
+      page: 1,
+      page_size: 100,
+      pages: 1,
+    }
+
+    it('unlinks the driver only after confirming, then says so', async () => {
+      const state: ServerState = { detail: FULL_DETAIL, fields: [] }
+      const { calls } = fakeApi(state, ({ method, url }) => {
+        if (method === 'DELETE' && url === '/api/v1/drivers/10/5/assignment') {
+          state.detail = { ...state.detail, driver: null }
+          return jsonResponse({ resource_id: 10, id: 5, name: 'Luz Gómez', code: null, phone: null, description: null, vehicle: null })
+        }
+        return undefined
+      })
+      renderDetail()
+      const user = userEvent.setup()
+      const driver = await screen.findByRole('region', { name: 'Conductor asignado' })
+
+      await user.click(within(driver).getByRole('button', { name: 'Desvincular a Luz Gómez' }))
+      const dialog = screen.getByRole('dialog', { name: '¿Desvincular a «Luz Gómez»?' })
+      expect(calls.some((call) => call.method === 'DELETE')).toBe(false)
+      await user.click(within(dialog).getByRole('button', { name: 'Desvincular' }))
+
+      expect(await screen.findByText('Conductor desvinculado')).toBeInTheDocument()
+      expect(await within(driver).findByText('Sin conductor asignado')).toBeInTheDocument()
+      expect(calls.filter((call) => call.method === 'DELETE').map((call) => call.url)).toEqual([
+        '/api/v1/drivers/10/5/assignment',
+      ])
+    })
+
+    it('unlinks one passenger after confirming', async () => {
+      const state: ServerState = { detail: FULL_DETAIL, fields: [] }
+      const { calls } = fakeApi(state, ({ method, url }) => {
+        if (method === 'DELETE' && url === '/api/v1/passengers/10/8/assignment') {
+          state.detail = { ...state.detail, passengers: state.detail.passengers.filter((p) => p.id !== 8) }
+          return jsonResponse({ ...MARTA, id: 8, name: 'Pedro Díaz', vehicle: null })
+        }
+        return undefined
+      })
+      renderDetail()
+      const user = userEvent.setup()
+      const section = await screen.findByRole('region', { name: 'Pasajeros asignados' })
+
+      await user.click(within(section).getByRole('button', { name: 'Desvincular a Pedro Díaz' }))
+      await user.click(
+        within(screen.getByRole('dialog', { name: '¿Desvincular a «Pedro Díaz»?' })).getByRole('button', {
+          name: 'Desvincular',
+        }),
+      )
+
+      expect(await screen.findByText('Pasajero desvinculado')).toBeInTheDocument()
+      await waitFor(() => expect(within(section).queryByText('Pedro Díaz')).not.toBeInTheDocument())
+      expect(within(section).getByText('Ana Ruiz')).toBeInTheDocument()
+      expect(calls.some((call) => call.method === 'DELETE' && call.url === '/api/v1/passengers/10/8/assignment')).toBe(
+        true,
+      )
+    })
+
+    it('searches a passenger from the vehicle, warns when it moves and assigns it', async () => {
+      const state: ServerState = { detail: FULL_DETAIL, fields: [] }
+      const { calls } = fakeApi(state, ({ method, url }) => {
+        if (method === 'GET' && url.startsWith('/api/v1/passengers?')) return jsonResponse(PASSENGER_PAGE)
+        if (method === 'PUT' && url === '/api/v1/passengers/10/9/assignment') {
+          state.detail = {
+            ...state.detail,
+            passengers: [...state.detail.passengers, { resource_id: 10, id: 9, name: 'Marta Gil', phone: null }],
+          }
+          return jsonResponse({ ...MARTA, vehicle: { id: 1, name: 'Camión 01' } })
+        }
+        return undefined
+      })
+      renderDetail()
+      const user = userEvent.setup()
+      const section = await screen.findByRole('region', { name: 'Pasajeros asignados' })
+
+      await user.click(within(section).getByRole('button', { name: 'Asignar pasajero' }))
+      const dialog = screen.getByRole('dialog', { name: 'Asignar pasajero a «Camión 01»' })
+      const select = within(dialog).getByRole('combobox', { name: /^Pasajero/ })
+      expect(await within(select).findByRole('option', { name: 'Marta Gil · P-9 (ahora en Van 03)' })).toBeInTheDocument()
+      // Already on this vehicle: not offered.
+      expect(within(select).queryByRole('option', { name: /Ana Ruiz/ })).not.toBeInTheDocument()
+
+      await user.click(within(dialog).getByRole('button', { name: 'Asignar pasajero' }))
+      expect(within(dialog).getByText('Elige un pasajero de la lista.')).toBeInTheDocument()
+      expect(calls.some((call) => call.method === 'PUT')).toBe(false)
+
+      await user.selectOptions(select, 'Marta Gil · P-9 (ahora en Van 03)')
+      expect(
+        within(dialog).getByText('«Marta Gil» está ahora en «Van 03»: al asignarlo pasa a «Camión 01».'),
+      ).toBeInTheDocument()
+      await user.click(within(dialog).getByRole('button', { name: 'Asignar pasajero' }))
+
+      expect(await screen.findByText('Pasajero asignado')).toBeInTheDocument()
+      const put = calls.find((call) => call.method === 'PUT')
+      expect(put?.url).toBe('/api/v1/passengers/10/9/assignment')
+      expect(put?.body).toEqual({ unit_id: 1 })
+      expect(await within(section).findByText('Marta Gil')).toBeInTheDocument()
+    })
   })
 
   describe('custom fields (RF-19..RF-22)', () => {

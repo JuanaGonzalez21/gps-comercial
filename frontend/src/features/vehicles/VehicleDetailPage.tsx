@@ -1,7 +1,9 @@
-import { useMemo, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode, type Ref } from 'react'
 import { Link, useParams } from 'react-router'
+import { useAssignDriver, useUnassignDriver } from '@/api/drivers'
 import { getErrorMessage, isApiError } from '@/api/errors'
-import type { Position, VehicleDetail, VehicleMarker } from '@/api/types'
+import { useAssignPassenger, useUnassignPassenger } from '@/api/passengers'
+import type { DriverRef, PassengerRef, Position, VehicleDetail, VehicleMarker } from '@/api/types'
 import { useVehicleDetail } from '@/api/vehicleDetail'
 import { useAuth } from '@/auth/useAuth'
 import {
@@ -23,15 +25,21 @@ import {
   ErrorState,
   HistoryIcon,
   LinkButton,
+  LinkIcon,
   PageHeader,
   PinOffIcon,
   Skeleton,
   SteeringWheelIcon,
   StatusBadge,
   TruckIcon,
+  UnlinkIcon,
   UsersIcon,
+  useToast,
 } from '@/ui'
+import { ConfirmAction } from '@/features/drivers/shared/ConfirmAction'
+import { AssignPersonDialog } from './AssignPersonDialog'
 import { CustomFieldsEditor } from './CustomFieldsEditor'
+import { useDriverOptions, usePassengerOptions } from './personOptions'
 import { VehiclePositionMap } from './VehiclePositionMap'
 import './vehicles.css'
 
@@ -82,13 +90,15 @@ interface CardHeaderProps {
   description?: ReactNode
   /** Short figure on the right of the title (for example "2 vinculados"). */
   meta?: ReactNode
+  /** Focus target when the button that opened a dialog no longer exists. */
+  titleRef?: Ref<HTMLHeadingElement>
 }
 
-function CardHeader({ id, title, description, meta }: CardHeaderProps) {
+function CardHeader({ id, title, description, meta, titleRef }: CardHeaderProps) {
   return (
     <div className="card-head vehicle-detail__card-head">
       <div>
-        <h2 id={id} className="card-title">
+        <h2 id={id} ref={titleRef} tabIndex={titleRef ? -1 : undefined} className="card-title">
           {title}
         </h2>
         {description && <p className="card-subtitle">{description}</p>}
@@ -168,11 +178,73 @@ function PositionCard({ vehicle }: { vehicle: VehicleDetail }) {
   )
 }
 
+/**
+ * After an assignment or an unassignment the button that opened the dialog is gone (or replaced):
+ * once the dialog has closed, focus moves to the card title instead of getting lost.
+ */
+function useFocusAfterDialog(open: boolean) {
+  const titleRef = useRef<HTMLHeadingElement>(null)
+  const pending = useRef(false)
+  useEffect(() => {
+    if (open || !pending.current) return
+    pending.current = false
+    titleRef.current?.focus()
+  }, [open])
+  const focusTitleOnClose = () => {
+    pending.current = true
+  }
+  return { titleRef, focusTitleOnClose }
+}
+
+function UnlinkButton({ name, onClick }: { name: string; onClick: () => void }) {
+  return (
+    // The accessible name starts with the visible label (WCAG 2.5.3) and says who is unlinked.
+    <Button
+      variant="ghost"
+      size="sm"
+      icon={<UnlinkIcon />}
+      className="person__action"
+      aria-label={`Desvincular a ${name}`}
+      onClick={onClick}
+    >
+      Desvincular
+    </Button>
+  )
+}
+
+function assignedMessage(person: { name: string; vehicle: { name: string } | null }, vehicleName: string): string {
+  return person.vehicle
+    ? `«${person.name}» pasó de «${person.vehicle.name}» a «${vehicleName}».`
+    : `«${person.name}» quedó vinculado a «${vehicleName}».`
+}
+
+type DriverDialog = { kind: 'assign' } | { kind: 'unassign'; driver: DriverRef }
+
 function DriverCard({ vehicle, canAssign }: { vehicle: VehicleDetail; canAssign: boolean }) {
   const { driver } = vehicle
+  const toast = useToast()
+  const assignDriver = useAssignDriver()
+  const unassignDriver = useUnassignDriver()
+  const [dialog, setDialog] = useState<DriverDialog | null>(null)
+  const { titleRef, focusTitleOnClose } = useFocusAfterDialog(dialog !== null)
+  const closeDialog = () => setDialog(null)
+
+  const confirmUnassign = (current: DriverRef) =>
+    unassignDriver.mutate(current, {
+      onSuccess: () => {
+        focusTitleOnClose()
+        closeDialog()
+        toast.show({
+          tone: 'success',
+          title: 'Conductor desvinculado',
+          description: `«${current.name}» ya no está vinculado a «${vehicle.name}».`,
+        })
+      },
+    })
+
   return (
     <Card as="section" className="vehicle-detail__card" aria-labelledby="vehicle-driver-title">
-      <CardHeader id="vehicle-driver-title" title="Conductor asignado" />
+      <CardHeader id="vehicle-driver-title" title="Conductor asignado" titleRef={titleRef} />
       {driver ? (
         <div className="person person--driver">
           <span className="person__icon person__icon--driver">
@@ -192,28 +264,97 @@ function DriverCard({ vehicle, canAssign }: { vehicle: VehicleDetail; canAssign:
             </p>
             <p className="person__meta">Vinculado en Wialon</p>
           </div>
+          {canAssign && (
+            <UnlinkButton
+              name={driver.name}
+              onClick={() => {
+                unassignDriver.reset()
+                setDialog({ kind: 'unassign', driver })
+              }}
+            />
+          )}
         </div>
       ) : (
-        <CardEmpty icon={<SteeringWheelIcon />} title="Sin conductor asignado">
-          <p>Este vehículo no tiene un conductor vinculado en Wialon.</p>
+        <>
+          <CardEmpty icon={<SteeringWheelIcon />} title="Sin conductor asignado">
+            <p>Este vehículo no tiene un conductor vinculado en Wialon.</p>
+          </CardEmpty>
+          {/* Only without a driver: a vehicle has one driver, so changing it is unlink, then assign. */}
           {canAssign && (
-            <p>
-              <Link to="/app/drivers">Asignar un conductor desde Conductores</Link>
-            </p>
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={<LinkIcon />}
+              className="vehicle-detail__card-action"
+              onClick={() => setDialog({ kind: 'assign' })}
+            >
+              Asignar conductor
+            </Button>
           )}
-        </CardEmpty>
+        </>
+      )}
+
+      {dialog?.kind === 'assign' && (
+        <AssignPersonDialog
+          kind="driver"
+          vehicle={vehicle}
+          useOptions={useDriverOptions}
+          onClose={closeDialog}
+          onAssign={async (person) => {
+            await assignDriver.mutateAsync({ ref: person, unitId: vehicle.id })
+            focusTitleOnClose()
+            closeDialog()
+            toast.show({ tone: 'success', title: 'Conductor asignado', description: assignedMessage(person, vehicle.name) })
+          }}
+        />
+      )}
+      {dialog?.kind === 'unassign' && (
+        <ConfirmAction
+          title={`¿Desvincular a «${dialog.driver.name}»?`}
+          message={`El conductor dejará de estar vinculado a «${vehicle.name}» en Wialon. Puedes volver a asignarlo después.`}
+          confirmLabel="Desvincular"
+          destructive={false}
+          busy={unassignDriver.isPending}
+          error={unassignDriver.error}
+          errorTitle="No se pudo desvincular"
+          onConfirm={() => confirmUnassign(dialog.driver)}
+          onCancel={closeDialog}
+        />
       )}
     </Card>
   )
 }
 
+type PassengerDialog = { kind: 'assign' } | { kind: 'unassign'; passenger: PassengerRef }
+
 function PassengersCard({ vehicle, canAssign }: { vehicle: VehicleDetail; canAssign: boolean }) {
   const { passengers } = vehicle
+  const toast = useToast()
+  const assignPassenger = useAssignPassenger()
+  const unassignPassenger = useUnassignPassenger()
+  const [dialog, setDialog] = useState<PassengerDialog | null>(null)
+  const { titleRef, focusTitleOnClose } = useFocusAfterDialog(dialog !== null)
+  const closeDialog = () => setDialog(null)
+
+  const confirmUnassign = (current: PassengerRef) =>
+    unassignPassenger.mutate(current, {
+      onSuccess: () => {
+        focusTitleOnClose()
+        closeDialog()
+        toast.show({
+          tone: 'success',
+          title: 'Pasajero desvinculado',
+          description: `«${current.name}» ya no está vinculado a «${vehicle.name}».`,
+        })
+      },
+    })
+
   return (
     <Card as="section" className="vehicle-detail__card" aria-labelledby="vehicle-passengers-title">
       <CardHeader
         id="vehicle-passengers-title"
         title="Pasajeros asignados"
+        titleRef={titleRef}
         meta={
           passengers.length === 0
             ? undefined
@@ -242,18 +383,60 @@ function PassengersCard({ vehicle, canAssign }: { vehicle: VehicleDetail; canAss
                   )}
                 </p>
               </div>
+              {canAssign && (
+                <UnlinkButton
+                  name={passenger.name}
+                  onClick={() => {
+                    unassignPassenger.reset()
+                    setDialog({ kind: 'unassign', passenger })
+                  }}
+                />
+              )}
             </li>
           ))}
         </ul>
       ) : (
         <CardEmpty icon={<UsersIcon />} title="Sin pasajeros asignados">
           <p>Ningún pasajero está vinculado a este vehículo en Wialon.</p>
-          {canAssign && (
-            <p>
-              <Link to="/app/passengers">Asignar pasajeros desde Pasajeros</Link>
-            </p>
-          )}
         </CardEmpty>
+      )}
+      {canAssign && (
+        <Button
+          variant="secondary"
+          size="sm"
+          icon={<LinkIcon />}
+          className="vehicle-detail__card-action"
+          onClick={() => setDialog({ kind: 'assign' })}
+        >
+          Asignar pasajero
+        </Button>
+      )}
+
+      {dialog?.kind === 'assign' && (
+        <AssignPersonDialog
+          kind="passenger"
+          vehicle={vehicle}
+          useOptions={usePassengerOptions}
+          onClose={closeDialog}
+          onAssign={async (person) => {
+            await assignPassenger.mutateAsync({ ref: person, unitId: vehicle.id })
+            closeDialog()
+            toast.show({ tone: 'success', title: 'Pasajero asignado', description: assignedMessage(person, vehicle.name) })
+          }}
+        />
+      )}
+      {dialog?.kind === 'unassign' && (
+        <ConfirmAction
+          title={`¿Desvincular a «${dialog.passenger.name}»?`}
+          message={`El pasajero dejará de estar vinculado a «${vehicle.name}» en Wialon. Puedes volver a asignarlo después.`}
+          confirmLabel="Desvincular"
+          destructive={false}
+          busy={unassignPassenger.isPending}
+          error={unassignPassenger.error}
+          errorTitle="No se pudo desvincular"
+          onConfirm={() => confirmUnassign(dialog.passenger)}
+          onCancel={closeDialog}
+        />
       )}
     </Card>
   )

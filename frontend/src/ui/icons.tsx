@@ -308,3 +308,36 @@ export const KeyIcon = (props: IconProps) => (
     <path d="M11 12l9-9M17 6l3 3M14 9l2 2" />
   </Svg>
 )
+
+// Landing iconography (also reusable): map with a pin, route between two points, shield with a check
+// and clipboard with a check.
+export const MapPinnedIcon = (props: IconProps) => (
+  <Svg {...props}>
+    <path d="M12 15s5-4.2 5-8a5 5 0 0 0-10 0c0 3.8 5 8 5 8z" />
+    <circle cx="12" cy="7" r="1.8" />
+    <path d="M7.5 13.6 3 15v6l6-2 6 2 6-2v-6l-4.5-1.4" />
+  </Svg>
+)
+
+export const RouteIcon = (props: IconProps) => (
+  <Svg {...props}>
+    <circle cx="6" cy="19" r="2.5" />
+    <circle cx="18" cy="5" r="2.5" />
+    <path d="M8.5 19H16a3.5 3.5 0 0 0 0-7H8a3.5 3.5 0 0 1 0-7h7.5" />
+  </Svg>
+)
+
+export const ShieldCheckIcon = (props: IconProps) => (
+  <Svg {...props}>
+    <path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6l7-3z" />
+    <path d="M9 12l2 2 4-4" />
+  </Svg>
+)
+
+export const ClipboardCheckIcon = (props: IconProps) => (
+  <Svg {...props}>
+    <rect x="8" y="2.5" width="8" height="4" rx="1" />
+    <path d="M16 4.5h2a2 2 0 0 1 2 2V20a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2h2" />
+    <path d="M9 14l2 2 4-4" />
+  </Svg>
+)

@@ -4,13 +4,13 @@ import { useAuth } from '@/auth/useAuth'
 import { useDocumentTitle } from '@/lib/hooks'
 import {
   ArrowRightIcon,
-  AuditIcon,
   CheckIcon,
+  ClipboardCheckIcon,
   EyeIcon,
-  HistoryIcon,
   LinkButton,
-  MapIcon,
-  SteeringWheelIcon,
+  MapPinnedIcon,
+  RouteIcon,
+  ShieldCheckIcon,
   UserCogIcon,
   UsersIcon,
   type ButtonVariant,
@@ -23,9 +23,9 @@ import flota from './assets/flota-furgoneta-camion.webp'
 import './landing.css'
 
 const CAPABILITIES: { title: string; text: string; Icon: ComponentType<IconProps> }[] = [
-  { title: 'Ubica tu flota', text: 'Consulta posiciones y estados de tus vehículos.', Icon: MapIcon },
+  { title: 'Ubica tu flota', text: 'Consulta posiciones y estados de tus vehículos.', Icon: MapPinnedIcon },
   { title: 'Organiza tu operación', text: 'Gestiona conductores, pasajeros y sus asignaciones.', Icon: UsersIcon },
-  { title: 'Revisa cada recorrido', text: 'Consulta el historial y visualiza los trayectos.', Icon: HistoryIcon },
+  { title: 'Revisa cada recorrido', text: 'Consulta el historial y visualiza los trayectos.', Icon: RouteIcon },
 ]
 
 const EDITORIAL_POINTS = [
@@ -43,11 +43,11 @@ const STEPS = [
 // Wording checked against ROLE_PERMISSIONS in backend/app/domain/permissions.py.
 // Operators edit people, assignments and vehicle custom fields; they cannot create vehicles in Wialon.
 const ROLES: { name: string; text: string; Icon: ComponentType<IconProps> }[] = [
-  { name: 'Administrador', text: 'Gestiona usuarios, permisos y operación.', Icon: UserCogIcon },
+  { name: 'Administrador', text: 'Gestiona usuarios, permisos y operación.', Icon: ShieldCheckIcon },
   {
     name: 'Operador',
     text: 'Gestiona personas, asignaciones y campos de los vehículos según sus permisos.',
-    Icon: SteeringWheelIcon,
+    Icon: UserCogIcon,
   },
   { name: 'Visualizador', text: 'Consulta la información sin modificarla.', Icon: EyeIcon },
 ]
@@ -126,7 +126,9 @@ export default function LandingPage() {
           <ul className="landing-strip__list" role="list">
             {CAPABILITIES.map(({ title, text, Icon }) => (
               <li key={title} className="landing-strip__item">
-                <Icon className="landing-strip__icon" aria-hidden="true" />
+                <span className="landing-icon" aria-hidden="true">
+                  <Icon />
+                </span>
                 <div>
                   <h3 className="landing-strip__title">{title}</h3>
                   <p>{text}</p>
@@ -229,14 +231,14 @@ export default function LandingPage() {
             </h2>
             <p className="landing-section__lead">Cada persona accede a las herramientas que necesita para su trabajo.</p>
             <p className="landing-audit">
-              <AuditIcon aria-hidden="true" />
+              <ClipboardCheckIcon aria-hidden="true" />
               Operaciones registradas para su consulta.
             </p>
           </div>
           <ul className="landing-roles" role="list">
             {ROLES.map(({ name, text, Icon }) => (
               <li key={name} className="landing-roles__row">
-                <span className="landing-roles__icon" aria-hidden="true">
+                <span className="landing-icon" aria-hidden="true">
                   <Icon />
                 </span>
                 <div>

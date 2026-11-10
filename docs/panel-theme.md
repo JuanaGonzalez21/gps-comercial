@@ -137,34 +137,32 @@ Se añadieron dos elementos visibles en todos los tamaños:
 - En `design-system.md` (apartado "Pulido visual final"), el bloque **Login** describe el panel anterior. También
   queda desactualizada cualquier captura del login en el README.
 
-## Rediseño del panel (handoff Claude Design, 2026-11-10) — estado
+## Rediseño del panel (handoff Claude Design, 2026-11-10): estado
 Rama `feat/dashboard-redesign` (sobre `style/panel-login-visual`), local, sin push. Solo diseño: sin cambios de
 backend, API, permisos ni validaciones.
 
-| Área | Estado |
-|---|---|
-| Base visual (Figtree/JetBrains Mono propias, tokens, campos, diálogos, toasts, paginación, insignias, controles nuevos) | Hecho |
-| Estructura (menú 256 px, riel 88 px en tablet, barra y cajón en móvil, conteos, aviso cerrable) | Hecho |
-| Panel | Hecho |
-| Historial | Hecho |
-| Conductores y Pasajeros | Hecho (falta revisar 834 px, el modal y el menú ⋮ con teclado en navegador) |
-| Vehículos | Parcial: cabecera, búsqueda, 8 por página, mapa 440 px, leyenda |
-| Detalle de vehículo | Pendiente |
-| Usuarios, Auditoría, Cambiar contraseña | Parcial: tablas, insignias, avatar, tarjeta de contraseña |
+Todas las pantallas están rediseñadas: base visual (Figtree/JetBrains Mono propias, tokens, campos, diálogos,
+toasts, paginación, insignias, controles nuevos), estructura (menú 256 px, riel 88 px, barra y cajón en móvil),
+Panel, Vehículos y su detalle, Conductores, Pasajeros, Historial, Usuarios, Auditoría y Cambiar contraseña.
 
-Desviaciones deliberadas (requisito o accesibilidad): fila de vehículos selecciona y resalta en el mapa (RF-15);
-orden por columnas (UX-06); sin "placa" (la API no la da); rol Operador en el formulario (RF-05); campos con borde
-3.20:1 y foco turquesa sólido (UX-03); texto sobre lavanda en #57525C; "Guardar contraseña" sin opacidad de
-deshabilitado; con cambio obligatorio se mantiene "Cancelar y cerrar sesión"; iconos SVG propios en lugar de la
-fuente Material Symbols (CSP y rendimiento).
+Desviaciones deliberadas (requisito o accesibilidad):
+- la fila de vehículos selecciona y resalta en el mapa (RF-15); el detalle se abre con "Ver detalle de X";
+- orden por columnas y "Ordenar por" en móvil (UX-06); sin "placa" (la API no la da);
+- conteos de los chips de estado solo sin búsqueda ni filtro de conductor (el resumen no cruza esos datos);
+- rol Operador en el formulario (RF-05) como tarjetas de radio reales;
+- campos con borde 3.20:1, foco turquesa sólido, texto sobre lavanda en #57525C y objetivos táctiles de 40 px (UX-03);
+- "Guardar contraseña" sin opacidad de deshabilitado; con cambio obligatorio se mantiene "Cancelar y cerrar sesión";
+- sin chip "N fallos" en auditoría (la API solo da el total); detalles expandibles en todo evento con detalles;
+- tabla de Usuarios desde 64rem (medido: no cabe a 768–834 px); tarjetas con etiquetas debajo;
+- iconos SVG propios en lugar de la fuente Material Symbols (CSP y rendimiento).
 
-Pendientes anotados por pantalla:
-- Vehículos: chips de estado (conteos del resumen, solo sin búsqueda ni filtro de conductor), tabla nueva, fila
-  seleccionable + enlace "Ver detalle de X", reparto 3:2 con mapa sticky, tarjetas móviles, marcadores del diseño.
-- Detalle: fila 2:1, rejilla de datos, conductor/pasajeros, campos personalizados en tiles.
-- Usuarios: acciones (Editar + menú ⋮), roles en tarjetas de radio con Operador, diálogo de contraseña temporal.
-- Auditoría: 10 por página, detalle expandible, ID recortado. Contraseña: aviso de coincidencia, "Cancelar y volver
-  al panel" cuando el cambio no es obligatorio.
-- Historial (decisión de Juana): línea fina sobre el gráfico de velocidad (contraste) y "1 d 0 h" frente a "24 h".
+Pendiente o por decidir:
+- Historial (Juana): línea fina sobre el gráfico de velocidad (contraste) y "1 d 0 h" frente a "24 h".
+- Revisar con más datos el mapa sticky de Vehículos y, en el Detalle, el tamaño del marcador seleccionado.
+- Propuestas no aplicadas: foco inicial en "Cancelar" de `ConfirmDialog`, `.icon-button--outlined` compartido,
+  mover `ToneBadge` a `src/ui`, iniciales de nombres simulados ("C1") unificadas en `ui/initials.ts`.
+- `design-system.md` y el README describen el panel anterior: actualizar al integrar.
 
-Comprobado: `tsc`, `oxlint`, 163/163 pruebas Vitest y `npm run build`.
+Comprobado: `tsc` y `oxlint` sin avisos, 171/171 pruebas Vitest, `npm run build`, y 8 pantallas × 1440/834/390 px
+sin desplazamiento horizontal ni errores de consola (datos simulados). Pendiente: lector de pantalla real y e2e
+contra Wialon (`flows.spec.ts` se adaptó al menú ⋮ pero no se ejecutó).

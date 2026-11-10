@@ -33,7 +33,48 @@ Solo cambia la apariencia: la estructura, el orden, los textos, las rutas y la l
 | Alertas | Borde completo del color del tono | Contorno tintado suave; se conserva el acento de 4 px a la izquierda |
 | Indicadores del dashboard | Franja de color de 4 px | Tarjeta lisa; el color de estado queda en el icono y la etiqueta pasa a `#57525C`. El *padding* compensa la franja |
 | Sombras | `sm` 0.08 | `sm` 0.05 + 0.04, más difusa |
-| Login (escritorio) | Panel oscuro liso | Dos anillos rojos decorativos (solo CSS) arriba a la derecha, sin cruzar texto |
+| Login | Ver "Login rediseñado" | Ver "Login rediseñado" |
+
+## Login rediseñado (petición de Juana, 2026-11-10)
+El login copia el diseño de referencia: títulos, textos y fondos. Como logo se usa el icono de GPS Comercial
+(pin blanco sobre baldosa roja), no el del prototipo. La lógica no cambia:
+- validación, mensajes de error y alertas de sesión;
+- foco en el error;
+- etiquetas "Correo electrónico" y "Contraseña" y botón "Ingresar".
+
+- **Escritorio (≥ 64 rem):** columna oscura `#1F1A24` a la izquierda (2/5) y página blanca a la derecha.
+  - Columna oscura:
+    - logo arriba;
+    - título "Tu flota en tiempo real, en un solo lugar.";
+    - subtítulo "Posición, estado y asignaciones de conductores y pasajeros de cada vehículo." en `#F58A96`
+      (rojo de marca aclarado al 50 %, 7,27:1);
+    - abajo, dos notas con icono: "Solo para cuentas creadas por un administrador. No hay registro público." y
+      "En tu primer ingreso deberás cambiar la contraseña.";
+    - anillos rojos decorativos (solo CSS, opacidad 0,4) abajo a la derecha, como en el diseño.
+  - Formulario sin marco de tarjeta:
+    - intro "Usa el correo y la contraseña que te entregó el administrador.";
+    - ejemplo `nombre@empresa.com` en el correo;
+    - botón con flecha;
+    - ayuda "¿Olvidaste tu contraseña? Comunícate con el administrador de tu empresa para restablecerla.".
+- **Móvil:**
+  - banda oscura con el logo y "Tu flota en tiempo real.";
+  - debajo, el formulario sobre blanco y la nota "Solo para cuentas creadas por el administrador. En el primer
+    ingreso deberás cambiar tu contraseña.".
+- **Textos que se retiraron:**
+  - "Monitoreo de flotas sobre Wialon" y su lista de tres capacidades;
+  - "Las horas se muestran en la zona horaria de Bogotá.";
+  - el pie "¿No tienes cuenta?… Volver al inicio". El logo sigue enlazando a la landing.
+- **No se copió:**
+  - la pista del prototipo "Prueba: envía vacío o con un correo inválido.";
+  - el resumen de errores "Revisa los campos marcados. Hay 2 errores.", porque añadirlo cambiaría la validación.
+- **Accesibilidad:**
+  - un solo `h1` ("Iniciar sesión");
+  - el panel es un `aside` con nombre y el título de marca es un párrafo;
+  - en el panel oscuro el anillo de foco es blanco: el rojo solo da 3,80:1 sobre `#1F1A24`;
+  - contraste del texto: 0 casos por debajo de AA a 1280 y 360 px;
+  - sin desplazamiento horizontal a 1280, 1024 y 360 px;
+  - sin errores de consola.
+- **Cambiar contraseña:** conserva la tarjeta blanca sobre lavanda con el logo encima.
 
 ## Tonos nuevos (solo dentro del ámbito)
 | Valor | Derivado de | Uso | Contraste |
@@ -42,6 +83,7 @@ Solo cambia la apariencia: la estructura, el orden, los textos, las rutas y la l
 | `#D6CFDC` | `#EEE8F2` oscurecido | Contorno de botones secundarios y paginación | Decorativo: identifican al control su etiqueta y su icono |
 | `#0F4C50` | `#1E8C93` oscurecido | Primario pulsado | Texto blanco 9,68:1 |
 | `#F3C3C9` | `#EB162C` muy claro | Contorno de la alerta de advertencia | Decorativo |
+| `#F58A96` | `#EB162C` mezclado al 50 % con blanco | Subtítulo del panel oscuro del login | 7,27:1 sobre `#1F1A24` |
 
 ## Contraste de los pares nuevos
 - Navegación:
@@ -81,3 +123,5 @@ Solo cambia la apariencia: la estructura, el orden, los textos, las rutas y la l
 - §4.4: en el panel, la acción secundaria es neutra (borde suave) con el icono en verde azulado.
 - §6: añadir que en el panel las insignias tienen un radio de 6 px.
 - `docs/estado.md` y la sección "Decisiones de diseño" del README, si repiten estos puntos.
+- En `design-system.md` (apartado "Pulido visual final"), el bloque **Login** describe el panel anterior. También
+  queda desactualizada cualquier captura del login en el README.

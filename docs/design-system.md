@@ -240,3 +240,8 @@ Dirección: producto de flotas sobrio y preciso. La personalidad viene de la com
   - la imagen del hero vuelve a la composición anterior (forma turquesa con borde izquierdo redondeado, vehículos sobresaliendo y sin etiqueta);
   - en «Funcionalidades» las dos columnas comparten altura: la foto ocupa el espacio bajo la introducción (mínimo 34 rem) y los tres bloques se reparten la altura, así que no queda hueco bajo la lista;
   - aparición única de los bloques bajo el hero al hacer scroll (opacidad y 24 px de desplazamiento, 600 ms, escalonado de 90 ms). No se aplica con «reducir movimiento» ni sin `IntersectionObserver`, y nunca al hero.
+- **Detalles de acabado (2026-11-10):**
+  - los enlaces de sección llevan al contenido, no al relleno superior: el texto queda unos 32–40 px bajo la cabecera fija, y «Control de tu flota» empieza justo bajo ella con su foto;
+  - desplazamiento suave al pulsarlos (`html:has(.landing)`, solo con movimiento permitido; el panel no se ve afectado);
+  - el menú móvil usa líneas suaves entre enlaces, sin subrayado;
+  - en «Control de tu flota» la altura la fija el texto y la foto la cubre, sin hueco bajo el texto.

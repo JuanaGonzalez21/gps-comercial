@@ -12,9 +12,14 @@
   margin-inline: auto;
 }
 
-/* Sticky header: anchored sections stop below it. */
+/* Sticky header (4.75rem + 1px border): anchors sit on the content, which lands 2rem below it. */
 .landing [id] {
-  scroll-margin-top: 5.5rem;
+  scroll-margin-top: calc(4.75rem + 1px + var(--space-8));
+}
+
+/* "Control de tu flota" starts with its photo, so the section itself aligns right under the header. */
+.landing .landing-control {
+  scroll-margin-top: calc(4.75rem + 1px);
 }
 
 /* ---------- Shared type ---------- */
@@ -496,9 +501,16 @@
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 
+  /* The text column sets the height; the photo covers its half (no empty space under the text). */
+  .landing-control__media {
+    position: relative;
+    min-height: 32rem;
+  }
+
   .landing-control__photo {
+    position: absolute;
+    inset: 0;
     height: 100%;
-    min-height: 40rem;
     aspect-ratio: auto;
   }
 
@@ -568,8 +580,13 @@
   }
 }
 
-/* ---------- Scroll reveal: once per block, only when motion is welcome (see useScrollReveal) ---------- */
+/* ---------- Smooth anchor scrolling and scroll reveal, only when motion is welcome ---------- */
 @media (prefers-reduced-motion: no-preference) {
+  /* Smooth scroll for the section links, only while the landing is on screen (the panel is unaffected). */
+  html:has(.landing) {
+    scroll-behavior: smooth;
+  }
+
   .landing-link {
     transition: color var(--duration-fast) var(--easing-standard);
   }

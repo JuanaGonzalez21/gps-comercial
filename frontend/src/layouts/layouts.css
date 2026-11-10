@@ -434,11 +434,22 @@
   box-shadow: var(--shadow-sm);
 }
 
+/* Mobile menu: plain links separated by soft rules (no underline); hover turns them teal. */
 .public-header__nav[data-open] a {
   display: block;
-  padding: var(--space-3) 0;
+  padding: var(--space-4) 0;
+  border-bottom: 1px solid var(--color-border);
   color: var(--color-text);
   font-weight: var(--weight-medium);
+  text-decoration: none;
+}
+
+.public-header__nav[data-open] a:last-child {
+  border-bottom: 0;
+}
+
+.public-header__nav[data-open] a:hover {
+  color: var(--color-primary);
 }
 
 @media (min-width: 48rem) {
@@ -465,6 +476,7 @@
   .public-header__nav a,
   .public-header__nav[data-open] a {
     padding-block: var(--space-2);
+    border-bottom: 0;
     color: var(--color-text-secondary);
     font-size: var(--text-base);
   }

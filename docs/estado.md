@@ -1,6 +1,19 @@
 # Estado actual y relevo
 Snapshot: 2026-11-10 12:15 America/Bogota. Verificar siempre Git, archivos y procesos antes de continuar.
 
+## Relevo — 2026-11-10 13:10 America/Bogota
+- **PR #15 (merge `5b2e3d1`), publicado:** arreglos de iPhone. El mapa ya no tapa la barra superior, el pellizco amplía solo el mapa y las fechas de Historial y Auditoría caben en su tarjeta. Pendiente de confirmar por Juana en su iPhone.
+- **Rama `feat/roster-newest-sort`:**
+  - menú ⋮ colocado con `left`/`top` dentro del ancho real de la página (`clientWidth`), sin depender de `window.innerWidth`, que en iPhone lo desplazaba unos 180 px a la izquierda;
+  - el menú es fijo y oculto hasta medirse, y el foco no desplaza la página;
+  - nuevo orden «Recién agregados» (`sort=-created`) en conductores, pasajeros y sus CSV, con el selector «Ordenar por» visible en todos los tamaños. Criterio en `docs/api-contract.md`.
+  - Lectura real de Wialon (sin mutaciones): los ids crecen dentro de cada recurso, pero cada recurso tiene su propia numeración. Por eso el orden usa primero la fecha de auditoría.
+  - Pruebas:
+    - backend: 250 de 250 y ruff limpio;
+    - frontend: 179 de 179, oxlint y tsc sin avisos;
+    - Chrome móvil 390 px con datos simulados: el menú queda alineado con su botón, dentro de la pantalla y sin desplazar la página;
+    - 0 errores de consola.
+
 ## Relevo — 2026-11-10 12:05 America/Bogota
 - **Landing, detalles de acabado (PR #12, commit `a22006d`, merge `42661a4`):**
   - los enlaces del menú llevan al contenido;

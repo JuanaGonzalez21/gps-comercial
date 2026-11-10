@@ -179,6 +179,12 @@ Una prueba recorre todas las rutas y falla si alguna no declara permiso.
 Paginación común: `?page=1&page_size=20` (1–100) → `{"items": [...], "total": 0, "page": 1, "page_size": 20, "pages": 0}`.
 Orden: `?sort=name` o `?sort=-name` (campos permitidos por endpoint).
 
+`?sort=-created` (conductores, pasajeros y sus CSV) = «Recién agregados». Wialon no guarda fecha de
+creación de conductores ni pasajeros, así que primero van los creados desde la aplicación, por la
+fecha de su `driver.created` / `passenger.created` correcto en la auditoría (el más reciente
+primero), y después los creados fuera (directamente en Wialon o antes de la auditoría), por id
+descendente: Wialon asigna ids crecientes dentro de cada recurso.
+
 ### Auth (sin permiso; requieren sesión salvo login/refresh)
 | Método y ruta | Entrada | Salida |
 |---|---|---|
@@ -239,7 +245,7 @@ Acciones: `auth.login_succeeded`, `auth.login_failed`, `auth.logout`, `auth.pass
 ### Conductores
 | Ruta | Permiso |
 |---|---|
-| `GET /drivers?search=&assigned=&sort=&page=&page_size=` → `Page<DriverOut>` | `drivers:read` |
+| `GET /drivers?search=&assigned=&sort=&page=&page_size=` → `Page<DriverOut>`; sort: `name`, `-name`, `-created` | `drivers:read` |
 | `POST /drivers` `{resource_id?, name, code?, phone?, description?}` → `201 DriverOut` | `drivers:write` |
 | `GET /drivers/{resource_id}/{driver_id}` → `DriverOut` | `drivers:read` |
 | `PUT /drivers/{resource_id}/{driver_id}` `{name, code?, phone?, description?}` → `DriverOut` | `drivers:write` |
@@ -253,7 +259,7 @@ Validación: `name` 1–50 obligatorio; `phone` opcional `^\+?[0-9 ()-]{7,20}$`;
 ### Pasajeros (tags de Wialon)
 | Ruta | Permiso |
 |---|---|
-| `GET /passengers?search=&assigned=&vehicle_id=&sort=&page=&page_size=` → `Page<PassengerOut>` | `passengers:read` |
+| `GET /passengers?search=&assigned=&vehicle_id=&sort=&page=&page_size=` → `Page<PassengerOut>`; sort: `name`, `-name`, `-created` | `passengers:read` |
 | `POST /passengers` `{resource_id?, name, code?, phone?, custom_fields?}` → `201` | `passengers:write` |
 | `GET /passengers/{resource_id}/{passenger_id}` → `PassengerOut` | `passengers:read` |
 | `PUT /passengers/{resource_id}/{passenger_id}` `{name, code?, phone?}` (conserva campos personalizados) | `passengers:write` |

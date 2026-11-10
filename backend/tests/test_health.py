@@ -56,3 +56,9 @@ def test_docs_disabled_in_production() -> None:
 def test_token_is_hidden_in_repr() -> None:
     settings = Settings(_env_file=None, wialon_token="secret-value-for-test")
     assert "secret-value-for-test" not in repr(settings)
+
+
+def test_health_answers_head_for_uptime_monitors() -> None:
+    response = make_client().head("/health")
+    assert response.status_code == 200
+    assert response.text == ""

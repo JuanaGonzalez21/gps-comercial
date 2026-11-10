@@ -4,16 +4,25 @@ Snapshot: 2026-11-09 18:40 America/Bogota. Verificar siempre Git, archivos y pro
 ## Alcance vigente
 Desarrollo local autónomo autorizado (ver CLAUDE.md). Commits locales en `chore/bootstrap-base`, sin push ni despliegue.
 
-## Qué usa Wialon real, qué está simulado
+## Qué usa Wialon real, qué está simulado (actualizado 2026-11-09 19:40 Bogotá)
 | Pieza | Estado |
 |---|---|
-| Login backend, sesión, CSRF, roles | Implementado y probado (pytest + curl). DB local SQLite; PostgreSQL 17 verificado aparte |
-| Lectura de vehículos, posiciones, conductor vinculado | **Wialon real** vía API propia: 62 vehículos, 61 con posición (curl contra `/api/v1`) |
-| Escrituras Wialon (conductor, pasajero, campos, vínculos) | **Verificadas en Wialon real** con datos de prueba propios: `scripts/wialon_write_check.py` 15/15 OK, sin restos |
-| Endpoints de conductores, pasajeros, campos, dashboard, historial, CSV, usuarios, auditoría | En implementación (agente backend) |
-| Frontend login → lista + mapa | En implementación (agente frontend); aún no visible en pantalla |
-| Pruebas automáticas | Wialon **simulado** (`FakeFleetGateway`, `httpx2.MockTransport`), identificado como tal |
-| Despliegue | Configuración preparada (`render.yaml`, `frontend/vercel.json`, Dockerfile); nada desplegado |
+| Login, refresh, logout, cambio obligatorio, roles | Implementado; pytest; navegador (Playwright + Chrome) para login/logout; PostgreSQL 17 verificado |
+| Usuarios (crear, rol, activar/desactivar, restablecer) y auditoría (API) | Implementado; pytest; ciclo completo verificado en PostgreSQL 17. UI en construcción |
+| Vehículos: lista, filtros, paginación servidor, mapa con clusters, selección sincronizada | **Wialon real en navegador** (62 vehículos, 61 marcadores; e2e Playwright OK) |
+| Conductores, pasajeros, asignaciones, campos de vehículos y pasajeros | API implementada y probada (pytest); **escrituras verificadas en Wialon real** con datos propios (15/15); UI en construcción |
+| Dashboard, historial (RDP), CSV (anti-inyección) | API implementada y probada (pytest con Wialon simulado); UI en construcción |
+| Pruebas automáticas | 246 backend (Wialon **simulado**), 65 frontend, 1 e2e real |
+| Despliegue | Configuración y guía (`docs/deploy-guide.md`); nada publicado |
+
+## En ejecución ahora (si se cierra el panel)
+- Backend local en `http://localhost:8000` contra Wialon real (proceso en segundo plano de Claude; reiniciar con
+  `cd backend; uv run uvicorn app.main:app --port 8000`).
+- PostgreSQL temporal aislado en el puerto 55432 (scratchpad de la sesión; no es el servicio de Juana).
+- Vite de Juana en `http://localhost:5173`.
+- 4 agentes de frontend: detalle de vehículo + corrección de tabla; conductores y pasajeros; dashboard + historial;
+  usuarios + auditoría + landing + docs/design-system.md. Al terminar: verificar build/lint/test y commitear.
+- Siguiente: e2e ampliado por rol, Lighthouse de la landing, README final y checklist.
 
 ## Relevo 2026-11-09 tarde — desarrollo autónomo
 Comandos y resultados reales:

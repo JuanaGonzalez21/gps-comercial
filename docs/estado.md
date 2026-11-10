@@ -1,5 +1,19 @@
 # Estado actual y relevo
-Snapshot: 2026-11-09 23:40 America/Bogota. Verificar siempre Git, archivos y procesos antes de continuar.
+Snapshot: 2026-11-10 08:55 America/Bogota. Verificar siempre Git, archivos y procesos antes de continuar.
+
+## Relevo — 2026-11-10 08:55 America/Bogota
+- **Landing rediseñada y publicada:** PR #7, merge `6274689`.
+  - Comprobado en https://gpscomercial.juanagonzalez.dev a las 08:51: landing, login y `/health` con 200; sin desbordamiento ni errores de consola a 1440, 768 y 360 px; menú móvil funcional.
+- **Cambios estéticos en pausa:** por decisión de Juana, hasta que entregue la nueva propuesta de Claude Design. Se conserva lo publicado.
+- **Lighthouse de la landing actual: sin medir.** Las cifras del README (98/97 y 99) corresponden a versiones anteriores de la landing, no al diseño del PR #7. UX-07 queda EN CURSO hasta remedir.
+- **Dashboard/login:** el chat paralelo trabaja en el worktree `../gps-comercial-panel`, rama `style/panel-login-visual`, con alcance exclusivamente visual. Al recibir sus hashes:
+  - revisar que solo toque estilos;
+  - integrarlo en un PR separado;
+  - verificar el despliegue, el login y la navegación.
+- **Confirmado por Juana (2026-11-10):** el login en producción funciona después de retirar `ADMIN_PASSWORD` de Render.
+- **Sin confirmación todavía:**
+  - renovación del `WIALON_TOKEN`;
+  - envío del correo de entrega.
 
 ## Alcance vigente
 Aplicación desplegada (Vercel + Render + Neon). Push, PR y fusión a `main` autorizados por Juana; sin force push.
@@ -18,13 +32,13 @@ Aplicación desplegada (Vercel + Render + Neon). Push, PR y fusión a `main` aut
 - Las rutas directas cargan la aplicación.
 - CORS y CSRF: un `Origin` ajeno recibe 403 (Vercel reenvía `Origin`).
 - Neon conectado; migraciones y Admin aplicados al arrancar.
-- Lighthouse móvil 99/100/100/100.
+- Lighthouse móvil 99/100/100/100 (2026-11-09, landing anterior; no aplica al diseño actual).
 - Arranque tras inactividad: no observado (medición a las 04:31 UTC tras 18 min sin tráfico propio: el servicio ya estaba activo (/health en 1,0 s, sin aviso), probablemente por el redespliegue y el login de comprobación; arranque en frío real aún no observado).
 - Comprobado por Juana en el navegador: login, flota real y edición.
 
 ### Pendiente de producción (requiere a Juana)
 - Ejecutar `e2e/production.spec.ts` con sus credenciales en su terminal: cookies, CSRF autenticado, refresh, logout y rol opcional.
-- Confirmar el login tras retirar `ADMIN_PASSWORD` en Render.
+- ~~Confirmar el login tras retirar `ADMIN_PASSWORD` en Render.~~ Confirmado manualmente por Juana el 2026-11-10.
 - Fijar el compute de Neon en 0,25 CU para cuidar las 100 CU-h/mes.
 
 ### Incidente de credenciales (captura del `.env` local, 2026-11-09)

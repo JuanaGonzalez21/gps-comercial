@@ -1,104 +1,12 @@
-/* Flat lavender surface (identity color), no decorative gradients. */
+/* Auth screens. Change password: white card on the flat lavender surface (identity colour).
+   Login (.auth-page--split): white page with the dark brand panel from the design reference,
+   a compact band above the form on phones and a full column on wide screens. */
 .auth-page {
   display: grid;
   place-items: center;
   min-height: 100dvh;
   padding: var(--space-6) var(--space-4);
   background: var(--color-bg);
-}
-
-/* Login on wide screens: dark product panel (same surface as the app sidebar) + form column. */
-.auth-aside {
-  display: none;
-}
-
-@media (min-width: 64rem) {
-  .auth-page--split {
-    grid-template-columns: minmax(20rem, 2fr) 3fr;
-    place-items: stretch;
-    padding: 0;
-  }
-
-  .auth-page--split .auth-page__panel {
-    align-self: center;
-    justify-self: center;
-    padding: var(--space-8) var(--space-4);
-  }
-
-  .auth-page--split .auth-page__brand {
-    display: none;
-  }
-
-  .auth-aside {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    gap: var(--space-10);
-    padding: var(--space-10) var(--space-12);
-    background: var(--color-dark);
-    color: var(--color-on-dark);
-    /* Contains the decorative rings below (no effect on the column layout). */
-    position: relative;
-    overflow: hidden;
-    isolation: isolate;
-  }
-
-  /* Decorative brand-red rings from the design reference. CSS only (never announced), drawn
-     behind the content and kept in the top-right corner so they never cross the text. */
-  .auth-aside::before,
-  .auth-aside::after {
-    content: '';
-    position: absolute;
-    z-index: -1;
-    border: 1px solid rgb(235 22 44 / 0.45);
-    border-radius: 50%;
-    pointer-events: none;
-  }
-
-  .auth-aside::before {
-    top: -11.5rem;
-    right: -11.5rem;
-    width: 23rem;
-    height: 23rem;
-  }
-
-  .auth-aside::after {
-    top: -7rem;
-    right: -7rem;
-    width: 14rem;
-    height: 14rem;
-  }
-
-  .auth-aside__title {
-    max-width: 16ch;
-    margin: 0;
-    font-size: clamp(1.75rem, 1rem + 1.6vw, 2.375rem);
-    font-weight: var(--weight-bold);
-    line-height: 1.12;
-    letter-spacing: -0.015em;
-  }
-
-  .auth-aside__facts {
-    display: grid;
-    gap: var(--space-3);
-    margin-top: var(--space-8);
-    color: var(--color-on-dark-muted);
-  }
-
-  .auth-aside__facts li {
-    padding-left: var(--space-5);
-    border-left: 2px solid var(--color-teal); /* non-text accent, 4.2:1 on the dark surface */
-  }
-
-  .auth-aside__note {
-    margin: 0;
-    color: var(--color-on-dark-muted);
-    font-size: var(--text-sm);
-  }
-
-  .auth-aside :focus-visible {
-    outline-color: var(--color-on-dark);
-  }
 }
 
 .auth-page__panel {
@@ -129,6 +37,7 @@
 
 .auth-card__title {
   font-size: var(--text-2xl);
+  letter-spacing: -0.015em;
 }
 
 .auth-card__intro {
@@ -140,12 +49,167 @@
   gap: var(--space-4);
 }
 
-.auth-page__footer {
-  font-size: var(--text-sm);
-  text-align: center;
-  color: var(--color-text-secondary);
+/* ---------- Login ---------- */
+.auth-page--split {
+  display: flex;
+  flex-direction: column;
+  place-items: stretch;
+  padding: 0;
+  background: var(--color-surface);
 }
 
+/* Brand panel: dark surface (white 17.05:1). Phones show only the brand and the short title. */
+.auth-aside {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5) var(--space-6);
+  background: var(--color-dark);
+  color: var(--color-on-dark);
+  /* Contains the decorative rings (no effect on the layout). */
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.auth-aside :focus-visible {
+  outline-color: var(--color-on-dark); /* the red ring is only 3.80:1 here; white is clearer */
+}
+
+.auth-aside__title {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.auth-aside__title-rest,
+.auth-aside__lead,
+.auth-aside__notes {
+  display: none;
+}
+
+/* Brand red lightened 50 % with white: 7.27:1 on the dark panel. */
+.auth-aside__lead {
+  max-width: 36ch;
+  margin-top: var(--space-4);
+  color: #f58a96;
+  font-size: var(--text-base);
+  line-height: 1.5;
+}
+
+.auth-aside__notes {
+  gap: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--color-on-dark-muted); /* 9.83:1 */
+}
+
+.auth-aside__notes li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.auth-aside__note-icon {
+  width: 1.125rem;
+  height: 1.125rem;
+  margin-top: 0.1rem;
+  flex-shrink: 0;
+  color: var(--color-on-dark);
+}
+
+/* The form sits directly on the white page: the card keeps its section role but loses the frame. */
+.auth-page--split .auth-page__panel {
+  align-self: center;
+  padding: var(--space-6) var(--space-5) var(--space-10);
+}
+
+.auth-page--split .auth-card {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.auth-card__help,
+.auth-page__mobile-note {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary); /* 7.59:1 on white */
+}
+
+.auth-page__mobile-note {
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+@media (min-width: 64rem) {
+  .auth-page--split {
+    display: grid;
+    grid-template-columns: minmax(20rem, 2fr) 3fr;
+  }
+
+  .auth-aside {
+    justify-content: space-between;
+    gap: var(--space-10);
+    padding: var(--space-10) var(--space-12);
+  }
+
+  .auth-aside__title {
+    max-width: 11.5em; /* breaks after "real," as in the design */
+    font-size: clamp(1.75rem, 0.9rem + 1.4vw, 2.25rem);
+    line-height: 1.12;
+  }
+
+  .auth-aside__title-rest {
+    display: inline;
+  }
+
+  .auth-aside__lead {
+    display: block;
+  }
+
+  .auth-aside__notes {
+    display: grid;
+  }
+
+  /* Decorative brand-red rings from the design reference. CSS only (never announced), behind the
+     content, low opacity so the notes they pass under stay fully legible. */
+  .auth-aside::before,
+  .auth-aside::after {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    border: 1px solid rgb(235 22 44 / 0.4);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  .auth-aside::before {
+    right: -6rem;
+    bottom: -7rem;
+    width: 22rem;
+    height: 22rem;
+  }
+
+  .auth-aside::after {
+    right: -2rem;
+    bottom: -3rem;
+    width: 14rem;
+    height: 14rem;
+  }
+
+  .auth-page--split .auth-page__panel {
+    justify-self: center;
+    padding: var(--space-8) var(--space-6);
+  }
+
+  .auth-page__mobile-note {
+    display: none;
+  }
+}
+
+/* ---------- Change password: rules checklist ---------- */
 .password-rules {
   margin-top: calc(-1 * var(--space-2));
   padding: var(--space-3);

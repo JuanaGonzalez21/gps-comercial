@@ -1,14 +1,24 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { Link, Navigate, useLocation, useSearchParams } from 'react-router'
+import { Navigate, useLocation, useSearchParams } from 'react-router'
 import { z } from 'zod'
 import { isApiError } from '@/api/errors'
 import { useServerWakeUp } from '@/api/system'
 import { getPostLoginPath, wasLoggedOut } from '@/auth/redirect'
 import { useAuth } from '@/auth/useAuth'
 import { useDocumentTitle } from '@/lib/hooks'
-import { Alert, Brand, Button, Card, PasswordField, TextField } from '@/ui'
+import {
+  Alert,
+  ArrowRightIcon,
+  Brand,
+  Button,
+  Card,
+  KeyIcon,
+  PasswordField,
+  TextField,
+  UserCogIcon,
+} from '@/ui'
 import '@/styles/panel-theme.css'
 import './auth.css'
 
@@ -86,29 +96,35 @@ export default function LoginPage() {
 
   return (
     <main id="main" className="auth-page auth-page--split">
-      {/* Product context next to the form on wide screens; hidden on small ones to keep the form first. */}
+      {/* Brand panel: a dark column on wide screens and a compact dark band above the form on phones. */}
       <aside className="auth-aside" aria-label="Sobre GPS Comercial">
         <Brand to="/" tone="dark" />
         <div className="auth-aside__body">
-          <p className="auth-aside__title">Monitoreo de flotas sobre Wialon</p>
-          <ul className="auth-aside__facts" role="list">
-            <li>Ubicación y estado de cada vehículo</li>
-            <li>Conductores, pasajeros y asignaciones</li>
-            <li>Historial de recorridos con reproducción</li>
-          </ul>
+          <p className="auth-aside__title">
+            Tu flota en tiempo real<span className="auth-aside__title-rest">, en un solo lugar</span>.
+          </p>
+          <p className="auth-aside__lead">
+            Posición, estado y asignaciones de conductores y pasajeros de cada vehículo.
+          </p>
         </div>
-        <p className="auth-aside__note">Las horas se muestran en la zona horaria de Bogotá.</p>
+        <ul className="auth-aside__notes" role="list">
+          <li>
+            <UserCogIcon className="auth-aside__note-icon" />
+            Solo para cuentas creadas por un administrador. No hay registro público.
+          </li>
+          <li>
+            <KeyIcon className="auth-aside__note-icon" />
+            En tu primer ingreso deberás cambiar la contraseña.
+          </li>
+        </ul>
       </aside>
       <div className="auth-page__panel">
-        <div className="auth-page__brand">
-          <Brand to="/" />
-        </div>
         <Card as="section" className="auth-card" aria-labelledby="login-title">
           <h1 id="login-title" className="auth-card__title">
             Iniciar sesión
           </h1>
           <p className="auth-card__intro">
-            Ingresa con el correo y la contraseña que te entregó el administrador.
+            Usa el correo y la contraseña que te entregó el administrador.
           </p>
 
           {expired && !formError && (
@@ -137,6 +153,7 @@ export default function LoginPage() {
               type="email"
               inputMode="email"
               autoComplete="username"
+              placeholder="nombre@empresa.com"
               isRequired
               error={errors.email?.message}
               {...register('email')}
@@ -148,14 +165,24 @@ export default function LoginPage() {
               error={errors.password?.message}
               {...register('password')}
             />
-            <Button type="submit" fullWidth loading={isSubmitting} loadingText="Ingresando…">
+            <Button
+              type="submit"
+              fullWidth
+              icon={<ArrowRightIcon />}
+              loading={isSubmitting}
+              loadingText="Ingresando…"
+            >
               Ingresar
             </Button>
           </form>
+          <p className="auth-card__help">
+            ¿Olvidaste tu contraseña? Comunícate con el administrador de tu empresa para restablecerla.
+          </p>
         </Card>
-        <p className="auth-page__footer">
-          ¿No tienes cuenta? Solo un administrador puede crear usuarios.{' '}
-          <Link to="/">Volver al inicio</Link>
+        {/* On phones the brand band only shows the title, so the access notes move below the form. */}
+        <p className="auth-page__mobile-note">
+          Solo para cuentas creadas por el administrador. En el primer ingreso deberás cambiar tu
+          contraseña.
         </p>
       </div>
     </main>

@@ -1,5 +1,38 @@
 # Estado actual y relevo
-Snapshot: 2026-11-09 23:40 America/Bogota. Verificar siempre Git, archivos y procesos antes de continuar.
+Snapshot: 2026-11-10 09:35 America/Bogota. Verificar siempre Git, archivos y procesos antes de continuar.
+
+## Relevo — 2026-11-10 09:35 America/Bogota
+- **Landing cerrada por Juana:** se queda como está. Diseño basado en Claude Design.
+  - PR #9 (merge `7e61cb3`) adoptó el diseño.
+  - PR #10 (merge `18ffe96`) aplicó tres ajustes pedidos por Juana:
+    - la imagen del hero vuelve a la composición anterior, sin etiqueta;
+    - en «Funcionalidades» las columnas tienen la misma altura;
+    - animación única de aparición al hacer scroll, respetando «reducir movimiento».
+  - Comprobado en https://gpscomercial.juanagonzalez.dev a las 09:28:
+    - landing, login y `/health` con 200;
+    - sin desbordamiento ni errores de consola a 1440, 768 y 360 px;
+    - menú móvil funcional y animación sin contenido oculto tras el scroll;
+    - sin sesión, el botón del hero lleva al login y `/app/dashboard` redirige a `/login`.
+  - No hay más cambios estéticos previstos en la landing.
+- **README:** se retiraron las capturas de la landing (Juana las veía muy cargadas) y se borraron los archivos `docs/screenshots/landing*.png`. `e2e/screenshots.spec.ts` ya no las genera. Las capturas del panel no cambian.
+- **Lighthouse de la landing actual: sin medir.** Las cifras del README corresponden a una versión anterior. UX-07 sigue EN CURSO hasta remedir.
+- **Dashboard/login: en curso en el chat paralelo.**
+  - Worktree `../gps-comercial-panel`, rama `style/panel-login-visual`, alcance exclusivamente visual.
+  - A las 09:35 tenía 8 commits, de `71aaee2` a `bd8dcc2`.
+    - Tocan `styles/panel-theme.css` (nuevo), `auth.css`, `dashboard.css`, `AppShell.tsx`, `ChangePasswordPage.tsx` (1 línea), `LoginPage.tsx` (64 líneas) y `docs/panel-theme.md`.
+    - No tocan ningún archivo de la landing.
+  - No integrar hasta que Juana entregue los hashes definitivos. Entonces:
+    - revisar que los cambios en `.tsx`, sobre todo el rediseño de `LoginPage.tsx`, sean solo visuales: mismo formulario, validación, errores, cambio de contraseña obligatorio y redirecciones;
+    - integrar en un PR separado;
+    - verificar el despliegue, el login y la navegación.
+- **Confirmado por Juana (2026-11-10):** el login en producción funciona después de retirar `ADMIN_PASSWORD` de Render.
+- **Sin confirmación todavía:**
+  - renovación del `WIALON_TOKEN`;
+  - envío del correo de entrega.
+- **Procesos locales:**
+  - Vite de la landing en el puerto 5175 (worktree `gps-comercial-landing`);
+  - backend local en el puerto 8000.
+  - Se pueden detener sin pérdida.
 
 ## Alcance vigente
 Aplicación desplegada (Vercel + Render + Neon). Push, PR y fusión a `main` autorizados por Juana; sin force push.
@@ -18,13 +51,13 @@ Aplicación desplegada (Vercel + Render + Neon). Push, PR y fusión a `main` aut
 - Las rutas directas cargan la aplicación.
 - CORS y CSRF: un `Origin` ajeno recibe 403 (Vercel reenvía `Origin`).
 - Neon conectado; migraciones y Admin aplicados al arrancar.
-- Lighthouse móvil 99/100/100/100.
+- Lighthouse móvil 99/100/100/100 (2026-11-09, landing anterior; no aplica al diseño actual).
 - Arranque tras inactividad: no observado (medición a las 04:31 UTC tras 18 min sin tráfico propio: el servicio ya estaba activo (/health en 1,0 s, sin aviso), probablemente por el redespliegue y el login de comprobación; arranque en frío real aún no observado).
 - Comprobado por Juana en el navegador: login, flota real y edición.
 
 ### Pendiente de producción (requiere a Juana)
 - Ejecutar `e2e/production.spec.ts` con sus credenciales en su terminal: cookies, CSRF autenticado, refresh, logout y rol opcional.
-- Confirmar el login tras retirar `ADMIN_PASSWORD` en Render.
+- ~~Confirmar el login tras retirar `ADMIN_PASSWORD` en Render.~~ Confirmado manualmente por Juana el 2026-11-10.
 - Fijar el compute de Neon en 0,25 CU para cuidar las 100 CU-h/mes.
 
 ### Incidente de credenciales (captura del `.env` local, 2026-11-09)

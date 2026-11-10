@@ -12,20 +12,26 @@ Prueba técnica Fullstack para GPS Control. Backend en **FastAPI (Python 3.13)**
 El estado verificado de cada requisito, con evidencia, está en [docs/checklist.md](docs/checklist.md). El relevo de trabajo está en [docs/estado.md](docs/estado.md).
 
 ## 1. Capturas
-Capturas reales tomadas con Playwright y Chrome. Las de la landing muestran la aplicación con datos simulados; las demás usan la cuenta Wialon `demoApps`. Por privacidad, los nombres o
-IMEI de los vehículos, los conductores y el mapa del recorrido aparecen **enmascarados** en magenta. El mapa general se
-muestra a escala de país.
+Capturas reales de la aplicación tomadas con Playwright y Chrome sobre la cuenta Wialon `demoApps`. Por privacidad, los
+nombres o IMEI de los vehículos, los conductores y el mapa del recorrido aparecen **enmascarados** en magenta. El mapa
+general se muestra a escala de país.
 
-| Landing | Dashboard | Vehículos: lista y mapa con clustering |
-|---|---|---|
-| ![Landing](docs/screenshots/landing.png) | ![Dashboard](docs/screenshots/dashboard.png) | ![Vehículos](docs/screenshots/vehiculos-mapa.png) |
+La landing pública se consulta directamente en https://gpscomercial.juanagonzalez.dev. Su diseño final, basado en Claude
+Design (PR #9 y #10, 2026-11-10), está descrito en [docs/design-system.md](docs/design-system.md).
 
-| Login | Historial con reproducción y velocidad | Móvil 360 px: landing |
-|---|---|---|
-| ![Login](docs/screenshots/login.png) | ![Historial](docs/screenshots/historial.png) | ![Landing móvil](docs/screenshots/landing-movil.png) |
+| Dashboard | Vehículos: lista y mapa con clustering |
+|---|---|
+| ![Dashboard](docs/screenshots/dashboard.png) | ![Vehículos](docs/screenshots/vehiculos-mapa.png) |
 
-**Lighthouse móvil** sobre la URL de producción `https://gpscomercial.juanagonzalez.dev`, tras el pulido visual
-(2026-11-10 12:42 UTC, dos ejecuciones):
+| Historial con reproducción y velocidad | Login |
+|---|---|
+| ![Historial](docs/screenshots/historial.png) | ![Login](docs/screenshots/login.png) |
+
+> La tabla de Lighthouse corresponde a una **versión anterior de la landing**. El diseño actual (PR #9 y #10) todavía no
+> se ha medido con Lighthouse; estas cifras no son resultados del diseño actual.
+
+**Lighthouse móvil** sobre la URL de producción `https://gpscomercial.juanagonzalez.dev`, landing anterior a los
+rediseños del 2026-11-10 (2026-11-10 12:42 UTC, dos ejecuciones):
 
 | Ejecución | Rendimiento | Accesibilidad | Buenas prácticas | SEO | LCP | TBT | CLS |
 |---|---|---|---|---|---|---|---|
@@ -61,7 +67,7 @@ muestra a escala de país.
 - CORS y CSRF: un `POST` con `Origin` ajeno → 403 `csrf_failed`, porque Vercel reenvía el `Origin`. Sin sesión → 401.
 - Neon conectado: migraciones aplicadas al arrancar y Admin creado desde las variables de Render.
 - La autora confirmó en el navegador el login, la consulta de flota y la edición.
-- Lighthouse móvil: 99/100/100/100.
+- Lighthouse móvil: 99/100/100/100 (2026-11-09, landing anterior; el diseño actual está pendiente de medir).
 - Arranque tras inactividad: el aviso "Iniciando el servidor" y los reintentos están probados en local. La medición en producción del 2026-11-10 encontró el servicio ya activo (`/health` en 1,0 s), así que no se observó un arranque en frío real; se comprueba abriendo la web tras 15 min sin uso.
 - Prueba autenticada de solo lectura `e2e/production.spec.ts` (cookies `HttpOnly`/`Secure`/`SameSite=Lax`, CSRF, refresh, datos reales, rutas directas, logout y, opcionalmente, rol Visualizador): la ejecuta la autora con sus credenciales en su terminal.
 

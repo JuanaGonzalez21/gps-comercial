@@ -213,3 +213,35 @@ Dirección: producto de flotas sobrio y preciso. La personalidad viene de la com
 - Cifras tabulares en tablas e indicadores (`font-variant-numeric: tabular-nums`) para comparar velocidades, fechas y conteos.
 - Tabla de pasajeros: con la columna extra de campos personalizados, las cuatro acciones ya no caben en una línea a 1440 px. Ahora forman una cuadrícula pareja de 2 × 2 (editar/cambiar, desasignar/eliminar) en lugar de un salto 3 + 1, y nombres y vehículos vuelven a una sola línea. Conductores mantiene su fila única.
 - Contenedor de tablas de conductores y pasajeros con `position: relative`: los textos solo para lectores de pantalla (posición absoluta) escapaban del desplazamiento interno y producían scroll horizontal de toda la página entre 48 y ~75 rem (97 px a 1024 px). Comprobado en 0 en las ocho pantallas internas a 360, 768, 1024, 1280 y 1440 px.
+
+## Rediseño de la landing (2026-11-10)
+- Se retiraron las capturas pequeñas del producto. El hero usa una fotografía ilustrativa de una furgoneta y un camión (PNG con transparencia, convertido a WebP con alfa de 720 y 1400 px) sobre una sola forma plana turquesa `#176F75`, con la etiqueta «Integración con Wialon». El reparto es 45 % texto y 55 % imagen.
+- Ritmo de secciones:
+  - hero lavanda;
+  - franja blanca de tres capacidades;
+  - sección editorial con fotografía ilustrativa (carga diferida);
+  - bloque oscuro «Cómo funciona» con una ficha ilustrativa en HTML/CSS («Vista ilustrativa»: sin mapa ni datos reales, sin botones);
+  - control de acceso en blanco;
+  - cierre lavanda;
+  - pie oscuro.
+- Los textos de los roles salen de `ROLE_PERMISSIONS` (`backend/app/domain/permissions.py`).
+- Cabecera blanca y fija de 76 px, con contenido de hasta 1200 px. Las secciones compensan la altura con `scroll-margin-top`. En móvil, botón de menú con `aria-expanded` y `aria-controls`; el menú se cierra al navegar y con Escape.
+- Todo el CSS nuevo está acotado a `.landing-*` y `.public-*`. Ningún token global cambió.
+
+## Landing según Claude Design (2026-11-10, sustituye a las dos secciones anteriores)
+- **Hero:** se reproduce la composición de la referencia, con una excepción pedida por Juana: en lugar de la fotografía, se conservan la furgoneta y el camión (WebP con transparencia) sobre el panel turquesa `#176F75`, que ocupa la mitad derecha de borde a borde. La nota «Información de tus unidades integrada con Wialon» va bajo los botones.
+- **Funcionalidades:** columna editorial con fotografía vertical 2:3 (4:5 en móvil) y lista 01–03 separada por líneas finas, sin tarjetas.
+- **Cómo trabajamos:** banda oscura con numeración grande en turquesa.
+- **Control de tu flota:** sustituye a «Control de acceso». Fotografía a la izquierda (4:3 en móvil, recorte que conserva los dos rostros y la tablet) y texto sobre lavanda. Los textos corresponden a funciones existentes: búsqueda por nombre, filtro por estado, velocidad, última actualización, «sin señal», conductor, pasajeros, campos e historial. Los permisos no cambian.
+- **Cierre y pie:** cierre turquesa y pie compacto.
+- **Tipografía:** la pila del sistema del producto. La fuente del diseño exigiría cargar una fuente externa y ampliar la CSP, así que se aproxima con peso 800 y espaciado negativo en titulares.
+- **Imágenes:** las fotografías bajo el hero cargan en diferido y todas declaran sus dimensiones. Se retiró la fotografía anterior de la coordinadora sola.
+- **Ajustes posteriores (2026-11-10, a petición de Juana):**
+  - la imagen del hero vuelve a la composición anterior (forma turquesa con borde izquierdo redondeado, vehículos sobresaliendo y sin etiqueta);
+  - en «Funcionalidades» las dos columnas comparten altura: la foto ocupa el espacio bajo la introducción (mínimo 34 rem) y los tres bloques se reparten la altura, así que no queda hueco bajo la lista;
+  - aparición única de los bloques bajo el hero al hacer scroll (opacidad y 24 px de desplazamiento, 600 ms, escalonado de 90 ms). No se aplica con «reducir movimiento» ni sin `IntersectionObserver`, y nunca al hero.
+- **Detalles de acabado (2026-11-10):**
+  - los enlaces de sección llevan al contenido, no al relleno superior: el texto queda unos 32–40 px bajo la cabecera fija, y «Control de tu flota» empieza justo bajo ella con su foto;
+  - desplazamiento suave al pulsarlos (`html:has(.landing)`, solo con movimiento permitido; el panel no se ve afectado);
+  - el menú móvil usa líneas suaves entre enlaces, sin subrayado;
+  - en «Control de tu flota» la altura la fija el texto y la foto la cubre, sin hueco bajo el texto.

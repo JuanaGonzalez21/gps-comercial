@@ -40,31 +40,64 @@ function renderLanding(status: AuthStatus, user: Me | null = null) {
 }
 
 describe('LandingPage', () => {
-  it('has every section required by RF-02 with a single h1 and semantic landmarks', () => {
+  it('has every section of the Claude Design landing with a single h1 and semantic landmarks', () => {
     renderLanding('anonymous')
 
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
-    const title = 'Tu flota, clara. Tu operación, bajo control.'
+    const title = 'Tu flota conectada. Tu equipo informado.'
     expect(screen.getByRole('heading', { level: 1, name: title })).toBeInTheDocument()
-    expect(screen.getByRole('region', { name: title })).toBeInTheDocument()
-    const features = screen.getByRole('region', { name: 'Lo que resuelve en el día a día' })
-    for (const capability of ['Ubicación y estado de la flota', 'Conductores y pasajeros', 'Historial de recorridos']) {
-      expect(within(features).getByRole('heading', { level: 3, name: capability })).toBeInTheDocument()
+    const hero = screen.getByRole('region', { name: title })
+    expect(within(hero).getByText('Información de tus unidades integrada con Wialon.')).toBeInTheDocument()
+    expect(within(hero).getByRole('link', { name: 'Conocer la plataforma' })).toHaveAttribute('href', '#funcionalidades')
+
+    const features = screen.getByRole('region', { name: 'Lo que necesitas saber, en el momento en que lo necesitas.' })
+    for (const feature of ['Saber dónde está cada vehículo.', 'Conductores y pasajeros, en orden.', 'Recorridos con contexto.']) {
+      expect(within(features).getByRole('heading', { level: 3, name: feature })).toBeInTheDocument()
     }
-    expect(screen.getByRole('region', { name: 'De la lista al mapa en un clic' })).toBeInTheDocument()
-    const trust = screen.getByRole('region', { name: 'Cada acceso, con su rol y su registro' })
-    expect(within(trust).getAllByRole('heading', { level: 3 })).toHaveLength(4)
-    expect(screen.getByRole('region', { name: 'Entra a tu panel de flota' })).toBeInTheDocument()
+    const work = screen.getByRole('region', { name: 'Una consulta, de principio a fin.' })
+    expect(within(work).getAllByRole('heading', { level: 3 })).toHaveLength(3)
+    const control = screen.getByRole('region', { name: 'Cada vehículo, con su información a la vista.' })
+    for (const item of ['Encuentra la unidad', 'Consulta su situación', 'Abre su detalle']) {
+      expect(within(control).getByRole('heading', { level: 3, name: item })).toBeInTheDocument()
+    }
+    // Marketing copy only: the role descriptions left this section, permissions are unchanged.
+    expect(within(control).queryByRole('heading', { name: 'Administrador' })).not.toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Todo listo para consultar tu flota.' })).toBeInTheDocument()
     expect(screen.getByRole('contentinfo')).toBeInTheDocument()
     expect(screen.getByRole('main')).toBeInTheDocument()
-    // Every product image declares its size (no layout shift) and says the data is simulated.
+
+    // Every image declares its size (no layout shift); photos below the hero load lazily, the hero does not.
     for (const image of screen.getAllByRole('img')) {
       if (image.tagName !== 'IMG') continue
       expect(image).toHaveAttribute('width')
       expect(image).toHaveAttribute('height')
     }
-    expect(screen.getAllByText(/datos simulados/i).length).toBeGreaterThan(0)
-    expect(screen.getByRole('link', { name: 'Explorar funcionalidades' })).toHaveAttribute('href', '#funcionalidades')
+    for (const photo of screen.getAllByRole('img', { name: /Fotografía ilustrativa/ })) {
+      expect(photo).toHaveAttribute('loading', 'lazy')
+    }
+    expect(screen.getByRole('img', { name: /furgoneta y un camión/ })).not.toHaveAttribute('loading')
+    // Scroll reveal never hides content when IntersectionObserver is unavailable (jsdom, old browsers).
+    expect(document.querySelectorAll('[data-reveal]:not([data-reveal="in"])')).toHaveLength(0)
+
+    const sections = within(screen.getByRole('navigation', { name: 'Secciones' }))
+    expect(sections.getByRole('link', { name: 'Funcionalidades' })).toHaveAttribute('href', '/#funcionalidades')
+    expect(sections.getByRole('link', { name: 'Cómo trabajamos' })).toHaveAttribute('href', '/#como-trabajamos')
+    expect(sections.getByRole('link', { name: 'Control de tu flota' })).toHaveAttribute('href', '/#control-de-tu-flota')
+    for (const id of ['funcionalidades', 'como-trabajamos', 'control-de-tu-flota']) {
+      expect(document.getElementById(id)).not.toBeNull()
+    }
+  })
+
+  it('opens and closes the mobile section menu (button state, Escape)', async () => {
+    renderLanding('anonymous')
+    const user = userEvent.setup()
+
+    const toggle = screen.getByRole('button', { name: 'Abrir menú de secciones' })
+    expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    await user.click(toggle)
+    expect(screen.getByRole('button', { name: 'Cerrar menú de secciones' })).toHaveAttribute('aria-expanded', 'true')
+    await user.keyboard('{Escape}')
+    expect(screen.getByRole('button', { name: 'Abrir menú de secciones' })).toHaveAttribute('aria-expanded', 'false')
   })
 
   it('offers login (and no public sign-up) to anonymous visitors and wakes the backend', async () => {
@@ -78,7 +111,7 @@ describe('LandingPage', () => {
     expect(screen.queryByRole('link', { name: /registr|crear cuenta/i })).not.toBeInTheDocument()
     expect(calls.some((call) => call.url === '/health')).toBe(true)
 
-    const hero = screen.getByRole('region', { name: 'Tu flota, clara. Tu operación, bajo control.' })
+    const hero = screen.getByRole('region', { name: 'Tu flota conectada. Tu equipo informado.' })
     await user.click(within(hero).getByRole('link', { name: 'Iniciar sesión' }))
     expect(router.state.location.pathname).toBe('/login')
   })
@@ -90,7 +123,5 @@ describe('LandingPage', () => {
     expect(panelLinks).toHaveLength(4) // header, hero, closing call to action and footer navigation
     for (const link of panelLinks) expect(link).toHaveAttribute('href', '/app/dashboard')
     expect(screen.queryByRole('link', { name: 'Iniciar sesión' })).not.toBeInTheDocument()
-    expect(screen.getByRole('heading', { level: 2, name: 'Tu panel está listo' })).toBeInTheDocument()
-    expect(screen.getByText(/Iniciaste sesión como Ana Pérez/)).toBeInTheDocument()
   })
 })

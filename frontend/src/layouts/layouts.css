@@ -126,3 +126,157 @@
     grid-column: 1 / -1;
   }
 }
+
+/* ---------- Public header v2: white, sticky, ~76 px, 1200 px grid, accessible mobile menu ---------- */
+.public-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.public-header__inner,
+.public-footer__inner {
+  width: min(100% - 2 * var(--space-4), 75rem);
+}
+
+.public-header__inner {
+  position: relative;
+  flex-wrap: nowrap;
+  min-height: 4.75rem;
+}
+
+.public-header__end {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+
+.public-header__toggle {
+  display: inline-grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.public-header__toggle svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* Small screens: the section links open as a panel under the header. */
+.public-header__nav[data-open] {
+  position: absolute;
+  top: 100%;
+  right: calc(-1 * var(--space-4));
+  left: calc(-1 * var(--space-4));
+  display: grid;
+  padding: var(--space-2) var(--space-4) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Mobile menu: plain links separated by soft rules (no underline); hover turns them teal. */
+.public-header__nav[data-open] a {
+  display: block;
+  padding: var(--space-4) 0;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+}
+
+.public-header__nav[data-open] a:last-child {
+  border-bottom: 0;
+}
+
+.public-header__nav[data-open] a:hover {
+  color: var(--color-primary);
+}
+
+@media (min-width: 48rem) {
+  .public-header__toggle {
+    display: none;
+  }
+
+  .public-header__end {
+    margin-left: 0;
+  }
+
+  .public-header__nav,
+  .public-header__nav[data-open] {
+    position: static;
+    display: flex;
+    gap: var(--space-8);
+    margin-left: auto;
+    padding: 0;
+    border: 0;
+    background: none;
+    box-shadow: none;
+  }
+
+  .public-header__nav a,
+  .public-header__nav[data-open] a {
+    padding-block: var(--space-2);
+    border-bottom: 0;
+    color: var(--color-text-secondary);
+    font-size: var(--text-base);
+  }
+}
+
+/* The brand never wraps next to the access button and the menu toggle (360 px). */
+.public-header__inner > :first-child {
+  flex: none;
+  white-space: nowrap;
+}
+
+/* ---------- Public footer v3 (Claude Design): compact; brand left, links right, legal line below ---------- */
+.public-footer__inner {
+  gap: var(--space-6) var(--space-10);
+  padding-block: var(--space-10) var(--space-8);
+}
+
+.public-footer__brand p {
+  max-width: 22rem;
+}
+
+.public-footer__links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-6);
+}
+
+.public-footer__links a {
+  padding-block: var(--space-2);
+  color: var(--color-on-dark);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+}
+
+.public-footer__links a:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.3em;
+}
+
+/* Access link in the light teal used on dark surfaces (9.92:1 on --color-dark). */
+.public-footer__links .public-footer__access {
+  color: #7fd3d8;
+}
+
+.public-footer__legal {
+  overflow-wrap: anywhere;
+  font-size: var(--text-xs);
+}
+
+@media (min-width: 48rem) {
+  .public-footer__inner {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}

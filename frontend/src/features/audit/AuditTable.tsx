@@ -1,9 +1,9 @@
 import { Fragment, useState } from 'react'
 import type { AuditLogOut } from '@/api/types'
 import { formatDateTime, formatRelative } from '@/lib/format'
-import { ChevronRightIcon, Skeleton } from '@/ui'
+import { Skeleton } from '@/ui'
 import { auditActionLabel, hasDetails } from './auditActions'
-import { DetailsJson, EntityCell, OutcomeBadge } from './AuditBits'
+import { ActionCell, ActorCell, AuditDetails, DetailsToggle, EntityCell, OutcomeBadge } from './AuditBits'
 
 const COLUMNS = 6
 
@@ -12,7 +12,7 @@ interface AuditTableProps {
   busy: boolean
 }
 
-/** Tablet and desktop: one row per entry, details expand in a row below it. */
+/** Tablet and desktop: one row per entry; details open in a full-width panel under the row. */
 export function AuditTable({ items, busy }: AuditTableProps) {
   const [expanded, setExpanded] = useState<ReadonlySet<number>>(new Set())
   const toggle = (id: number) =>
@@ -36,36 +36,37 @@ export function AuditTable({ items, busy }: AuditTableProps) {
             <th scope="col">Acción</th>
             <th scope="col">Entidad</th>
             <th scope="col">Resultado</th>
-            <th scope="col">Detalles</th>
+            <th scope="col" className="audit-table__toggle">
+              <span className="visually-hidden">Detalles</span>
+            </th>
           </tr>
         </thead>
         <tbody>
           {items.map((entry) => {
             const open = expanded.has(entry.id)
             const detailsId = `audit-details-${entry.id}`
-            const label = auditActionLabel(entry.action)
+            const failure = entry.outcome === 'failure'
+            const when = formatDateTime(entry.occurred_at)
+            const withDetails = hasDetails(entry)
             return (
               <Fragment key={entry.id}>
-                <tr className={entry.outcome === 'failure' ? 'audit-table__row--failure' : undefined}>
+                <tr
+                  className={
+                    [failure && 'audit-table__row--failure', open && 'audit-table__row--open'].filter(Boolean).join(' ') ||
+                    undefined
+                  }
+                >
                   <th scope="row">
-                    <time dateTime={entry.occurred_at} className="admin-table__primary">
-                      {formatDateTime(entry.occurred_at)}
+                    <time dateTime={entry.occurred_at} className="audit-when">
+                      {when}
                     </time>
                     <span className="admin-table__secondary">{formatRelative(entry.occurred_at)}</span>
                   </th>
-                  <td className="audit-table__who">
-                    {entry.actor_email ? (
-                      <span className="audit-table__actor">{entry.actor_email}</span>
-                    ) : (
-                      <span className="admin-muted">Sin usuario</span>
-                    )}
-                    <span className="admin-table__secondary">
-                      IP <span className="admin-table__mono">{entry.ip_address ?? 'sin dato'}</span>
-                    </span>
+                  <td>
+                    <ActorCell entry={entry} />
                   </td>
                   <td>
-                    <span className="admin-table__primary">{label}</span>
-                    <span className="admin-table__mono">{entry.action}</span>
+                    <ActionCell entry={entry} />
                   </td>
                   <td>
                     <EntityCell entry={entry} />
@@ -73,28 +74,29 @@ export function AuditTable({ items, busy }: AuditTableProps) {
                   <td>
                     <OutcomeBadge outcome={entry.outcome} />
                   </td>
-                  <td>
-                    {hasDetails(entry) ? (
-                      <button
-                        type="button"
-                        className="audit-toggle"
-                        aria-label={`Detalles de ${label}`}
-                        aria-expanded={open}
-                        aria-controls={detailsId}
-                        onClick={() => toggle(entry.id)}
-                      >
-                        <ChevronRightIcon className="audit-toggle__icon" />
-                        Detalles
-                      </button>
+                  <td className="audit-table__toggle">
+                    {withDetails ? (
+                      <DetailsToggle
+                        label={`${auditActionLabel(entry.action)}, ${when}`}
+                        expanded={open}
+                        controls={detailsId}
+                        onToggle={() => toggle(entry.id)}
+                      />
                     ) : (
-                      <span className="admin-muted">Sin detalles</span>
+                      <span className="visually-hidden">Sin detalles</span>
                     )}
                   </td>
                 </tr>
-                {hasDetails(entry) && (
-                  <tr id={detailsId} className="admin-table__details-row" hidden={!open}>
+                {withDetails && (
+                  <tr
+                    id={detailsId}
+                    className={['admin-table__details-row', failure && 'audit-table__row--failure']
+                      .filter(Boolean)
+                      .join(' ')}
+                    hidden={!open}
+                  >
                     <td colSpan={COLUMNS}>
-                      <DetailsJson details={entry.details} />
+                      <AuditDetails details={entry.details} failure={failure} />
                     </td>
                   </tr>
                 )}
@@ -130,7 +132,7 @@ export function AuditTableSkeleton({ rows = 6 }: { rows?: number }) {
                 <Skeleton width="4.5rem" height="1.5rem" pill />
               </td>
               <td>
-                <Skeleton width="5rem" />
+                <Skeleton width="2.5rem" height="2.5rem" />
               </td>
             </tr>
           ))}

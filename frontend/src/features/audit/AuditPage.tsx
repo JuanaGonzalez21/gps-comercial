@@ -11,7 +11,8 @@ import { AuditTable, AuditTableSkeleton } from './AuditTable'
 import '@/features/users/admin-table.css'
 import './audit.css'
 
-const PAGE_SIZE = 20
+/** Design "8. Auditoría": 10 events per page (the server paginates). */
+const PAGE_SIZE = 10
 const ACTOR_DEBOUNCE_MS = 350
 /** Below 80rem the log is cards; the six-column table needs the width. */
 const COMPACT_QUERY = '(max-width: 79.99rem)'

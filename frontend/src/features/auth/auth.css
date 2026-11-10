@@ -336,6 +336,36 @@
   min-height: 3rem;
 }
 
+/* Confirm field + live match hint (presentational; the submit validation is unchanged).
+   Mismatch: #EB162C border (4.48:1, non-text) and #A81A2B text (7.37:1); match: #176F75 (5.89:1). */
+.auth-page--password .password-confirm {
+  display: grid;
+}
+
+.auth-page--password .password-confirm--mismatch .field__control,
+.auth-page--password .password-confirm--mismatch .field__control:hover,
+.auth-page--password .password-confirm--mismatch .field__control:focus-visible {
+  border-color: var(--color-brand);
+}
+
+.auth-page--password .password-confirm--mismatch .field__control:focus-visible {
+  box-shadow: 0 0 0 3px rgb(235 22 44 / 0.16);
+}
+
+.auth-page--password .password-match:not(:empty) {
+  margin-top: 0.375rem;
+  font-size: 0.84375rem;
+  font-weight: var(--weight-semibold);
+}
+
+.auth-page--password .password-match--mismatch {
+  color: var(--color-danger);
+}
+
+.auth-page--password .password-match--match {
+  color: var(--color-primary);
+}
+
 /* Live requirements box: #F7F4F9, radius 12 */
 .password-rules {
   padding: var(--space-4);

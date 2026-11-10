@@ -1,65 +1,60 @@
+import { useState } from 'react'
 import type { AuditLogOut } from '@/api/types'
 import { formatDateTime, formatRelative } from '@/lib/format'
 import { Skeleton } from '@/ui'
 import { auditActionLabel, hasDetails } from './auditActions'
-import { DetailsJson, EntityCell, OutcomeBadge } from './AuditBits'
+import { ActionCell, ActorCell, AuditDetails, DetailsToggle, EntityCell, OutcomeBadge } from './AuditBits'
 
-/** Phones (UX-01): one card per entry; details fold with the native <details> element. */
+/** One entry in the order of the table columns; the date is the heading, as the row header is. */
+function AuditCard({ entry }: { entry: AuditLogOut }) {
+  const [open, setOpen] = useState(false)
+  const titleId = `audit-card-${entry.id}`
+  const detailsId = `audit-card-details-${entry.id}`
+  const when = formatDateTime(entry.occurred_at)
+  const failure = entry.outcome === 'failure'
+  const withDetails = hasDetails(entry)
+  return (
+    <article className="admin-card audit-card" aria-labelledby={titleId}>
+      <div className="audit-card__group">
+        <h3 id={titleId} className="audit-card__title">
+          <time dateTime={entry.occurred_at}>{when}</time>
+        </h3>
+        <span className="admin-table__secondary">{formatRelative(entry.occurred_at)}</span>
+      </div>
+      <div className="audit-card__group">
+        <ActorCell entry={entry} />
+      </div>
+      <div className="audit-card__group">
+        <ActionCell entry={entry} />
+      </div>
+      <div className="audit-card__group">
+        <EntityCell entry={entry} />
+      </div>
+      <div className="audit-card__footer">
+        <OutcomeBadge outcome={entry.outcome} />
+        {withDetails && (
+          <DetailsToggle
+            label={`${auditActionLabel(entry.action)}, ${when}`}
+            expanded={open}
+            controls={detailsId}
+            onToggle={() => setOpen((value) => !value)}
+          />
+        )}
+      </div>
+      {withDetails && <AuditDetails id={detailsId} hidden={!open} details={entry.details} failure={failure} />}
+    </article>
+  )
+}
+
+/** Phones and tablets (UX-01): one stacked entry per event, same data and details as the table. */
 export function AuditCardList({ items }: { items: readonly AuditLogOut[] }) {
   return (
     <ul className="admin-cards" role="list">
-      {items.map((entry) => {
-        const titleId = `audit-card-${entry.id}`
-        return (
-          <li key={entry.id}>
-            <article className="admin-card" aria-labelledby={titleId}>
-              <div className="admin-card__header">
-                <h3 id={titleId} className="admin-card__title">
-                  {auditActionLabel(entry.action)}
-                </h3>
-                <p className="admin-card__subtitle">
-                  <time dateTime={entry.occurred_at}>{formatDateTime(entry.occurred_at)}</time> ·{' '}
-                  {formatRelative(entry.occurred_at)}
-                </p>
-              </div>
-              <dl className="admin-card__details">
-                <div>
-                  <dt>Resultado</dt>
-                  <dd>
-                    <OutcomeBadge outcome={entry.outcome} />
-                  </dd>
-                </div>
-                <div>
-                  <dt>Usuario</dt>
-                  <dd>{entry.actor_email ?? <span className="admin-muted">Sin usuario</span>}</dd>
-                </div>
-                <div>
-                  <dt>Entidad</dt>
-                  <dd>
-                    <EntityCell entry={entry} />
-                  </dd>
-                </div>
-                <div>
-                  <dt>IP</dt>
-                  <dd className="admin-table__mono">{entry.ip_address ?? 'Sin dato'}</dd>
-                </div>
-                <div>
-                  <dt>Código</dt>
-                  <dd className="admin-table__mono">{entry.action}</dd>
-                </div>
-              </dl>
-              {hasDetails(entry) ? (
-                <details className="audit-disclosure">
-                  <summary>Ver detalles</summary>
-                  <DetailsJson details={entry.details} />
-                </details>
-              ) : (
-                <p className="admin-note">Sin detalles adicionales.</p>
-              )}
-            </article>
-          </li>
-        )
-      })}
+      {items.map((entry) => (
+        <li key={entry.id}>
+          <AuditCard entry={entry} />
+        </li>
+      ))}
     </ul>
   )
 }

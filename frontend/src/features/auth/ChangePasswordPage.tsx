@@ -7,12 +7,13 @@ import { getErrorMessage, isApiError } from '@/api/errors'
 import { DEFAULT_APP_PATH } from '@/auth/redirect'
 import { useAuth } from '@/auth/useAuth'
 import { useDocumentTitle } from '@/lib/hooks'
-import { Alert, Brand, Button, Card, CheckCircleIcon, CircleIcon, PasswordField, useToast } from '@/ui'
+import { Alert, Brand, Button, Card, CheckCircleIcon, CircleIcon, LinkButton, PasswordField, useToast } from '@/ui'
 import { passwordRules, type PasswordRule } from './passwordPolicy'
 import '@/styles/panel-theme.css'
 import './auth.css'
 
 const CHECKLIST_ID = 'new-password-rules'
+const MATCH_ID = 'confirm-password-match'
 
 function buildSchema(rules: readonly PasswordRule[]) {
   return z
@@ -66,6 +67,11 @@ export default function ChangePasswordPage() {
     defaultValues: { currentPassword: '', newPassword: '', confirmPassword: '' },
   })
   const newPassword = useWatch({ control, name: 'newPassword' }) ?? ''
+  const confirmPassword = useWatch({ control, name: 'confirmPassword' }) ?? ''
+  // Live hint only (design "9. Cambiar contraseña"); the schema still decides on submit. Hidden
+  // while the field shows its own submit error, so the message is never repeated.
+  const matchState =
+    confirmPassword === '' || errors.confirmPassword ? null : confirmPassword === newPassword ? 'match' : 'mismatch'
 
   useEffect(() => {
     if (formError) errorRef.current?.focus()
@@ -167,20 +173,40 @@ export default function ChangePasswordPage() {
                 })}
               </ul>
             </div>
-            <PasswordField
-              label="Confirmar nueva contraseña"
-              autoComplete="new-password"
-              isRequired
-              error={errors.confirmPassword?.message}
-              {...register('confirmPassword')}
-            />
+            <div className="password-confirm">
+              <PasswordField
+                label="Confirmar nueva contraseña"
+                autoComplete="new-password"
+                isRequired
+                describedBy={matchState ? MATCH_ID : undefined}
+                fieldClassName={matchState === 'mismatch' ? 'password-confirm--mismatch' : undefined}
+                error={errors.confirmPassword?.message}
+                {...register('confirmPassword')}
+              />
+              {/* Always rendered so the polite status is announced when it changes. */}
+              <p
+                id={MATCH_ID}
+                role="status"
+                className={matchState ? `password-match password-match--${matchState}` : 'password-match'}
+              >
+                {matchState === 'match' && 'Las contraseñas coinciden.'}
+                {matchState === 'mismatch' && 'Las contraseñas no coinciden.'}
+              </p>
+            </div>
             <Button type="submit" fullWidth loading={isSubmitting} loadingText="Guardando…">
               Guardar contraseña
             </Button>
           </form>
-          <Button variant="ghost" fullWidth onClick={handleLogout}>
-            Cancelar y cerrar sesión
-          </Button>
+          {/* A temporary password must be replaced before using the panel: leaving means signing out. */}
+          {user?.must_change_password ? (
+            <Button variant="ghost" fullWidth onClick={handleLogout}>
+              Cancelar y cerrar sesión
+            </Button>
+          ) : (
+            <LinkButton variant="ghost" fullWidth to={DEFAULT_APP_PATH}>
+              Cancelar y volver al panel
+            </LinkButton>
+          )}
         </Card>
       </div>
     </main>

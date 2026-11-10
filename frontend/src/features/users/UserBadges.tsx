@@ -15,23 +15,12 @@ export function ActiveBadge({ active }: { active: boolean }) {
   )
 }
 
-/** must_change_password: the user still has a temporary password (RF-06). Table cell version. */
+/** must_change_password: the user still has a temporary password (RF-06). */
 export function PendingPasswordBadge() {
   return (
     <ToneBadge tone="warning" icon={<KeyIcon />}>
       Debe cambiar la contraseña
     </ToneBadge>
-  )
-}
-
-/** Card version, under its own "Contraseña" label. */
-export function PasswordState({ mustChange }: { mustChange: boolean }) {
-  return mustChange ? (
-    <ToneBadge tone="warning" icon={<KeyIcon />}>
-      Temporal, debe cambiarla
-    </ToneBadge>
-  ) : (
-    <span>Definida por el usuario</span>
   )
 }
 

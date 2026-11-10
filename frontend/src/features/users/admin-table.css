@@ -158,23 +158,10 @@
   white-space: nowrap;
 }
 
-.admin-table__primary {
-  display: block;
-  font-weight: var(--weight-semibold);
-  color: var(--color-text);
-}
-
 .admin-table__secondary {
   display: block;
   color: var(--color-text-muted); /* 5.33:1 on white */
   font-size: 0.8125rem;
-  overflow-wrap: anywhere;
-}
-
-.admin-table__mono {
-  font-family: var(--font-mono);
-  font-size: 0.78125rem;
-  color: var(--color-text-secondary);
   overflow-wrap: anywhere;
 }
 
@@ -207,46 +194,28 @@
   height: 0.875rem;
 }
 
-/* ---------- Cards (phones) ---------- */
+/* ---------- Cards (phones; audit also on tablets) ---------- */
+/* Rows separated by hairlines, as in the design at 390 px: no card inside the card. */
 .admin-cards {
   display: grid;
-  gap: var(--space-3);
+  column-gap: var(--space-6);
 }
 
-/* Tablets and small laptops: two cards per row */
+.admin-cards > li {
+  border-top: 1px solid var(--color-border-row);
+}
+
+/* Tablets and small laptops: two entries per row */
 @media (min-width: 48rem) {
   .admin-cards {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    align-items: start;
   }
 }
 
 .admin-card {
   display: grid;
   gap: var(--space-3);
-  padding: var(--space-4);
-  border: 1px solid var(--color-border-tile);
-  border-radius: var(--radius-tile);
-  background: var(--color-surface-tile);
-}
-
-.admin-card__header {
-  display: grid;
-  gap: var(--space-1);
-}
-
-.admin-card__title {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: var(--text-base);
-}
-
-.admin-card__subtitle {
-  font-size: var(--text-sm);
-  color: var(--color-text-secondary);
-  overflow-wrap: anywhere;
+  padding-block: var(--space-4);
 }
 
 .admin-card__details {
@@ -271,7 +240,7 @@
   overflow-wrap: anywhere;
 }
 
-/* Phones: less nested padding leaves room for e-mails and badges inside the cards */
+/* Phones: less nested padding leaves room for e-mails and badges */
 @media (max-width: 47.99rem) {
   .admin-panel {
     padding-block: var(--space-4);
@@ -279,10 +248,6 @@
 
   .admin-panel > * {
     margin-inline: var(--space-4);
-  }
-
-  .admin-card {
-    padding: var(--space-3);
   }
 }
 
@@ -394,17 +359,6 @@
 .admin-muted {
   color: var(--color-text-secondary);
   font-style: italic;
-}
-
-.admin-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-}
-
-.admin-actions__note {
-  flex-basis: 100%;
-  max-width: 22rem;
 }
 
 .admin-alert {

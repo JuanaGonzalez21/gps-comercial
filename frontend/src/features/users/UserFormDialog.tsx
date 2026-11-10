@@ -1,14 +1,14 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect, useId, useRef, useState } from 'react'
-import { useForm, useWatch } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { getErrorMessage, isApiError } from '@/api/errors'
-import type { UserOut } from '@/api/types'
-import { Alert, Button, Dialog, SelectField, TextField, type SelectOption } from '@/ui'
-import { isRoleCode, ROLE_SUMMARIES } from './roles'
+import type { RoleCode, UserOut } from '@/api/types'
+import { Alert, Button, Dialog, TextField, type SelectOption } from '@/ui'
+import { RoleRadioGroup } from './RoleRadioGroup'
 import { USER_FORM_FIELDS, userFormSchema, type UserFormInput, type UserFormOutput } from './userSchema'
 
 const UNCERTAIN_CREATE_HINT =
-  ' Si el usuario aparece en la lista, usa «Restablecer» para generarle una contraseña temporal nueva.'
+  ' Si el usuario aparece en la lista, abre «Más acciones» y elige «Restablecer contraseña» para generarle una contraseña temporal nueva.'
 
 interface UserFormDialogProps {
   mode: 'create' | 'edit'
@@ -16,7 +16,7 @@ interface UserFormDialogProps {
   user?: UserOut
   /** Editing the signed-in admin: the role is locked (the backend answers 409 otherwise). */
   isSelf?: boolean
-  roleOptions: readonly SelectOption[]
+  roleOptions: readonly (SelectOption & { value: RoleCode })[]
   onClose: () => void
   /** Saves and resolves on success; a rejected ApiError is shown on its fields or as a form alert. */
   onSubmit: (values: UserFormOutput) => Promise<void>
@@ -34,7 +34,6 @@ export function UserFormDialog({ mode, user, isSelf = false, roleOptions, onClos
     handleSubmit,
     setError,
     setFocus,
-    control,
     formState: { errors, isSubmitting },
   } = useForm<UserFormInput, unknown, UserFormOutput>({
     resolver: zodResolver(userFormSchema),
@@ -44,7 +43,6 @@ export function UserFormDialog({ mode, user, isSelf = false, roleOptions, onClos
       role: user?.role.code ?? 'viewer',
     },
   })
-  const selectedRole = useWatch({ control, name: 'role' })
 
   useEffect(() => {
     if (formError) errorRef.current?.focus()
@@ -84,12 +82,6 @@ export function UserFormDialog({ mode, user, isSelf = false, roleOptions, onClos
       }
     }
   })
-
-  const roleHint = isSelf
-    ? 'No puedes cambiar el rol de tu propia cuenta. Otro administrador puede hacerlo.'
-    : isRoleCode(selectedRole)
-      ? ROLE_SUMMARIES[selectedRole]
-      : undefined
 
   return (
     <Dialog
@@ -139,6 +131,7 @@ export function UserFormDialog({ mode, user, isSelf = false, roleOptions, onClos
             spellCheck={false}
             isRequired
             maxLength={254}
+            placeholder="nombre@empresa.com"
             hint="Será su usuario para iniciar sesión."
             error={errors.email?.message}
             {...register('email')}
@@ -160,17 +153,14 @@ export function UserFormDialog({ mode, user, isSelf = false, roleOptions, onClos
           error={errors.full_name?.message}
           {...register('full_name')}
         />
-        {isSelf ? (
-          <SelectField label="Rol" options={roleOptions} defaultValue={user?.role.code} disabled hint={roleHint} />
-        ) : (
-          <SelectField
-            label="Rol"
+        {isSelf && user ? (
+          <RoleRadioGroup
             options={roleOptions}
-            isRequired
-            hint={roleHint}
-            error={errors.role?.message}
-            {...register('role')}
+            lockedRole={user.role.code}
+            hint="No puedes cambiar el rol de tu propia cuenta. Otro administrador puede hacerlo."
           />
+        ) : (
+          <RoleRadioGroup options={roleOptions} registration={register('role')} error={errors.role?.message} />
         )}
       </form>
     </Dialog>

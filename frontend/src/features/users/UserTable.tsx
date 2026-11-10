@@ -48,7 +48,9 @@ export function UserTable({ items, currentUserId, sort, onSortChange, onAction, 
             <th scope="col">Rol</th>
             <th scope="col">Estado</th>
             <th scope="col">Último ingreso</th>
-            <th scope="col">Acciones</th>
+            <th scope="col" className="users-table__actions-head">
+              Acciones
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -58,21 +60,22 @@ export function UserTable({ items, currentUserId, sort, onSortChange, onAction, 
             return (
               <tr key={user.id}>
                 <th scope="row" className="users-table__user">
-                  <div className="users-table__person">
+                  <div className="users-person">
                     <Avatar name={user.full_name} tone="dark" size="lg" />
-                    <div className="users-table__identity">
-                      <span className="admin-table__primary">
-                        {user.full_name} {isSelf && <span className="admin-tag">Tu cuenta</span>}
+                    <div className="users-person__identity">
+                      <span className="users-person__name">
+                        {user.full_name}
+                        {isSelf && <span className="admin-tag">Tu cuenta</span>}
                       </span>
-                      <span className="users-table__email">{user.email}</span>
-                      {isSelf && <SelfNote id={selfNoteId} className="users-table__note" />}
+                      <span className="users-person__email">{user.email}</span>
+                      {isSelf && <SelfNote id={selfNoteId} className="users-person__note" />}
                     </div>
                   </div>
                 </th>
                 <td>{user.role.name}</td>
                 <td>
                   {/* One column for both states keeps the table within a laptop screen. */}
-                  <div className="admin-badges admin-badges--stack">
+                  <div className="admin-badges admin-badges--stack users-table__badges">
                     <ActiveBadge active={user.is_active} />
                     {user.must_change_password && <PendingPasswordBadge />}
                   </div>
@@ -81,12 +84,7 @@ export function UserTable({ items, currentUserId, sort, onSortChange, onAction, 
                   <LastLogin user={user} compact />
                 </td>
                 <td className="users-table__actions">
-                  <UserActions
-                    user={user}
-                    isSelf={isSelf}
-                    onAction={onAction}
-                    selfNoteId={isSelf ? selfNoteId : undefined}
-                  />
+                  <UserActions user={user} isSelf={isSelf} onAction={onAction} selfNoteId={selfNoteId} />
                 </td>
               </tr>
             )
@@ -118,7 +116,7 @@ export function UserTableSkeleton({ rows = 5 }: { rows?: number }) {
                 <Skeleton width="9rem" />
               </td>
               <td>
-                <Skeleton width="14rem" height="2rem" />
+                <Skeleton width="8rem" height="2.5rem" />
               </td>
             </tr>
           ))}

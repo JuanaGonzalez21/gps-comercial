@@ -130,23 +130,32 @@ describe('UsersPage', () => {
     expect(within(own).getByText('Administrador')).toBeInTheDocument()
     // 19:30 UTC is 14:30 in Bogota; the compact table date keeps the full one in its title.
     expect(within(own).getByText('9 de nov, 14:30')).toHaveAttribute('title', '9 de nov de 2026, 14:30')
-    const deactivateSelf = within(own).getByRole('button', { name: 'Desactivar a Ana Pérez' })
-    expect(deactivateSelf).toBeDisabled()
-    expect(deactivateSelf).toHaveAccessibleDescription(/no puedes desactivarla ni cambiar su rol/)
-    expect(within(own).queryByRole('button', { name: /Restablecer/ })).not.toBeInTheDocument()
-    expect(within(own).getByRole('link', { name: 'Cambiar mi contraseña' })).toHaveAttribute(
+    // Own account: change-password link and Editar; no deactivate/reset/menu (the backend refuses them).
+    expect(within(own).getByText('No puedes desactivar tu propia cuenta ni cambiar tu rol.')).toBeInTheDocument()
+    expect(within(own).getByRole('link', { name: 'Contraseña: cambiar la tuya' })).toHaveAttribute(
       'href',
       '/change-password',
     )
+    expect(within(own).getByRole('button', { name: 'Editar a Ana Pérez' })).toHaveAccessibleDescription(
+      'No puedes desactivar tu propia cuenta ni cambiar tu rol.',
+    )
+    expect(within(own).queryByRole('button', { name: /Desactivar|Restablecer|Más acciones/ })).not.toBeInTheDocument()
 
     const operator = rowOf('Luis Gómez')
     expect(within(operator).getByText('Debe cambiar la contraseña')).toBeInTheDocument()
     expect(within(operator).getByText('Nunca ha ingresado')).toBeInTheDocument()
-    expect(within(operator).getByRole('button', { name: 'Desactivar a Luis Gómez' })).toBeEnabled()
+    expect(within(operator).getByRole('button', { name: 'Editar a Luis Gómez' })).toBeEnabled()
+    expect(within(operator).queryByRole('link', { name: /Contraseña/ })).not.toBeInTheDocument()
 
+    // Other people: reset and activate/deactivate live in the "⋮" menu, destructive last.
     const viewer = rowOf('Marta Ruiz')
     expect(within(viewer).getByText('Inactivo')).toBeInTheDocument()
-    expect(within(viewer).getByRole('button', { name: 'Activar a Marta Ruiz' })).toBeEnabled()
+    await userEvent.setup().click(within(viewer).getByRole('button', { name: 'Más acciones para Marta Ruiz' }))
+    const menu = screen.getByRole('menu', { name: 'Más acciones para Marta Ruiz' })
+    expect(within(menu).getAllByRole('menuitem').map((item) => item.textContent)).toEqual([
+      'Restablecer contraseña',
+      'Activar',
+    ])
   })
 
   it('creates a user and shows the temporary password only once', async () => {
@@ -167,9 +176,33 @@ describe('UsersPage', () => {
 
     await user.click(screen.getByRole('button', { name: 'Crear usuario' }))
     const form = screen.getByRole('dialog', { name: 'Crear usuario' })
-    await user.type(within(form).getByRole('textbox', { name: /Correo electrónico/ }), 'nora@example.com')
+    const email = within(form).getByRole('textbox', { name: /Correo electrónico/ })
+    expect(email).toHaveAttribute('placeholder', 'nombre@empresa.com')
+    expect(email).toHaveAccessibleDescription('Será su usuario para iniciar sesión.')
+    await user.type(email, 'nora@example.com')
     await user.type(within(form).getByRole('textbox', { name: /Nombre completo/ }), 'Nora Díaz')
-    await user.selectOptions(within(form).getByRole('combobox', { name: /Rol/ }), 'operator')
+
+    // Role cards are a real radio group: Visualizador by default, each role described.
+    const roles = within(form).getByRole('group', { name: /Rol/ })
+    expect(within(roles).getAllByRole('radio').map((radio) => radio.getAttribute('value'))).toEqual([
+      'viewer',
+      'operator',
+      'admin',
+    ])
+    const viewer = within(roles).getByRole('radio', { name: 'Visualizador' })
+    expect(viewer).toBeChecked()
+    expect(viewer).toHaveAccessibleDescription(/Solo lectura/)
+    expect(within(roles).getByRole('radio', { name: 'Administrador' })).toHaveAccessibleDescription(
+      /más usuarios y auditoría/,
+    )
+    await user.click(within(roles).getByRole('radio', { name: 'Operador' }))
+    expect(within(roles).getByRole('radio', { name: 'Operador' })).toBeChecked()
+    // Arrow keys move the selection inside the group, as in any native radio group.
+    await user.keyboard('{ArrowDown}')
+    expect(within(roles).getByRole('radio', { name: 'Administrador' })).toBeChecked()
+    await user.keyboard('{ArrowUp}')
+    expect(within(roles).getByRole('radio', { name: 'Operador' })).toHaveFocus()
+    expect(within(roles).getByRole('radio', { name: 'Operador' })).toBeChecked()
     await user.click(within(form).getByRole('button', { name: 'Crear usuario' }))
 
     const shown = await screen.findByRole('dialog', { name: 'Usuario creado' })
@@ -232,13 +265,18 @@ describe('UsersPage', () => {
     const user = userEvent.setup()
     await screen.findByRole('table')
 
-    await user.click(screen.getByRole('button', { name: 'Desactivar a Luis Gómez' }))
+    const more = screen.getByRole('button', { name: 'Más acciones para Luis Gómez' })
+    await user.click(more)
+    await user.click(screen.getByRole('menuitem', { name: 'Desactivar' }))
     let confirm = screen.getByRole('dialog', { name: '¿Desactivar a Luis Gómez?' })
     expect(confirm).toHaveTextContent('sus sesiones abiertas se cerrarán de inmediato')
     await user.click(within(confirm).getByRole('button', { name: 'Cancelar' }))
     expect(calls.some((call) => call.method === 'PATCH')).toBe(false)
+    // Focus returns to the menu button that started the flow.
+    expect(more).toHaveFocus()
 
-    await user.click(screen.getByRole('button', { name: 'Desactivar a Luis Gómez' }))
+    await user.click(more)
+    await user.click(screen.getByRole('menuitem', { name: 'Desactivar' }))
     confirm = screen.getByRole('dialog', { name: '¿Desactivar a Luis Gómez?' })
     await user.click(within(confirm).getByRole('button', { name: 'Desactivar usuario' }))
 
@@ -258,7 +296,8 @@ describe('UsersPage', () => {
     const user = userEvent.setup()
     await screen.findByRole('table')
 
-    await user.click(screen.getByRole('button', { name: 'Desactivar a Luis Gómez' }))
+    await user.click(screen.getByRole('button', { name: 'Más acciones para Luis Gómez' }))
+    await user.click(screen.getByRole('menuitem', { name: 'Desactivar' }))
     const confirm = screen.getByRole('dialog', { name: '¿Desactivar a Luis Gómez?' })
     await user.click(within(confirm).getByRole('button', { name: 'Desactivar usuario' }))
     expect(await within(confirm).findByRole('alert')).toHaveTextContent('No puedes desactivar tu propia cuenta.')
@@ -274,7 +313,8 @@ describe('UsersPage', () => {
     const user = userEvent.setup()
     await screen.findByRole('table')
 
-    await user.click(screen.getByRole('button', { name: 'Restablecer la contraseña de Luis Gómez' }))
+    await user.click(screen.getByRole('button', { name: 'Más acciones para Luis Gómez' }))
+    await user.click(screen.getByRole('menuitem', { name: 'Restablecer contraseña' }))
     const confirm = screen.getByRole('dialog', { name: '¿Restablecer la contraseña de Luis Gómez?' })
     expect(calls.some((call) => call.url.endsWith('/reset-password'))).toBe(false)
     await user.click(within(confirm).getByRole('button', { name: 'Restablecer contraseña' }))
@@ -297,9 +337,11 @@ describe('UsersPage', () => {
 
     await user.click(screen.getByRole('button', { name: 'Editar a Ana Pérez' }))
     const form = screen.getByRole('dialog', { name: 'Editar a Ana Pérez' })
-    const role = within(form).getByRole('combobox', { name: /Rol/ })
-    expect(role).toBeDisabled()
-    expect(role).toHaveAccessibleDescription(/No puedes cambiar el rol de tu propia cuenta/)
+    const roles = within(form).getByRole('group', { name: /Rol/ })
+    expect(roles).toBeDisabled()
+    expect(roles).toHaveAccessibleDescription(/No puedes cambiar el rol de tu propia cuenta/)
+    expect(within(roles).getByRole('radio', { name: 'Administrador' })).toBeChecked()
+    expect(within(roles).getByRole('radio', { name: 'Visualizador' })).toBeDisabled()
 
     const name = within(form).getByRole('textbox', { name: /Nombre completo/ })
     await user.clear(name)

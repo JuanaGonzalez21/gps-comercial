@@ -1,6 +1,7 @@
 # Guía de despliegue (planes gratuitos)
 
-Estado: **preparado, no ejecutado**. Nada se ha publicado, ni se han creado cuentas, ni se ha tocado el DNS.
+Estado (2026-11-09 22:00 Bogotá): **Neon y Render creados por Juana; API pública verificada** en
+`https://gps-comercial-ygq0.onrender.com` (HTTPS, cabeceras, CORS, CSRF y conexión a Neon). Vercel y DNS pendientes.
 Proveedores elegidos y condiciones verificadas el 2026-11-09: [docs/deployment.md](deployment.md).
 
 | Pieza | Proveedor | Plan | Por qué |
@@ -19,8 +20,22 @@ así las cookies de sesión son de primera parte (Safari/Firefox bloquean cookie
    El backend la convierte a `postgresql+psycopg://` automáticamente.
 
 ## 2. API (Render)
-1. New → Blueprint → repositorio `JuanaGonzalez21/gps-comercial` (usa `render.yaml`): servicio `gps-comercial-api`,
-   Docker, plan Free. Si el nombre está ocupado, Render añade un sufijo: anotar la URL real.
+Configuración usada (Web Service creado desde el panel; `render.yaml` queda como alternativa Blueprint equivalente):
+
+| Campo | Valor |
+|---|---|
+| Repositorio / rama | `JuanaGonzalez21/gps-comercial` / `main` |
+| Language | Docker |
+| Region | Virginia (US East), igual que Neon `aws-us-east-1` |
+| Root Directory | `backend` |
+| Dockerfile Path | `./Dockerfile` (relativo al Root Directory) |
+| Docker Build Context Directory | `.` |
+| Docker Command | vacío (usa `CMD ./start.sh`) |
+| Instance Type | Free |
+| Health Check Path | `/health` |
+| URL resultante | `https://gps-comercial-ygq0.onrender.com` |
+
+1. Si se recrea el servicio, anotar la URL real y actualizarla en `frontend/vercel.json`.
 2. Variables marcadas `sync: false` (se escriben en el panel, nunca en Git):
    | Variable | Valor |
    |---|---|
@@ -28,17 +43,22 @@ así las cookies de sesión son de primera parte (Safari/Firefox bloquean cookie
    | `WIALON_TOKEN` | token privado de la prueba |
    | `CORS_ORIGINS` | `https://gpscomercial.juanagonzalez.dev,https://<proyecto>.vercel.app` |
    | `ADMIN_EMAIL`, `ADMIN_FULL_NAME`, `ADMIN_PASSWORD` | Admin que se entregará al evaluador (contraseña robusta) |
-   `JWT_SECRET` lo genera Render (`generateValue`). `APP_ENV=production` activa cookies `Secure`, HSTS y validaciones
+   Además: `APP_ENV=production`, `FLEET_GATEWAY=wialon`, `LOG_LEVEL=INFO`, `API_DOCS_ENABLED=true`,
+   `WIALON_BASE_URL=https://hst-api.wialon.com/wialon/ajax.html`. `DATABASE_URL`: cadena **directa** de Neon (sin pooling)
+   tal cual (`postgresql://…?sslmode=require&channel_binding=require`); el backend añade el driver `psycopg`.
+   `JWT_SECRET` se genera con el botón Generate de Render. `APP_ENV=production` activa cookies `Secure`, HSTS y validaciones
    (sin SQLite, sin datos simulados, secreto obligatorio).
 3. Al arrancar, `start.sh` ejecuta `alembic upgrade head`, crea/asegura el Admin si hay `ADMIN_EMAIL` y lanza uvicorn.
 4. Comprobar `https://<api>.onrender.com/health` → `{"status":"ok"}` y `/docs`.
 5. Tras el primer arranque correcto, **borrar `ADMIN_PASSWORD`** del panel (el usuario ya existe; el seed es idempotente).
 
 ## 3. Frontend (Vercel)
-1. Editar `frontend/vercel.json` y sustituir `https://gps-comercial-api.onrender.com` por la URL real de Render
-   (si coincide, no hay que cambiar nada). Commit + push de ese cambio.
-2. Vercel → Add New Project → mismo repositorio → **Root Directory `frontend`**, framework Vite,
-   build `npm run build`, output `dist`. Sin variables de entorno (`VITE_API_BASE_URL` vacío = mismo origen).
+1. `frontend/vercel.json` ya apunta a `https://gps-comercial-ygq0.onrender.com` (rewrites de `/api/*` y `/health`,
+   caché de rewrites desactivada, catch-all SPA a `/index.html` y cabeceras de seguridad con CSP).
+2. Vercel → Add New Project → mismo repositorio, rama `main`, Project Name `gps-comercial`, **Root Directory `frontend`**,
+   preset Vite. Build Command `npm run build`, Output Directory `dist`, Install Command `npm ci`, Node.js 22.x o 24.x.
+   **Sin variables de entorno**: `VITE_API_BASE_URL` vacío significa mismo origen y el frontend no lleva secretos.
+3. Añadir en Render `CORS_ORIGINS` el dominio `https://<proyecto>.vercel.app` que asigne Vercel (separado por coma).
 3. Comprobar `https://<proyecto>.vercel.app/health` (pasa por el rewrite) y el login.
 
 ## 4. Subdominio `gpscomercial.juanagonzalez.dev` sin tocar el portafolio

@@ -1,4 +1,4 @@
-import { Outlet } from 'react-router'
+import { Link, Outlet } from 'react-router'
 import { useAuth } from '@/auth/useAuth'
 import { ArrowRightIcon, Brand, LinkButton } from '@/ui'
 import './layouts.css'
@@ -32,6 +32,11 @@ export default function PublicLayout() {
       </main>
       <footer className="public-footer">
         <div className="public-footer__inner">
+          <nav aria-label="Pie de página" className="public-footer__nav">
+            <a href="/#funcionalidades">Funcionalidades</a>
+            <a href="/#como-funciona">Cómo funciona</a>
+            <Link to={signedIn ? '/app/dashboard' : '/login'}>{signedIn ? 'Ir al panel' : 'Iniciar sesión'}</Link>
+          </nav>
           <p>© 2026 GPS Comercial. Plataforma de monitoreo de flotas.</p>
           <p>Acceso solo para usuarios creados por un administrador.</p>
         </div>

@@ -21,19 +21,23 @@ interface DialogProps {
  */
 export function Dialog({ open, title, description, onClose, children, footer, busy = false, size = 'md' }: DialogProps) {
   const ref = useRef<HTMLDialogElement>(null)
+  const openerRef = useRef<HTMLElement | null>(null)
   const titleId = useId()
   const descriptionId = useId()
 
   useEffect(() => {
     const dialog = ref.current
-    if (!dialog) return
-    if (open && !dialog.open) {
-      const opener = document.activeElement as HTMLElement | null
+    if (!dialog || !open) return undefined
+    if (!dialog.open) {
+      openerRef.current = document.activeElement as HTMLElement | null
       dialog.showModal()
-      return () => opener?.focus?.()
     }
-    if (!open && dialog.open) dialog.close()
-    return undefined
+    // Runs when `open` turns false or on unmount (also StrictMode's extra mount/unmount):
+    // close and give focus back to whatever opened the dialog.
+    return () => {
+      if (dialog.open) dialog.close()
+      openerRef.current?.focus?.()
+    }
   }, [open])
 
   return (

@@ -43,8 +43,8 @@ h4 {
   font-weight: var(--weight-bold);
 }
 
-ul[role='list'],
-ol[role='list'] {
+/* :where() keeps specificity at 0 so component classes can still set margins. */
+:where(ul[role='list'], ol[role='list']) {
   list-style: none;
   margin: 0;
   padding: 0;

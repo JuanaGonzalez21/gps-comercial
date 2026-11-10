@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { NavLink, Outlet, useLocation } from 'react-router'
+import { Link, NavLink, Outlet, useLocation } from 'react-router'
 import { getErrorMessage } from '@/api/errors'
 import type { Me } from '@/api/types'
 import { FleetSourceBanner } from '@/app/FleetSourceBanner'
@@ -54,6 +54,10 @@ function UserPanel({
           <p className="user-panel__role">{user.role.name}</p>
         </div>
       </div>
+      {/* Own password changes go through /change-password (the admin reset is for other users). */}
+      <Link to="/change-password" className="user-panel__link">
+        Cambiar contraseña
+      </Link>
       <Button
         variant="ghost"
         size="sm"

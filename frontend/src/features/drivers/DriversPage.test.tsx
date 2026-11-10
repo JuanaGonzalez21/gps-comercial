@@ -93,8 +93,11 @@ describe('DriversPage — list', () => {
     const luzRow = within(table).getByRole('row', { name: /Luz Gómez/ })
     expect(within(luzRow).getByRole('link', { name: 'Camión 01' })).toHaveAttribute('href', '/app/vehicles/101')
     expect(within(luzRow).getByText('Turno mañana')).toBeInTheDocument()
+    // Resource name, avatar initials and monospaced code, as in the design.
+    expect(within(luzRow).getByText('Recurso: Flota principal')).toBeInTheDocument()
     const pedroRow = within(table).getByRole('row', { name: /Pedro Ruiz/ })
-    expect(within(pedroRow).getByText('Sin vehículo')).toBeInTheDocument()
+    // Without a vehicle, an operator gets the dashed "Asignar vehículo" button in the cell.
+    expect(within(pedroRow).getByRole('button', { name: 'Asignar vehículo a Pedro Ruiz' })).toBeInTheDocument()
     expect(within(pedroRow).getAllByText('Sin dato')).toHaveLength(2)
     expect(screen.getByText('21 conductores')).toBeInTheDocument()
     expect(screen.getByRole('navigation', { name: 'Paginación de conductores' })).toHaveTextContent(
@@ -114,7 +117,9 @@ describe('DriversPage — list', () => {
     await screen.findByRole('table')
 
     await user.type(screen.getByRole('searchbox', { name: 'Buscar conductor' }), 'luz')
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Asignación' }), 'yes')
+    const assignment = screen.getByRole('group', { name: 'Asignación' })
+    await user.click(within(assignment).getByRole('button', { name: 'Con vehículo' }))
+    expect(within(assignment).getByRole('button', { name: 'Con vehículo' })).toHaveAttribute('aria-pressed', 'true')
     await user.click(screen.getByRole('button', { name: 'Nombre' }))
 
     await waitFor(() =>
@@ -178,7 +183,11 @@ describe('DriversPage — list', () => {
 
     const card = await screen.findByRole('article', { name: 'Luz Gómez' })
     expect(within(card).getByText('Camión 01')).toBeInTheDocument()
-    expect(within(screen.getByRole('article', { name: 'Pedro Ruiz' })).getByText('Sin vehículo')).toBeInTheDocument()
+    expect(
+      within(screen.getByRole('article', { name: 'Pedro Ruiz' })).getByRole('button', {
+        name: 'Asignar vehículo a Pedro Ruiz',
+      }),
+    ).toBeInTheDocument()
     expect(screen.queryByRole('table')).not.toBeInTheDocument()
     // Without sortable headers, sorting is a select.
     expect(screen.getByRole('combobox', { name: 'Ordenar por nombre' })).toBeInTheDocument()
@@ -327,13 +336,17 @@ describe('DriversPage — delete and assignment', () => {
     const user = userEvent.setup()
     await screen.findByRole('table')
 
-    await user.click(screen.getByRole('button', { name: 'Eliminar a Pedro Ruiz' }))
+    // Without a vehicle the "⋮" menu only offers deleting.
+    await user.click(screen.getByRole('button', { name: 'Más acciones para Pedro Ruiz' }))
+    expect(screen.getAllByRole('menuitem').map((item) => item.textContent)).toEqual(['Eliminar'])
+    await user.click(screen.getByRole('menuitem', { name: 'Eliminar' }))
     let dialog = screen.getByRole('dialog', { name: '¿Eliminar a «Pedro Ruiz»?' })
     await user.click(within(dialog).getByRole('button', { name: 'Cancelar' }))
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(writes(calls)).toHaveLength(0)
 
-    await user.click(screen.getByRole('button', { name: 'Eliminar a Pedro Ruiz' }))
+    await user.click(screen.getByRole('button', { name: 'Más acciones para Pedro Ruiz' }))
+    await user.click(screen.getByRole('menuitem', { name: 'Eliminar' }))
     dialog = screen.getByRole('dialog', { name: '¿Eliminar a «Pedro Ruiz»?' })
     await user.click(within(dialog).getByRole('button', { name: 'Eliminar conductor' }))
     expect(await within(dialog).findByRole('alert')).toHaveTextContent('Wialon no respondió.')
@@ -399,7 +412,13 @@ describe('DriversPage — delete and assignment', () => {
     const user = userEvent.setup()
     await screen.findByRole('table')
 
-    await user.click(screen.getByRole('button', { name: 'Cambiar vehículo de Luz Gómez' }))
+    await user.click(screen.getByRole('button', { name: 'Más acciones para Luz Gómez' }))
+    expect(screen.getAllByRole('menuitem').map((item) => item.textContent)).toEqual([
+      'Cambiar vehículo',
+      'Desvincular',
+      'Eliminar',
+    ])
+    await user.click(screen.getByRole('menuitem', { name: 'Cambiar vehículo' }))
     let dialog = screen.getByRole('dialog', { name: 'Cambiar el vehículo de «Luz Gómez»' })
     expect(dialog).toHaveTextContent('Vehículo actual: Camión 01')
     // The current vehicle is not offered again.
@@ -410,7 +429,8 @@ describe('DriversPage — delete and assignment', () => {
     expect(await within(dialog).findByRole('alert')).toHaveTextContent('El vehículo no existe o no es accesible.')
     await user.click(within(dialog).getByRole('button', { name: 'Cancelar' }))
 
-    await user.click(screen.getByRole('button', { name: 'Desvincular a Luz Gómez' }))
+    await user.click(screen.getByRole('button', { name: 'Más acciones para Luz Gómez' }))
+    await user.click(screen.getByRole('menuitem', { name: 'Desvincular' }))
     dialog = screen.getByRole('dialog', { name: '¿Desvincular a «Luz Gómez»?' })
     await user.click(within(dialog).getByRole('button', { name: 'Desvincular' }))
 
@@ -431,7 +451,10 @@ describe('DriversPage — permissions', () => {
     expect(within(table).getByRole('row', { name: /Luz Gómez/ })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Nuevo conductor' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Exportar CSV/ })).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /^(Editar|Eliminar|Asignar|Cambiar|Desvincular)/ })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: /^(Editar|Eliminar|Asignar|Cambiar|Desvincular|Más acciones)/ }),
+    ).not.toBeInTheDocument()
+    expect(within(table).getByRole('row', { name: /Pedro Ruiz/ })).toHaveTextContent('Sin vehículo')
     expect(within(table).queryByRole('columnheader', { name: 'Acciones' })).not.toBeInTheDocument()
   })
 

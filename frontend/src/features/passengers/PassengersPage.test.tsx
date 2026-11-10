@@ -104,7 +104,12 @@ describe('PassengersPage — list', () => {
     const anaRow = within(table).getByRole('row', { name: /Ana Rojas/ })
     expect(within(anaRow).getByRole('link', { name: 'Van 02' })).toBeInTheDocument()
     expect(within(anaRow).getByRole('button', { name: '2 campos personalizados de Ana Rojas' })).toBeInTheDocument()
-    expect(within(table).getByRole('row', { name: /Beto Díaz/ })).toHaveTextContent('Sin vehículo')
+    expect(within(anaRow).getByRole('button', { name: '2 campos personalizados de Ana Rojas' })).toHaveTextContent(
+      '2 campos',
+    )
+    const betoRow = within(table).getByRole('row', { name: /Beto Díaz/ })
+    expect(within(betoRow).getByRole('button', { name: 'Asignar vehículo a Beto Díaz' })).toBeInTheDocument()
+    expect(within(betoRow).getByRole('button', { name: '0 campos personalizados de Beto Díaz' })).toBeInTheDocument()
     expect(calls.some((call) => call.url.startsWith('/api/v1/passengers?') && call.url.includes('vehicle_id=102'))).toBe(
       true,
     )
@@ -346,7 +351,14 @@ describe('PassengersPage — assignment and permissions', () => {
     expect(await within(dialog).findByRole('alert')).toHaveTextContent('El pasajero ya está asignado a este vehículo.')
     await user.click(within(dialog).getByRole('button', { name: 'Cancelar' }))
 
-    await user.click(screen.getByRole('button', { name: 'Desasignar a Ana Rojas' }))
+    await user.click(screen.getByRole('button', { name: 'Más acciones para Ana Rojas' }))
+    expect(screen.getAllByRole('menuitem').map((item) => item.textContent)).toEqual([
+      'Cambiar vehículo',
+      'Desasignar',
+      'Campos personalizados',
+      'Eliminar',
+    ])
+    await user.click(screen.getByRole('menuitem', { name: 'Desasignar' }))
     dialog = screen.getByRole('dialog', { name: '¿Desasignar a «Ana Rojas»?' })
     await user.click(within(dialog).getByRole('button', { name: 'Desasignar' }))
     expect(await screen.findByText('Pasajero desasignado')).toBeInTheDocument()
@@ -365,7 +377,10 @@ describe('PassengersPage — assignment and permissions', () => {
     const table = await screen.findByRole('table')
     expect(screen.queryByRole('button', { name: 'Nuevo pasajero' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Exportar CSV/ })).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /^(Editar|Eliminar|Asignar|Cambiar|Desasignar)/ })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: /^(Editar|Eliminar|Asignar|Cambiar|Desasignar|Más acciones)/ }),
+    ).not.toBeInTheDocument()
+    expect(within(table).getByRole('row', { name: /Beto Díaz/ })).toHaveTextContent('Sin vehículo')
     expect(within(table).queryByRole('columnheader', { name: 'Acciones' })).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: '2 campos personalizados de Ana Rojas' }))

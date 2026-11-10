@@ -16,7 +16,7 @@ import { ConfirmAction } from '@/features/drivers/shared/ConfirmAction'
 import { ROSTER_PAGE_SIZE, useRosterListState } from '@/features/drivers/shared/listState'
 import { RosterFilters } from '@/features/drivers/shared/RosterFilters'
 import { RosterListContent } from '@/features/drivers/shared/RosterListContent'
-import { RosterActions } from '@/features/drivers/shared/RosterTable'
+import { RosterRowActions } from '@/features/drivers/shared/RosterTable'
 import { useVehicleOptions } from '@/features/drivers/shared/useVehicleOptions'
 import { ExportCsvButton } from '@/features/exports/ExportCsvButton'
 import { formatNumber } from '@/lib/format'
@@ -24,18 +24,19 @@ import { useDocumentTitle, useMediaQuery } from '@/lib/hooks'
 import {
   Alert,
   Button,
-  EditIcon,
   EmptyState,
-  LinkIcon,
+  ListIcon,
   PageHeader,
   Pagination,
   PlusIcon,
   SearchIcon,
   SelectField,
+  SwapIcon,
   TrashIcon,
   UnlinkIcon,
   UsersIcon,
   useToast,
+  type ActionMenuItem,
   type SelectOption,
 } from '@/ui'
 import { CustomFieldsDialog } from './CustomFieldsDialog'
@@ -81,7 +82,7 @@ export default function PassengersPage() {
   const resources = useResources(hasPermission('drivers:read'))
   const resourceList = resources.data ?? []
   const resourceNames =
-    resourceList.length > 1 ? new Map(resourceList.map((resource) => [resource.id, resource.name])) : null
+    resourceList.length > 0 ? new Map(resourceList.map((resource) => [resource.id, resource.name])) : null
 
   const [dialog, setDialog] = useState<PassengerDialog | null>(null)
   const deletePassenger = useDeletePassenger()
@@ -134,6 +135,8 @@ export default function PassengersPage() {
 
   const handleAssign = (passenger: PassengerOut) => async (vehicle: VehicleRef) => {
     await assignPassenger.mutateAsync({ ref: passenger, unitId: vehicle.id })
+    // The dashed "Asignar vehículo" button that opened the dialog becomes a link: focus the list.
+    if (!passenger.vehicle) focusListOnClose.current = true
     closeDialog()
     toast.show({
       tone: 'success',
@@ -171,54 +174,39 @@ export default function PassengersPage() {
 
   const renderActions =
     canWrite || canAssign
-      ? (passenger: PassengerOut) => (
-          <RosterActions label={`Acciones de ${passenger.name}`}>
-            {canWrite && (
-              <Button
-                size="sm"
-                variant="ghost"
-                icon={<EditIcon />}
-                onClick={() => openDialog({ kind: 'edit', passenger })}
-              >
-                Editar <span className="visually-hidden">a {passenger.name}</span>
-              </Button>
-            )}
-            {canAssign && (
-              <Button
-                size="sm"
-                variant="ghost"
-                icon={<LinkIcon />}
-                onClick={() => openDialog({ kind: 'assign', passenger })}
-              >
-                {passenger.vehicle ? 'Cambiar vehículo ' : 'Asignar vehículo '}
-                <span className="visually-hidden">
-                  {passenger.vehicle ? 'de' : 'a'} {passenger.name}
-                </span>
-              </Button>
-            )}
-            {canAssign && passenger.vehicle && (
-              <Button
-                size="sm"
-                variant="ghost"
-                icon={<UnlinkIcon />}
-                onClick={() => openDialog({ kind: 'unassign', passenger })}
-              >
-                Desasignar <span className="visually-hidden">a {passenger.name}</span>
-              </Button>
-            )}
-            {canWrite && (
-              <Button
-                size="sm"
-                variant="ghost"
-                icon={<TrashIcon />}
-                onClick={() => openDialog({ kind: 'delete', passenger })}
-              >
-                Eliminar <span className="visually-hidden">a {passenger.name}</span>
-              </Button>
-            )}
-          </RosterActions>
-        )
+      ? (passenger: PassengerOut) => {
+          const items: ActionMenuItem[] = []
+          if (canAssign && passenger.vehicle) {
+            items.push(
+              { label: 'Cambiar vehículo', icon: <SwapIcon />, onSelect: () => openDialog({ kind: 'assign', passenger }) },
+              { label: 'Desasignar', icon: <UnlinkIcon />, onSelect: () => openDialog({ kind: 'unassign', passenger }) },
+            )
+          }
+          if (canWrite) {
+            items.push(
+              {
+                label: 'Campos personalizados',
+                icon: <ListIcon />,
+                onSelect: () => openDialog({ kind: 'fields', passenger }),
+              },
+              {
+                label: 'Eliminar',
+                icon: <TrashIcon />,
+                tone: 'danger',
+                onSelect: () => openDialog({ kind: 'delete', passenger }),
+              },
+            )
+          }
+          return (
+            <RosterRowActions
+              name={passenger.name}
+              onEdit={canWrite ? () => openDialog({ kind: 'edit', passenger }) : undefined}
+              menuItems={items}
+            />
+          )
+        }
       : null
+  const onAssign = canAssign ? (passenger: PassengerOut) => openDialog({ kind: 'assign', passenger }) : null
 
   const total = passengers.data?.total
 
@@ -256,6 +244,7 @@ export default function PassengersPage() {
         {linkVehicles && (
           <SelectField
             label="Vehículo"
+            fieldClassName="roster-filters__select"
             options={vehicleSelectOptions}
             value={vehicleId}
             onChange={(event) => setVehicleId(event.target.value)}
@@ -280,12 +269,12 @@ export default function PassengersPage() {
         </Alert>
       )}
 
-      <section className="roster-panel" aria-labelledby="passengers-list-title">
+      <section className="card roster-panel" aria-labelledby="passengers-list-title">
         <div className="roster-panel__header">
-          <h2 id="passengers-list-title" ref={headingRef} tabIndex={-1} className="roster-panel__title">
+          <h2 id="passengers-list-title" ref={headingRef} tabIndex={-1} className="card-title roster-panel__title">
             Lista de pasajeros
           </h2>
-          <p className="roster-panel__meta" role="status">
+          <p className="card-meta" role="status">
             {total === undefined ? '' : total === 1 ? '1 pasajero' : `${formatNumber(total)} pasajeros`}
           </p>
         </div>
@@ -340,6 +329,7 @@ export default function PassengersPage() {
                 resourceNames={resourceNames}
                 linkVehicles={linkVehicles}
                 onOpenFields={(passenger) => openDialog({ kind: 'fields', passenger })}
+                onAssign={onAssign}
                 renderActions={renderActions}
               />
             ) : (
@@ -348,6 +338,7 @@ export default function PassengersPage() {
                 resourceNames={resourceNames}
                 linkVehicles={linkVehicles}
                 onOpenFields={(passenger) => openDialog({ kind: 'fields', passenger })}
+                onAssign={onAssign}
                 renderActions={renderActions}
                 sort={list.sort}
                 onSortChange={list.setSort}
@@ -358,16 +349,18 @@ export default function PassengersPage() {
         </RosterListContent>
 
         {passengers.data && passengers.data.total > 0 && (
-          <Pagination
-            page={list.page}
-            pages={passengers.data.pages}
-            total={passengers.data.total}
-            pageSize={ROSTER_PAGE_SIZE}
-            onPageChange={list.goToPage}
-            label="Paginación de pasajeros"
-            itemLabel="pasajeros"
-            disabled={passengers.isPlaceholderData}
-          />
+          <div className="roster-panel__footer">
+            <Pagination
+              page={list.page}
+              pages={passengers.data.pages}
+              total={passengers.data.total}
+              pageSize={ROSTER_PAGE_SIZE}
+              onPageChange={list.goToPage}
+              label="Paginación de pasajeros"
+              itemLabel="pasajeros"
+              disabled={passengers.isPlaceholderData}
+            />
+          </div>
         )}
       </section>
 

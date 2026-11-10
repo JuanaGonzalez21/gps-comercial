@@ -16,17 +16,17 @@ import { useDocumentTitle, useMediaQuery } from '@/lib/hooks'
 import {
   Alert,
   Button,
-  EditIcon,
   EmptyState,
-  LinkIcon,
   PageHeader,
   Pagination,
   PlusIcon,
   SearchIcon,
   SteeringWheelIcon,
+  SwapIcon,
   TrashIcon,
   UnlinkIcon,
   useToast,
+  type ActionMenuItem,
 } from '@/ui'
 import { DriverCards, DriverTable } from './DriverList'
 import { DriverFormDialog } from './DriverFormDialog'
@@ -35,7 +35,7 @@ import { ConfirmAction } from './shared/ConfirmAction'
 import { ROSTER_PAGE_SIZE, useRosterListState } from './shared/listState'
 import { RosterFilters } from './shared/RosterFilters'
 import { RosterListContent } from './shared/RosterListContent'
-import { RosterActions } from './shared/RosterTable'
+import { RosterRowActions } from './shared/RosterTable'
 import './shared/roster.css'
 
 /** Below 48rem the list becomes cards (UX-01). */
@@ -65,7 +65,7 @@ export default function DriversPage() {
   const resources = useResources(hasPermission('drivers:read'))
   const resourceList = resources.data ?? []
   const resourceNames =
-    resourceList.length > 1 ? new Map(resourceList.map((resource) => [resource.id, resource.name])) : null
+    resourceList.length > 0 ? new Map(resourceList.map((resource) => [resource.id, resource.name])) : null
 
   const [dialog, setDialog] = useState<DriverDialog | null>(null)
   const deleteDriver = useDeleteDriver()
@@ -99,6 +99,8 @@ export default function DriversPage() {
 
   const handleAssign = (driver: DriverOut) => async (vehicle: VehicleRef) => {
     await assignDriver.mutateAsync({ ref: driver, unitId: vehicle.id })
+    // The dashed "Asignar vehículo" button that opened the dialog becomes a link: focus the list.
+    if (!driver.vehicle) focusListOnClose.current = true
     closeDialog()
     toast.show({
       tone: 'success',
@@ -133,49 +135,32 @@ export default function DriversPage() {
 
   const renderActions =
     canWrite || canAssign
-      ? (driver: DriverOut) => (
-          <RosterActions label={`Acciones de ${driver.name}`}>
-            {canWrite && (
-              <Button size="sm" variant="ghost" icon={<EditIcon />} onClick={() => openDialog({ kind: 'edit', driver })}>
-                Editar <span className="visually-hidden">a {driver.name}</span>
-              </Button>
-            )}
-            {canAssign && (
-              <Button
-                size="sm"
-                variant="ghost"
-                icon={<LinkIcon />}
-                onClick={() => openDialog({ kind: 'assign', driver })}
-              >
-                {driver.vehicle ? 'Cambiar vehículo ' : 'Asignar vehículo '}
-                <span className="visually-hidden">
-                  {driver.vehicle ? 'de' : 'a'} {driver.name}
-                </span>
-              </Button>
-            )}
-            {canAssign && driver.vehicle && (
-              <Button
-                size="sm"
-                variant="ghost"
-                icon={<UnlinkIcon />}
-                onClick={() => openDialog({ kind: 'unassign', driver })}
-              >
-                Desvincular <span className="visually-hidden">a {driver.name}</span>
-              </Button>
-            )}
-            {canWrite && (
-              <Button
-                size="sm"
-                variant="ghost"
-                icon={<TrashIcon />}
-                onClick={() => openDialog({ kind: 'delete', driver })}
-              >
-                Eliminar <span className="visually-hidden">a {driver.name}</span>
-              </Button>
-            )}
-          </RosterActions>
-        )
+      ? (driver: DriverOut) => {
+          const items: ActionMenuItem[] = []
+          if (canAssign && driver.vehicle) {
+            items.push(
+              { label: 'Cambiar vehículo', icon: <SwapIcon />, onSelect: () => openDialog({ kind: 'assign', driver }) },
+              { label: 'Desvincular', icon: <UnlinkIcon />, onSelect: () => openDialog({ kind: 'unassign', driver }) },
+            )
+          }
+          if (canWrite) {
+            items.push({
+              label: 'Eliminar',
+              icon: <TrashIcon />,
+              tone: 'danger',
+              onSelect: () => openDialog({ kind: 'delete', driver }),
+            })
+          }
+          return (
+            <RosterRowActions
+              name={driver.name}
+              onEdit={canWrite ? () => openDialog({ kind: 'edit', driver }) : undefined}
+              menuItems={items}
+            />
+          )
+        }
       : null
+  const onAssign = canAssign ? (driver: DriverOut) => openDialog({ kind: 'assign', driver }) : null
 
   const total = drivers.data?.total
 
@@ -227,12 +212,12 @@ export default function DriversPage() {
         </Alert>
       )}
 
-      <section className="roster-panel" aria-labelledby="drivers-list-title">
+      <section className="card roster-panel" aria-labelledby="drivers-list-title">
         <div className="roster-panel__header">
-          <h2 id="drivers-list-title" ref={headingRef} tabIndex={-1} className="roster-panel__title">
+          <h2 id="drivers-list-title" ref={headingRef} tabIndex={-1} className="card-title roster-panel__title">
             Lista de conductores
           </h2>
-          <p className="roster-panel__meta" role="status">
+          <p className="card-meta" role="status">
             {total === undefined ? '' : total === 1 ? '1 conductor' : `${formatNumber(total)} conductores`}
           </p>
         </div>
@@ -286,6 +271,7 @@ export default function DriversPage() {
                 items={page.items}
                 resourceNames={resourceNames}
                 linkVehicles={linkVehicles}
+                onAssign={onAssign}
                 renderActions={renderActions}
               />
             ) : (
@@ -293,6 +279,7 @@ export default function DriversPage() {
                 items={page.items}
                 resourceNames={resourceNames}
                 linkVehicles={linkVehicles}
+                onAssign={onAssign}
                 renderActions={renderActions}
                 sort={list.sort}
                 onSortChange={list.setSort}
@@ -303,16 +290,18 @@ export default function DriversPage() {
         </RosterListContent>
 
         {drivers.data && drivers.data.total > 0 && (
-          <Pagination
-            page={list.page}
-            pages={drivers.data.pages}
-            total={drivers.data.total}
-            pageSize={ROSTER_PAGE_SIZE}
-            onPageChange={list.goToPage}
-            label="Paginación de conductores"
-            itemLabel="conductores"
-            disabled={drivers.isPlaceholderData}
-          />
+          <div className="roster-panel__footer">
+            <Pagination
+              page={list.page}
+              pages={drivers.data.pages}
+              total={drivers.data.total}
+              pageSize={ROSTER_PAGE_SIZE}
+              onPageChange={list.goToPage}
+              label="Paginación de conductores"
+              itemLabel="conductores"
+              disabled={drivers.isPlaceholderData}
+            />
+          </div>
         )}
       </section>
 

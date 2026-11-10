@@ -86,7 +86,9 @@ test('Admin: CRUD de conductor de prueba reflejado en Wialon', async ({ page, co
     expect((await edited.json()).total).toBe(1)
     await page.screenshot({ path: `${shots}/07-conductores.png` })
 
-    await page.getByRole('button', { name: `Eliminar a ${name} editado` }).first().click()
+    // Row actions live in the "⋮" menu since the redesign.
+    await page.getByRole('button', { name: `Más acciones para ${name} editado` }).first().click()
+    await page.getByRole('menuitem', { name: 'Eliminar' }).click()
     await page.getByRole('dialog').getByRole('button', { name: 'Eliminar conductor' }).click()
     await expect(page.getByRole('dialog')).toBeHidden({ timeout: 30_000 })
     const gone = await page.request.get('/api/v1/drivers', { params: { search: name } })

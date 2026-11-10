@@ -152,7 +152,7 @@ export function PassengerFormDialog({ passenger, resources, onClose, onSaved }: 
           <TextField
             label="Código"
             autoComplete="off"
-            hint={`Opcional, único en el recurso. Máximo ${CODE_MAX} caracteres.`}
+            hint={`Opcional, único. Máx. ${CODE_MAX}.`}
             error={errors.code?.message}
             {...register('code')}
           />

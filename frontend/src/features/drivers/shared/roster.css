@@ -81,7 +81,10 @@
 }
 
 /* ---------- Table (48rem and up) ---------- */
+/* position: relative keeps the absolutely positioned screen-reader texts inside the scroll box;
+   without it they escaped and made the whole page scroll sideways between 48rem and ~75rem. */
 .roster-table-scroll {
+  position: relative;
   overflow-x: auto;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -182,6 +185,15 @@
   justify-content: flex-end;
   min-width: 19rem;
   gap: var(--space-1);
+}
+
+/* Passengers carry one more column, so four actions cannot share one line: two even rows
+   (edit/change, then unassign/delete) instead of a ragged 3 + 1 wrap that squeezed the names. */
+.roster-table--extra-column .roster-actions {
+  display: grid;
+  grid-template-columns: repeat(2, max-content);
+  justify-content: end;
+  min-width: 0;
 }
 
 /* ---------- Cards (below 48rem) ---------- */

@@ -211,3 +211,5 @@ Dirección: producto de flotas sobrio y preciso. La personalidad viene de la com
 
 **Transversal**
 - Cifras tabulares en tablas e indicadores (`font-variant-numeric: tabular-nums`) para comparar velocidades, fechas y conteos.
+- Tabla de pasajeros: con la columna extra de campos personalizados, las cuatro acciones ya no caben en una línea a 1440 px. Ahora forman una cuadrícula pareja de 2 × 2 (editar/cambiar, desasignar/eliminar) en lugar de un salto 3 + 1, y nombres y vehículos vuelven a una sola línea. Conductores mantiene su fila única.
+- Contenedor de tablas de conductores y pasajeros con `position: relative`: los textos solo para lectores de pantalla (posición absoluta) escapaban del desplazamiento interno y producían scroll horizontal de toda la página entre 48 y ~75 rem (97 px a 1024 px). Comprobado en 0 en las ocho pantallas internas a 360, 768, 1024, 1280 y 1440 px.

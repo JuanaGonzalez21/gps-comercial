@@ -46,7 +46,7 @@ export function PassengerTable({
 }: PassengerTableProps) {
   return (
     <div className="roster-table-scroll" role="region" aria-label="Tabla de pasajeros" tabIndex={0}>
-      <table className="roster-table" aria-busy={busy || undefined}>
+      <table className="roster-table roster-table--extra-column" aria-busy={busy || undefined}>
         <caption className="visually-hidden">Pasajeros {sortCaption(sort)}.</caption>
         <thead>
           <tr>

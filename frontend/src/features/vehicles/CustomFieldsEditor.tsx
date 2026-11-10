@@ -592,12 +592,12 @@ export function CustomFieldsEditor({ vehicleId }: { vehicleId: number }) {
 
   return (
     <Card as="section" className="vehicle-detail__card vehicle-detail__card--wide" aria-labelledby={headingId}>
-      <div className="vehicle-detail__card-header">
+      <div className="card-head vehicle-detail__card-head">
         <div>
-          <h2 id={headingId} ref={headingRef} tabIndex={-1} className="vehicle-detail__card-title">
+          <h2 id={headingId} ref={headingRef} tabIndex={-1} className="card-title">
             Campos personalizados
           </h2>
-          <p className="vehicle-detail__card-description">
+          <p className="card-subtitle">
             Datos adicionales del vehículo, guardados en Wialon.
             {!canWrite && ' Solo los roles Administrador y Operador pueden editarlos.'}
           </p>

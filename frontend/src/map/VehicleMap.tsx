@@ -71,7 +71,8 @@ export function VehicleMap({
     L.tileLayer(OSM_TILES, { maxZoom: 19, attribution: OSM_ATTRIBUTION }).addTo(map)
     const cluster = L.markerClusterGroup({
       showCoverageOnHover: false,
-      maxClusterRadius: 48,
+      // 24 px markers: group only those that would really overlap, so shapes stay visible (RF-11).
+      maxClusterRadius: 32,
       spiderfyOnMaxZoom: true,
       iconCreateFunction: createClusterIcon,
     })

@@ -16,8 +16,9 @@ export interface VehiclePositionMapProps {
 
 /**
  * Single-vehicle map for the detail page. It reuses the fleet marker (status colour + shape +
- * heading) and follows the vehicle when the detail refreshes. Scroll-wheel zoom is off so the
- * page keeps scrolling normally; the zoom buttons and keyboard still work.
+ * heading, drawn larger with a halo by vehicles.css) and follows the vehicle when the detail
+ * refreshes. Scroll-wheel zoom is off so the page keeps scrolling normally; the zoom buttons
+ * (top right, as in the design) and keyboard still work.
  */
 export function VehiclePositionMap({ vehicle }: VehiclePositionMapProps) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -32,7 +33,7 @@ export function VehiclePositionMap({ vehicle }: VehiclePositionMapProps) {
     const first = initialRef.current
     const center: L.LatLngTuple = [first.latitude, first.longitude]
     const map = L.map(container, { center, zoom: DETAIL_ZOOM, zoomControl: false, scrollWheelZoom: false })
-    L.control.zoom({ zoomInTitle: 'Acercar', zoomOutTitle: 'Alejar' }).addTo(map)
+    L.control.zoom({ position: 'topright', zoomInTitle: 'Acercar', zoomOutTitle: 'Alejar' }).addTo(map)
     L.tileLayer(OSM_TILES, { maxZoom: 19, attribution: OSM_ATTRIBUTION }).addTo(map)
     const element = createMarkerElement(first, true)
     const marker = L.marker(center, {

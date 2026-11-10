@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
+import { useDashboardSummary } from '@/api/dashboard'
 import { getErrorMessage } from '@/api/errors'
 import type { VehicleListParams, VehicleSort, VehicleStatus } from '@/api/types'
 import { useVehiclePositions, useVehicles } from '@/api/vehicles'
@@ -23,15 +24,14 @@ import {
   TruckIcon,
 } from '@/ui'
 import { VehicleCardList, VehicleCardListSkeleton } from './VehicleCardList'
-import { VehicleFilters, type DriverFilter } from './VehicleFilters'
+import { VehicleFilters, type DriverFilter, type StatusCounts } from './VehicleFilters'
 import { VehicleTable, VehicleTableSkeleton } from './VehicleTable'
 import './vehicles.css'
 
 const PAGE_SIZE = 8 // design: 8 rows per page (server-side paging, RF-10)
 const SEARCH_DEBOUNCE_MS = 350
-/** Below 48rem: cards plus a List/Map toggle. From 80rem: list and map side by side. */
+/** Below 48rem: cards plus a List/Map toggle. Wider, list and map share a row when they fit (CSS). */
 const COMPACT_QUERY = '(max-width: 47.99rem)'
-const SPLIT_QUERY = '(min-width: 80rem)'
 
 type View = 'list' | 'map'
 interface Selection {
@@ -44,7 +44,6 @@ export default function VehiclesPage() {
   useDocumentTitle('Vehículos')
   const navigate = useNavigate()
   const isCompact = useMediaQuery(COMPACT_QUERY)
-  const isSplit = useMediaQuery(SPLIT_QUERY)
   const reducedMotion = usePrefersReducedMotion()
   const [view, setView] = useState<View>('list')
 
@@ -114,14 +113,17 @@ export default function VehiclesPage() {
     setSelection({ id, source: 'list' })
     setFocusRequest((count) => count + 1)
     if (isCompact) setView('map')
-    // Not side by side: the map is below the list or behind the toggle, bring it into view.
-    if (!isSplit) scrollToMapRef.current = true
+    scrollToMapRef.current = true
   }
 
   useEffect(() => {
-    if (!scrollToMapRef.current || mapPanelRef.current?.hidden) return
+    const panel = mapPanelRef.current
+    if (!scrollToMapRef.current || !panel || panel.hidden) return
     scrollToMapRef.current = false
-    mapPanelRef.current?.scrollIntoView?.({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'start' })
+    // Side by side the map is sticky and already on screen; stacked or behind the toggle it is not.
+    const { top, bottom } = panel.getBoundingClientRect()
+    if (top >= 0 && bottom <= window.innerHeight) return
+    panel.scrollIntoView?.({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'start' })
   })
 
   const toggleFromList = (id: number) => {
@@ -160,17 +162,27 @@ export default function VehiclesPage() {
   }
 
   const hasFilters = searchInput.trim() !== '' || status !== '' || driver !== ''
+
+  // Status chip counts come from the fleet summary, which cannot be crossed with a search or the
+  // driver filter: in that case the chips show no number rather than a wrong one.
+  const summary = useDashboardSummary()
+  const statusCounts: StatusCounts | null =
+    summary.data && searchInput.trim() === '' && driver === ''
+      ? { total: summary.data.vehicles_total, byStatus: summary.data.vehicles_by_status }
+      : null
+
   const clearFilters = () => {
     setSearchInput('')
     setStatus('')
     setDriver('')
   }
 
-  // ---- List content ----
+  // ---- List content: rows run edge to edge in the panel, messages get their own padding ----
   const listData = list.data
   let listContent
+  let listMessage
   if (!listData && list.isError) {
-    listContent = (
+    listMessage = (
       <ErrorState
         title="No pudimos cargar los vehículos"
         message={getErrorMessage(list.error)}
@@ -188,7 +200,7 @@ export default function VehiclesPage() {
       </>
     )
   } else if (listData.total === 0) {
-    listContent = hasFilters ? (
+    listMessage = hasFilters ? (
       <EmptyState
         icon={<SearchIcon />}
         title="Ningún vehículo coincide con los filtros"
@@ -207,7 +219,7 @@ export default function VehiclesPage() {
       />
     )
   } else if (listData.items.length === 0) {
-    listContent = (
+    listMessage = (
       <EmptyState
         title="Esta página ya no tiene vehículos"
         description="La lista cambió mientras la consultabas."
@@ -301,6 +313,7 @@ export default function VehiclesPage() {
         sort={sort}
         onSortChange={setSort}
         compact={isCompact}
+        counts={statusCounts}
         hasFilters={hasFilters}
         onClear={clearFilters}
       />
@@ -344,9 +357,9 @@ export default function VehiclesPage() {
         </div>
       )}
 
-      <div className={isSplit ? 'vehicles-layout vehicles-layout--split' : 'vehicles-layout'}>
+      <div className="vehicles-layout">
         <section
-          className="vehicles-panel"
+          className="vehicles-panel vehicles-panel--list"
           aria-labelledby="vehicles-list-title"
           hidden={isCompact && view !== 'list'}
         >
@@ -362,7 +375,7 @@ export default function VehiclesPage() {
           {selectedOutsidePage && selectedMarker && (
             <Alert
               tone="info"
-              className="vehicles-alert"
+              className="vehicles-panel__notice"
               title={`«${selectedMarker.name}» no está en esta página de la lista`}
               action={
                 <Button size="sm" variant="secondary" onClick={showSelectedInList}>
@@ -372,19 +385,21 @@ export default function VehiclesPage() {
             />
           )}
 
-          {listContent}
+          {listMessage ? <div className="vehicles-panel__state">{listMessage}</div> : listContent}
 
           {list.data && list.data.total > 0 && (
-            <Pagination
-              page={page}
-              pages={list.data.pages}
-              total={list.data.total}
-              pageSize={PAGE_SIZE}
-              onPageChange={goToPage}
-              label="Paginación de vehículos"
-              itemLabel="vehículos"
-              disabled={list.isPlaceholderData}
-            />
+            <div className="vehicles-panel__footer">
+              <Pagination
+                page={page}
+                pages={list.data.pages}
+                total={list.data.total}
+                pageSize={PAGE_SIZE}
+                onPageChange={goToPage}
+                label="Paginación de vehículos"
+                itemLabel="vehículos"
+                disabled={list.isPlaceholderData}
+              />
+            </div>
           )}
         </section>
 
@@ -399,9 +414,7 @@ export default function VehiclesPage() {
               Mapa
             </h2>
             <p className="vehicles-panel__meta">
-              {positions.data
-                ? `${formatNumber(markers.length)} con posición`
-                : ''}
+              {positions.data ? `${formatNumber(markers.length)} con posición` : ''}
             </p>
           </div>
           <div className="vehicles-map-frame">

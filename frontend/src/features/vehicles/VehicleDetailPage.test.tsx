@@ -199,9 +199,10 @@ describe('VehicleDetailPage', () => {
     const driver = screen.getByRole('region', { name: 'Conductor asignado' })
     expect(within(driver).getByText('Luz Gómez')).toBeInTheDocument()
     expect(within(driver).getByRole('link', { name: /300 123 4567/ })).toHaveAttribute('href', 'tel:+573001234567')
+    expect(within(driver).getByText('Vinculado en Wialon')).toBeInTheDocument()
 
     const passengers = screen.getByRole('region', { name: 'Pasajeros asignados' })
-    expect(within(passengers).getByText('2 pasajeros vinculados en Wialon.')).toBeInTheDocument()
+    expect(within(passengers).getByText('2 vinculados')).toBeInTheDocument()
     expect(within(passengers).getByText('Ana Ruiz')).toBeInTheDocument()
     expect(within(passengers).getByText('Pedro Díaz')).toBeInTheDocument()
 

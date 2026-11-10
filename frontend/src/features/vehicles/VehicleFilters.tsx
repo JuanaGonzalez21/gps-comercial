@@ -1,11 +1,14 @@
-import { useState } from 'react'
 import type { VehicleSort, VehicleStatus } from '@/api/types'
-import { VEHICLE_STATUSES, VEHICLE_STATUS_LABELS, isVehicleStatus } from '@/lib/vehicleStatus'
-import { Button, SearchIcon, SelectField, TextField, type SelectOption } from '@/ui'
+import { VEHICLE_STATUSES, VEHICLE_STATUS_LABELS } from '@/lib/vehicleStatus'
+import { Button, FilterChip, SearchIcon, SelectField, TextField, type SelectOption } from '@/ui'
 
 export type DriverFilter = '' | 'with' | 'without'
 
-const EXTRA_FILTERS_ID = 'vehicle-extra-filters'
+/** Fleet-wide totals per status (dashboard summary). Only valid when nothing else filters the list. */
+export interface StatusCounts {
+  total: number
+  byStatus: Record<VehicleStatus, number>
+}
 
 const SORT_OPTIONS: readonly (SelectOption & { value: VehicleSort })[] = [
   { value: 'name', label: 'Nombre (A–Z)' },
@@ -15,16 +18,18 @@ const SORT_OPTIONS: readonly (SelectOption & { value: VehicleSort })[] = [
   { value: 'last_message_at', label: 'Actualización más antigua' },
 ]
 
-const STATUS_OPTIONS: readonly SelectOption[] = [
-  { value: '', label: 'Todos' },
-  ...VEHICLE_STATUSES.map((status) => ({ value: status, label: VEHICLE_STATUS_LABELS[status] })),
-]
-
 const DRIVER_OPTIONS: readonly SelectOption[] = [
   { value: '', label: 'Todos' },
   { value: 'with', label: 'Con conductor' },
   { value: 'without', label: 'Sin conductor' },
 ]
+
+/** Chip dot per status: same colours as the map markers and the legend (the label names it too). */
+const STATUS_DOT: Record<VehicleStatus, string> = {
+  moving: 'var(--color-teal)',
+  stopped: 'var(--color-neutral)',
+  no_signal: 'var(--color-brand)',
+}
 
 interface VehicleFiltersProps {
   search: string
@@ -35,11 +40,10 @@ interface VehicleFiltersProps {
   onDriverChange: (value: DriverFilter) => void
   sort: VehicleSort
   onSortChange: (value: VehicleSort) => void
-  /**
-   * Small screens: the table headers are not shown (cards), so sorting needs a select, and the
-   * extra filters fold behind a toggle so the vehicles start higher on the page.
-   */
+  /** Small screens: the table headers are not shown (cards), so sorting needs a select (UX-06). */
   compact: boolean
+  /** Counts for the status chips, or null when they would not match the filtered list. */
+  counts: StatusCounts | null
   hasFilters: boolean
   onClear: () => void
 }
@@ -52,7 +56,7 @@ function toSort(value: string): VehicleSort {
   return SORT_OPTIONS.find((option) => option.value === value)?.value ?? 'name'
 }
 
-/** Search landmark with server-side filters (RF-10, UX-06). */
+/** Search landmark with server-side filters (RF-10, UX-06): search, driver and status chips. */
 export function VehicleFilters({
   search,
   onSearchChange,
@@ -63,12 +67,10 @@ export function VehicleFilters({
   sort,
   onSortChange,
   compact,
+  counts,
   hasFilters,
   onClear,
 }: VehicleFiltersProps) {
-  const [expanded, setExpanded] = useState(false)
-  const activeExtra = (status ? 1 : 0) + (driver ? 1 : 0)
-  const showExtra = !compact || expanded
   return (
     <form
       role="search"
@@ -76,63 +78,60 @@ export function VehicleFilters({
       className="vehicle-filters"
       onSubmit={(event) => event.preventDefault()}
     >
-      <TextField
-        type="search"
-        label="Buscar vehículo"
-        placeholder="Nombre o conductor"
-        leadingIcon={<SearchIcon />}
-        autoComplete="off"
-        value={search}
-        onChange={(event) => onSearchChange(event.target.value)}
-        fieldClassName="vehicle-filters__search"
-        maxLength={100}
-      />
-      {compact && (
-        <Button
-          variant="secondary"
-          size="sm"
-          className="vehicle-filters__toggle"
-          aria-expanded={expanded}
-          aria-controls={EXTRA_FILTERS_ID}
-          onClick={() => setExpanded((current) => !current)}
-        >
-          {expanded ? 'Ocultar filtros' : 'Más filtros'}
-          {activeExtra > 0 && ` (${activeExtra} activos)`}
-        </Button>
-      )}
-      {showExtra && (
-        <div id={EXTRA_FILTERS_ID} className="vehicle-filters__extra">
+      <div className="vehicle-filters__fields">
+        <TextField
+          type="search"
+          label="Buscar vehículo"
+          placeholder="Nombre o conductor"
+          leadingIcon={<SearchIcon />}
+          autoComplete="off"
+          value={search}
+          onChange={(event) => onSearchChange(event.target.value)}
+          maxLength={100}
+        />
+        <SelectField
+          label="Conductor"
+          options={DRIVER_OPTIONS}
+          value={driver}
+          onChange={(event) => onDriverChange(toDriverFilter(event.target.value))}
+        />
+        {compact && (
           <SelectField
-            label="Estado"
-            options={STATUS_OPTIONS}
-            value={status}
-            onChange={(event) => {
-              const value = event.target.value
-              onStatusChange(isVehicleStatus(value) ? value : '')
-            }}
+            label="Ordenar por"
+            options={SORT_OPTIONS}
+            value={sort}
+            onChange={(event) => onSortChange(toSort(event.target.value))}
           />
-          <SelectField
-            label="Conductor"
-            options={DRIVER_OPTIONS}
-            value={driver}
-            onChange={(event) => onDriverChange(toDriverFilter(event.target.value))}
-          />
-          {compact && (
-            <SelectField
-              label="Ordenar por"
-              fieldClassName="vehicle-filters__sort"
-              options={SORT_OPTIONS}
-              value={sort}
-              onChange={(event) => onSortChange(toSort(event.target.value))}
-            />
-          )}
+        )}
+      </div>
+      <div className="vehicle-filters__chips">
+        <div role="group" aria-label="Estado" className="vehicle-filters__status">
+          <FilterChip
+            pressed={status === ''}
+            onClick={() => onStatusChange('')}
+            dotColor="currentColor"
+            count={counts?.total}
+          >
+            Todos
+          </FilterChip>
+          {VEHICLE_STATUSES.map((value) => (
+            <FilterChip
+              key={value}
+              pressed={status === value}
+              onClick={() => onStatusChange(value)}
+              dotColor={STATUS_DOT[value]}
+              count={counts?.byStatus[value]}
+            >
+              {VEHICLE_STATUS_LABELS[value]}
+            </FilterChip>
+          ))}
         </div>
-      )}
-      {hasFilters && (
-        <Button variant="ghost" className="vehicle-filters__clear" onClick={onClear}>
-          Limpiar filtros
-        </Button>
-      )}
+        {hasFilters && (
+          <Button variant="ghost" size="sm" onClick={onClear}>
+            Limpiar filtros
+          </Button>
+        )}
+      </div>
     </form>
   )
 }

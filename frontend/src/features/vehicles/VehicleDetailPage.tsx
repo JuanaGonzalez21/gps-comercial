@@ -24,6 +24,7 @@ import {
   HistoryIcon,
   LinkButton,
   PageHeader,
+  PinOffIcon,
   Skeleton,
   SteeringWheelIcon,
   StatusBadge,
@@ -31,7 +32,6 @@ import {
   UsersIcon,
 } from '@/ui'
 import { CustomFieldsEditor } from './CustomFieldsEditor'
-import { PinOffIcon } from './NoPositionBadge'
 import { VehiclePositionMap } from './VehiclePositionMap'
 import './vehicles.css'
 
@@ -69,22 +69,31 @@ function Breadcrumb({ current }: { current: string }) {
 
 function Detail({ term, children }: { term: string; children: ReactNode }) {
   return (
-    <div>
+    <div className="detail-list__item">
       <dt>{term}</dt>
       <dd>{children}</dd>
     </div>
   )
 }
 
-function CardHeader({ id, title, description }: { id: string; title: string; description?: ReactNode }) {
+interface CardHeaderProps {
+  id: string
+  title: string
+  description?: ReactNode
+  /** Short figure on the right of the title (for example "2 vinculados"). */
+  meta?: ReactNode
+}
+
+function CardHeader({ id, title, description, meta }: CardHeaderProps) {
   return (
-    <div className="vehicle-detail__card-header">
+    <div className="card-head vehicle-detail__card-head">
       <div>
-        <h2 id={id} className="vehicle-detail__card-title">
+        <h2 id={id} className="card-title">
           {title}
         </h2>
-        {description && <p className="vehicle-detail__card-description">{description}</p>}
+        {description && <p className="card-subtitle">{description}</p>}
       </div>
+      {meta && <p className="card-meta">{meta}</p>}
     </div>
   )
 }
@@ -121,7 +130,7 @@ function PositionCard({ vehicle }: { vehicle: VehicleDetail }) {
   )
 
   return (
-    <Card as="section" className="vehicle-detail__card" aria-labelledby="vehicle-position-title">
+    <Card as="section" className="vehicle-detail__card vehicle-detail__card--position" aria-labelledby="vehicle-position-title">
       <CardHeader
         id="vehicle-position-title"
         title="Posición actual"
@@ -165,15 +174,15 @@ function DriverCard({ vehicle, canAssign }: { vehicle: VehicleDetail; canAssign:
     <Card as="section" className="vehicle-detail__card" aria-labelledby="vehicle-driver-title">
       <CardHeader id="vehicle-driver-title" title="Conductor asignado" />
       {driver ? (
-        <div className="person">
-          <span className="person__icon">
+        <div className="person person--driver">
+          <span className="person__icon person__icon--driver">
             <SteeringWheelIcon />
           </span>
-          <div>
+          <div className="person__text">
             <p className="person__name">{driver.name}</p>
             <p className="person__meta">
               {driver.phone ? (
-                <a href={telHref(driver.phone)}>
+                <a className="person__phone" href={telHref(driver.phone)}>
                   <span className="visually-hidden">Teléfono: </span>
                   {driver.phone}
                 </a>
@@ -181,7 +190,7 @@ function DriverCard({ vehicle, canAssign }: { vehicle: VehicleDetail; canAssign:
                 'Sin teléfono registrado'
               )}
             </p>
-            <p className="person__meta">Vinculado a este vehículo en Wialon.</p>
+            <p className="person__meta">Vinculado en Wialon</p>
           </div>
         </div>
       ) : (
@@ -205,12 +214,12 @@ function PassengersCard({ vehicle, canAssign }: { vehicle: VehicleDetail; canAss
       <CardHeader
         id="vehicle-passengers-title"
         title="Pasajeros asignados"
-        description={
+        meta={
           passengers.length === 0
             ? undefined
             : passengers.length === 1
-              ? '1 pasajero vinculado en Wialon.'
-              : `${formatNumber(passengers.length)} pasajeros vinculados en Wialon.`
+              ? '1 vinculado'
+              : `${formatNumber(passengers.length)} vinculados`
         }
       />
       {passengers.length > 0 ? (
@@ -220,11 +229,11 @@ function PassengersCard({ vehicle, canAssign }: { vehicle: VehicleDetail; canAss
               <span className="person__icon">
                 <UsersIcon />
               </span>
-              <div>
+              <div className="person__text">
                 <p className="person__name">{passenger.name}</p>
                 <p className="person__meta">
                   {passenger.phone ? (
-                    <a href={telHref(passenger.phone)}>
+                    <a className="person__phone" href={telHref(passenger.phone)}>
                       <span className="visually-hidden">Teléfono de {passenger.name}: </span>
                       {passenger.phone}
                     </a>
@@ -261,10 +270,10 @@ function DetailSkeleton() {
         <Skeleton width="20rem" />
       </div>
       <div className="vehicle-detail__grid" aria-hidden="true">
-        <div className="card card--padded vehicle-detail__card">
+        <div className="card card--padded vehicle-detail__card vehicle-detail__card--position">
           <Skeleton width="10rem" height="1.25rem" />
-          <Skeleton height="16rem" />
-          <Skeleton width="80%" />
+          <Skeleton height="20rem" />
+          <Skeleton height="8rem" />
         </div>
         <div className="vehicle-detail__aside">
           <div className="card card--padded vehicle-detail__card">
@@ -357,7 +366,10 @@ export default function VehicleDetailPage() {
               Última actualización:{' '}
               {lastMessage ? (
                 <>
-                  <time dateTime={lastMessage}>{formatDateTime(lastMessage)}</time> ({formatRelative(lastMessage)})
+                  <time dateTime={lastMessage} className="vehicle-detail__nowrap">
+                    {formatDateTime(lastMessage)}
+                  </time>{' '}
+                  <span className="vehicle-detail__nowrap">({formatRelative(lastMessage)})</span>
                 </>
               ) : (
                 'sin reportes'

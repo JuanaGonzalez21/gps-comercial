@@ -89,11 +89,10 @@
   display: none;
 }
 
-/* Brand red lightened 50 % with white: 7.27:1 on the dark panel. */
 .auth-aside__lead {
   max-width: 36ch;
   margin-top: var(--space-4);
-  color: #f58a96;
+  color: var(--color-on-dark-muted); /* grey on the dark panel: 9.83:1 */
   font-size: var(--text-base);
   line-height: 1.5;
 }

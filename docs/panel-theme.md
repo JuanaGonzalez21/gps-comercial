@@ -46,8 +46,8 @@ El login copia el diseño de referencia: títulos, textos y fondos. Como logo se
   - Columna oscura:
     - logo arriba;
     - título "Tu flota en tiempo real, en un solo lugar.";
-    - subtítulo "Posición, estado y asignaciones de conductores y pasajeros de cada vehículo." en `#F58A96`
-      (rojo de marca aclarado al 50 %, 7,27:1);
+    - subtítulo "Posición, estado y asignaciones de conductores y pasajeros de cada vehículo." en gris
+      `#C9C2CF` (`--color-on-dark-muted`, 9,83:1), a petición de Juana, en lugar del tono salmón del diseño;
     - abajo, dos notas con icono: "Solo para cuentas creadas por un administrador. No hay registro público." y
       "En tu primer ingreso deberás cambiar la contraseña.";
     - anillos rojos decorativos (solo CSS, opacidad 0,4) abajo a la derecha, como en el diseño.
@@ -83,8 +83,6 @@ El login copia el diseño de referencia: títulos, textos y fondos. Como logo se
 | `#D6CFDC` | `#EEE8F2` oscurecido | Contorno de botones secundarios y paginación | Decorativo: identifican al control su etiqueta y su icono |
 | `#0F4C50` | `#1E8C93` oscurecido | Primario pulsado | Texto blanco 9,68:1 |
 | `#F3C3C9` | `#EB162C` muy claro | Contorno de la alerta de advertencia | Decorativo |
-| `#F58A96` | `#EB162C` mezclado al 50 % con blanco | Subtítulo del panel oscuro del login | 7,27:1 sobre `#1F1A24` |
-
 ## Contraste de los pares nuevos
 - Navegación:
   - `#57525C` sobre blanco: 7,59:1;

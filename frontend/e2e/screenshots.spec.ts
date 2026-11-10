@@ -23,9 +23,12 @@ test('capturas públicas con datos enmascarados', async ({ page }) => {
   await login(page)
   await page.goto('/app/dashboard')
   await expect(page.getByText('Sin conductor', { exact: true }).first()).toBeVisible({ timeout: 45_000 })
-  await page.screenshot({ path: `${out}/dashboard.png` })
+  // Since the panel redesign the dashboard shows a fleet map and names in "Requiere atención": both are masked.
+  const dashboardMask = [page.locator('.dash-card--map .leaflet-container'), page.locator('.attention-item__name')]
+  await page.waitForTimeout(1000) // let the map tiles settle
+  await page.screenshot({ path: `${out}/dashboard.png`, mask: dashboardMask })
   await page.setViewportSize({ width: 360, height: 780 })
-  await page.screenshot({ path: `${out}/dashboard-movil.png`, fullPage: true })
+  await page.screenshot({ path: `${out}/dashboard-movil.png`, fullPage: true, mask: dashboardMask })
   await page.setViewportSize({ width: 1366, height: 860 })
 
   // Vehicle names (some are device IMEIs) and driver names are masked; the map stays zoomed out.

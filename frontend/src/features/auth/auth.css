@@ -1,0 +1,84 @@
+.auth-page {
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;
+  padding: var(--space-6) var(--space-4);
+  background:
+    radial-gradient(circle at 15% 10%, rgb(235 22 44 / 0.08), transparent 40%),
+    radial-gradient(circle at 85% 90%, rgb(30 140 147 / 0.12), transparent 45%),
+    var(--color-bg);
+}
+
+.auth-page__panel {
+  display: grid;
+  gap: var(--space-4);
+  width: 100%;
+  max-width: 27rem;
+}
+
+.auth-page__brand {
+  display: flex;
+  justify-content: center;
+}
+
+.auth-card {
+  display: grid;
+  gap: var(--space-4);
+  box-shadow: var(--shadow-md);
+}
+
+.auth-card__title {
+  font-size: var(--text-2xl);
+}
+
+.auth-card__intro {
+  color: var(--color-text-secondary);
+}
+
+.auth-form {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.auth-page__footer {
+  font-size: var(--text-sm);
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+
+.password-rules {
+  margin-top: calc(-1 * var(--space-2));
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-muted);
+}
+
+.password-rules__title {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+}
+
+.password-rules__list {
+  display: grid;
+  gap: var(--space-1);
+  margin-top: var(--space-2);
+}
+
+.password-rule {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+.password-rule.is-met {
+  color: var(--color-success-text);
+  font-weight: var(--weight-medium);
+}
+
+.password-rule__icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}

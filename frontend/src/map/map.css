@@ -8,6 +8,15 @@
   background: #e5e1e8;
 }
 
+/* Leaflet's panes and controls use z-index 400–1000. Each map is its own stacking context at level 0,
+   so none of them paints over the sticky top bar (z-index 100) while the page scrolls on phones. */
+.vehicle-map,
+.track-map,
+.leaflet-container {
+  isolation: isolate;
+  z-index: 0;
+}
+
 .vehicle-map__canvas {
   position: absolute;
   inset: 0;

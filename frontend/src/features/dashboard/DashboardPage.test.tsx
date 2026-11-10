@@ -4,10 +4,18 @@ import userEvent from '@testing-library/user-event'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { DASHBOARD_REFRESH_MS } from '@/api/dashboard'
-import type { DashboardSummary } from '@/api/types'
+import type { DashboardSummary, Page, VehicleSummary } from '@/api/types'
 import { AuthContext, type AuthContextValue } from '@/auth/useAuth'
-import { jsonResponse, makeUser, mockFetch, problemResponse } from '@/test/http'
+import type { VehicleMapProps } from '@/map/VehicleMap'
+import { jsonResponse, makeUser, mockFetch, problemResponse, type FetchCall } from '@/test/http'
 import DashboardPage from './DashboardPage'
+
+// Leaflet needs a real layout engine; the map card is tested against a stand-in with the same props.
+vi.mock('@/map/VehicleMap', () => ({
+  VehicleMap: ({ markers }: VehicleMapProps) => (
+    <div data-testid="vehicle-map">{markers.length} marcadores</div>
+  ),
+}))
 
 const SUMMARY: DashboardSummary = {
   vehicles_total: 62,
@@ -19,10 +27,37 @@ const SUMMARY: DashboardSummary = {
   generated_at: '2026-11-09T19:33:11Z', // 14:33 in Bogota
 }
 
-// Percentages use a non-breaking space ("19\u00a0%"); getByText compares against
+const NO_SIGNAL: Page<VehicleSummary> = {
+  items: [
+    {
+      id: 7,
+      name: 'Bus 07',
+      status: 'no_signal',
+      last_message_at: '2026-11-09T04:07:00Z',
+      position: null,
+      driver: null,
+      passenger_count: 0,
+    },
+  ],
+  total: 20,
+  page: 1,
+  page_size: 4,
+  pages: 5,
+}
+
+// Percentages use a non-breaking space before "%"; getByText compares against
 // whitespace-normalised text, so text queries use a plain space.
-const pct = (value: number) => `${value}\u00a0%`
 const pctText = (value: number) => `${value} %`
+
+/** Routes the dashboard's three reads: KPIs, the no-signal list and the map positions. */
+function api(summary: () => Response) {
+  return (call: FetchCall) => {
+    if (call.url.startsWith('/api/v1/dashboard/summary')) return summary()
+    if (call.url.startsWith('/api/v1/vehicles/positions')) return jsonResponse({ items: [], total: 0 })
+    if (call.url.startsWith('/api/v1/vehicles')) return jsonResponse(NO_SIGNAL)
+    return problemResponse(404, 'not_found')
+  }
+}
 
 function renderDashboard() {
   const user = makeUser()
@@ -58,58 +93,69 @@ describe('DashboardPage', () => {
     focusManager.setFocused(undefined)
   })
 
-  it('shows every KPI from the backend with its share of the fleet', async () => {
-    mockFetch(() => jsonResponse(SUMMARY))
+  it('shows every KPI from the backend with a link to its filtered list', async () => {
+    mockFetch(api(() => jsonResponse(SUMMARY)))
     renderDashboard()
 
-    const vehicles = await screen.findByTestId('kpi-vehicles')
-    expect(within(vehicles).getByText('62')).toBeInTheDocument()
-    expect(within(vehicles).getByRole('link', { name: 'Ver vehículos' })).toHaveAttribute('href', '/app/vehicles')
-    expect(within(screen.getByTestId('kpi-moving')).getByText('12')).toBeInTheDocument()
-    expect(within(screen.getByTestId('kpi-moving')).getByText(`${pctText(19)} de la flota`)).toBeInTheDocument()
-    expect(within(screen.getByTestId('kpi-stopped')).getByText('30')).toBeInTheDocument()
-    expect(within(screen.getByTestId('kpi-no_signal')).getByText('20')).toBeInTheDocument()
-    expect(within(screen.getByTestId('kpi-with_driver')).getByText('40')).toBeInTheDocument()
-    expect(within(screen.getByTestId('kpi-without_driver')).getByText('22')).toBeInTheDocument()
-    expect(within(screen.getByTestId('kpi-drivers')).getByText('16')).toBeInTheDocument()
-    expect(within(screen.getByTestId('kpi-passengers')).getByText('101')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Ver pasajeros' })).toHaveAttribute('href', '/app/passengers')
+    expect(await screen.findByTestId('kpi-vehicles')).toHaveTextContent('62')
+    expect(screen.getByRole('link', { name: 'Ver vehículos' })).toHaveAttribute('href', '/app/vehicles')
 
-    // "Actualizado hh:mm" in Bogota time, from the server timestamp.
+    const moving = screen.getByTestId('kpi-moving')
+    expect(moving).toHaveTextContent('12')
+    expect(within(moving).getByText(`${pctText(19)} de la flota`)).toBeInTheDocument()
+    expect(within(moving).getByRole('link')).toHaveAttribute('href', '/app/vehicles?status=moving')
+    expect(screen.getByTestId('kpi-stopped')).toHaveTextContent('30')
+    expect(screen.getByTestId('kpi-no_signal')).toHaveTextContent('20')
+
+    const withDriver = screen.getByTestId('kpi-with_driver')
+    expect(withDriver).toHaveTextContent('40')
+    expect(within(withDriver).getByRole('link')).toHaveAttribute('href', '/app/vehicles?has_driver=true')
+    expect(screen.getByTestId('kpi-without_driver')).toHaveTextContent('22')
+    expect(screen.getByTestId('kpi-drivers')).toHaveTextContent('16')
+    expect(screen.getByRole('link', { name: /^Pasajeros: 101/ })).toHaveAttribute('href', '/app/passengers')
+
     expect(screen.getByText('14:33')).toHaveAttribute('datetime', '2026-11-09T19:33:11Z')
   })
 
-  it('gives both charts a text alternative with visible values', async () => {
-    mockFetch(() => jsonResponse(SUMMARY))
+  it('gives both visualisations a text alternative with the same values', async () => {
+    mockFetch(api(() => jsonResponse(SUMMARY)))
     renderDashboard()
 
-    const donut = await screen.findByRole('img', { name: /Distribución de 62 vehículos por estado/ })
-    expect(donut).toHaveAccessibleName(
-      `Distribución de 62 vehículos por estado: En movimiento 12 (${pct(19)}), Detenido 30 (${pct(48)}), Sin señal 20 (${pct(32)}).`,
+    const statusBar = await screen.findByRole('img', { name: /Distribución de 62 vehículos por estado/ })
+    expect(statusBar).toHaveAccessibleName(
+      'Distribución de 62 vehículos por estado: 12 en movimiento, 30 detenido, 20 sin señal',
     )
+    expect(within(screen.getByTestId('kpi-with_driver')).getByText(`· ${pctText(65)}`)).toBeInTheDocument()
+    expect(screen.getByTestId('coverage-bar-with').style.width).toMatch(/^64\.5/)
+    expect(screen.getByText(pctText(65), { selector: '.dash-figure__value' })).toBeInTheDocument()
+  })
 
-    const statusTable = screen.getByRole('table', { name: 'Vehículos por estado' })
-    const movingRow = within(statusTable).getByRole('row', { name: /En movimiento/ })
-    expect(within(movingRow).getAllByRole('cell').map((cell) => cell.textContent)).toEqual(['12', pct(19)])
-    const noSignalRow = within(statusTable).getByRole('row', { name: /Sin señal/ })
-    expect(within(noSignalRow).getAllByRole('cell').map((cell) => cell.textContent)).toEqual(['20', pct(32)])
+  it('lists the vehicles that need attention, longest silence first', async () => {
+    const { calls } = mockFetch(api(() => jsonResponse(SUMMARY)))
+    renderDashboard()
 
-    const driversTable = screen.getByRole('table', { name: 'Vehículos con y sin conductor asignado' })
-    const withRow = within(driversTable).getByRole('row', { name: /Con conductor/ })
-    expect(within(withRow).getAllByRole('cell').map((cell) => cell.textContent)).toEqual(['40', pct(65)])
-    const withoutRow = within(driversTable).getByRole('row', { name: /Sin conductor/ })
-    expect(within(withoutRow).getAllByRole('cell').map((cell) => cell.textContent)).toEqual(['22', pct(35)])
-    // The bars are proportional to the same numbers.
-    expect(Number(screen.getByTestId('coverage-bar-with').getAttribute('width'))).toBeCloseTo(64.52, 1)
-    expect(screen.getByText(pctText(65), { selector: '.coverage-chart__headline-value' })).toBeInTheDocument()
+    const heading = await screen.findByRole('heading', { name: 'Requiere atención' })
+    const card = heading.closest('section') as HTMLElement
+    expect(within(card).getByText('20 vehículos sin señal')).toBeInTheDocument()
+    expect(await within(card).findByRole('link', { name: /Bus 07/ })).toHaveAttribute('href', '/app/vehicles/7')
+    expect(within(card).getByRole('link', { name: /Ver los 20 sin señal/ })).toHaveAttribute(
+      'href',
+      '/app/vehicles?status=no_signal',
+    )
+    const listCall = calls.find((call) => call.url.startsWith('/api/v1/vehicles?'))
+    expect(listCall?.url).toContain('status=no_signal')
+    expect(listCall?.url).toContain('sort=last_message_at')
+    expect(listCall?.url).toContain('page_size=4')
   })
 
   it('shows an error with a retry that recovers', async () => {
     let attempt = 0
-    mockFetch(() => {
-      attempt += 1
-      return attempt === 1 ? problemResponse(503, 'upstream_unavailable') : jsonResponse(SUMMARY)
-    })
+    mockFetch(
+      api(() => {
+        attempt += 1
+        return attempt === 1 ? problemResponse(503, 'upstream_unavailable') : jsonResponse(SUMMARY)
+      }),
+    )
     renderDashboard()
     const user = userEvent.setup()
 
@@ -122,24 +168,27 @@ describe('DashboardPage', () => {
   })
 
   it('explains an empty fleet instead of drawing empty charts', async () => {
-    mockFetch(() =>
-      jsonResponse({
-        ...SUMMARY,
-        vehicles_total: 0,
-        vehicles_by_status: { moving: 0, stopped: 0, no_signal: 0 },
-        vehicles_with_driver: 0,
-        vehicles_without_driver: 0,
-      }),
+    mockFetch(
+      api(() =>
+        jsonResponse({
+          ...SUMMARY,
+          vehicles_total: 0,
+          vehicles_by_status: { moving: 0, stopped: 0, no_signal: 0 },
+          vehicles_with_driver: 0,
+          vehicles_without_driver: 0,
+        }),
+      ),
     )
     renderDashboard()
 
     expect(await screen.findByRole('heading', { name: 'Aún no hay vehículos' })).toBeInTheDocument()
     expect(screen.queryByRole('img', { name: /Distribución/ })).not.toBeInTheDocument()
+    expect(screen.queryByTestId('vehicle-map')).not.toBeInTheDocument()
   })
 
   it('refetches every 30 s and pauses while the tab is hidden', async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true })
-    const { calls } = mockFetch(() => jsonResponse(SUMMARY))
+    const { calls } = mockFetch(api(() => jsonResponse(SUMMARY)))
     renderDashboard()
     await screen.findByTestId('kpi-vehicles')
     expect(summaryCalls(calls)).toBe(1)

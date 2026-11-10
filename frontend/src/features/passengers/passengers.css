@@ -1,0 +1,138 @@
+/* Passenger-specific pieces: initial custom fields in the create form and the fields editor. */
+
+/* ---------- Create form: initial custom fields ---------- */
+.passenger-new-fields {
+  display: grid;
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.passenger-new-fields__title,
+.cf-section-title {
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+}
+
+.cf-section-title:focus {
+  outline: none;
+}
+
+.passenger-new-fields__optional {
+  font-weight: var(--weight-regular);
+  color: var(--color-text-secondary);
+}
+
+.passenger-new-field {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-muted);
+}
+
+.passenger-new-field__remove {
+  justify-self: start;
+}
+
+@media (min-width: 36rem) {
+  .passenger-new-field {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+    align-items: end;
+  }
+}
+
+/* ---------- Custom fields editor ---------- */
+.cf-editor {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.cf-editor__notice:empty {
+  display: none;
+}
+
+.cf-section {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.cf-section__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.cf-list {
+  display: grid;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.cf-row {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.cf-row:last-child {
+  border-bottom: 0;
+}
+
+.cf-row--active {
+  background: var(--color-surface-muted);
+  box-shadow: inset 4px 0 0 var(--color-teal);
+}
+
+@media (min-width: 36rem) {
+  .cf-row:not(.cf-row--active) {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+}
+
+.cf-row__content {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+@media (min-width: 36rem) {
+  .cf-row__content {
+    grid-template-columns: minmax(8rem, 2fr) minmax(0, 3fr);
+    align-items: baseline;
+  }
+}
+
+.cf-row__key {
+  font-weight: var(--weight-semibold);
+  overflow-wrap: anywhere;
+}
+
+.cf-row__value {
+  overflow-wrap: anywhere;
+}
+
+.cf-row__question {
+  font-weight: var(--weight-semibold);
+}
+
+.cf-row__question:focus {
+  outline: none;
+}
+
+.cf-row__form,
+.cf-add {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.cf-add {
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}

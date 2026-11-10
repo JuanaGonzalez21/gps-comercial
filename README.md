@@ -33,8 +33,8 @@ Buenas prácticas 100**, SEO 91 (LCP 2,1 s, TBT 50 ms, CLS 0). Se repetirá sobr
 | Recurso | URL |
 |---|---|
 | Aplicación (frontend) | *pendiente de despliegue* (`https://gpscomercial.juanagonzalez.dev`) |
-| API | *pendiente de despliegue* (`https://<servicio>.onrender.com`) |
-| Swagger / OpenAPI | `<API>/docs` y `<API>/openapi.json` |
+| API | https://gps-comercial-ygq0.onrender.com (Render Free; `/health`) |
+| Swagger / OpenAPI | https://gps-comercial-ygq0.onrender.com/docs y `/openapi.json` |
 
 El procedimiento de despliegue está en [docs/deploy-guide.md](docs/deploy-guide.md).
 

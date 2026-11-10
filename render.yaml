@@ -1,4 +1,5 @@
-# Render Blueprint for the API (free plan). Validate in the Render dashboard before applying.
+# Render Blueprint for the API (free plan). The live service was created from the dashboard with the same
+# settings (Root Directory backend, Dockerfile ./Dockerfile): https://gps-comercial-ygq0.onrender.com
 # Secrets use sync: false (entered in the dashboard, never committed).
 services:
   - type: web

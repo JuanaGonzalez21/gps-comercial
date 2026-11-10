@@ -6,8 +6,8 @@ import './layouts.css'
 
 const SECTIONS = [
   { href: '/#funcionalidades', label: 'Funcionalidades' },
-  { href: '/#como-funciona', label: 'Cómo funciona' },
-  { href: '/#control-de-acceso', label: 'Control de acceso' },
+  { href: '/#como-trabajamos', label: 'Cómo trabajamos' },
+  { href: '/#control-de-tu-flota', label: 'Control de tu flota' },
 ] as const
 
 /** Public pages: header with the access CTA, content and footer. No public sign-up. */
@@ -81,25 +81,20 @@ export default function PublicLayout() {
         <div className="public-footer__inner">
           <div className="public-footer__brand">
             <Brand to="/" tone="dark" />
-            <p>Información clara para gestionar tu flota.</p>
+            <p>Plataforma de gestión y monitoreo de flotas integrada con Wialon.</p>
           </div>
-          <nav aria-labelledby="footer-explore" className="public-footer__group">
-            <h2 id="footer-explore" className="public-footer__heading">
-              Explora
-            </h2>
+          <nav aria-label="Pie de página" className="public-footer__links">
             {SECTIONS.map((section) => (
               <a key={section.href} href={section.href}>
                 {section.label}
               </a>
             ))}
+            <Link className="public-footer__access" to={signedIn ? '/app/dashboard' : '/login'}>
+              {signedIn ? 'Ir al panel' : 'Iniciar sesión'}
+            </Link>
           </nav>
-          <div className="public-footer__group">
-            <h2 className="public-footer__heading">Acceso</h2>
-            <Link to={signedIn ? '/app/dashboard' : '/login'}>{signedIn ? 'Ir al panel' : 'Iniciar sesión'}</Link>
-            <p className="public-footer__note">Acceso para usuarios autorizados.</p>
-          </div>
           <p className="public-footer__legal">
-            © 2026 GPS Comercial · Mapas © colaboradores de OpenStreetMap · Fotografías ilustrativas
+            © 2026 GPS Comercial · Datos de mapa © colaboradores de OpenStreetMap · Fotografías ilustrativas
           </p>
         </div>
       </footer>

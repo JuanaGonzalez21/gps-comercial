@@ -227,3 +227,12 @@ Dirección: producto de flotas sobrio y preciso. La personalidad viene de la com
 - Los textos de los roles salen de `ROLE_PERMISSIONS` (`backend/app/domain/permissions.py`).
 - Cabecera blanca y fija de 76 px, con contenido de hasta 1200 px. Las secciones compensan la altura con `scroll-margin-top`. En móvil, botón de menú con `aria-expanded` y `aria-controls`; el menú se cierra al navegar y con Escape.
 - Todo el CSS nuevo está acotado a `.landing-*` y `.public-*`. Ningún token global cambió.
+
+## Landing según Claude Design (2026-11-10, sustituye a las dos secciones anteriores)
+- **Hero:** se reproduce la composición de la referencia, con una excepción pedida por Juana: en lugar de la fotografía, se conservan la furgoneta y el camión (WebP con transparencia) sobre el panel turquesa `#176F75`, que ocupa la mitad derecha de borde a borde. La nota «Información de tus unidades integrada con Wialon» va bajo los botones.
+- **Funcionalidades:** columna editorial con fotografía vertical 2:3 (4:5 en móvil) y lista 01–03 separada por líneas finas, sin tarjetas.
+- **Cómo trabajamos:** banda oscura con numeración grande en turquesa.
+- **Control de tu flota:** sustituye a «Control de acceso». Fotografía a la izquierda (4:3 en móvil, recorte que conserva los dos rostros y la tablet) y texto sobre lavanda. Los textos corresponden a funciones existentes: búsqueda por nombre, filtro por estado, velocidad, última actualización, «sin señal», conductor, pasajeros, campos e historial. Los permisos no cambian.
+- **Cierre y pie:** cierre turquesa y pie compacto.
+- **Tipografía:** la pila del sistema del producto. La fuente del diseño exigiría cargar una fuente externa y ampliar la CSP, así que se aproxima con peso 800 y espaciado negativo en titulares.
+- **Imágenes:** las fotografías bajo el hero cargan en diferido y todas declaran sus dimensiones. Se retiró la fotografía anterior de la coordinadora sola.

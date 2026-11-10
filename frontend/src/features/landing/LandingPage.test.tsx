@@ -56,11 +56,11 @@ describe('LandingPage', () => {
     expect(within(how).getAllByRole('heading', { level: 3 })).toHaveLength(3)
     expect(within(how).getByText('Vista ilustrativa')).toBeInTheDocument()
     expect(within(how).queryByRole('button')).not.toBeInTheDocument() // the sample card is not interactive
-    const access = screen.getByRole('region', { name: 'Cada persona, con el acceso que necesita.' })
+    const access = screen.getByRole('region', { name: 'Un equipo conectado. Responsabilidades claras.' })
     for (const role of ['Administrador', 'Operador', 'Visualizador']) {
       expect(within(access).getByRole('heading', { level: 3, name: role })).toBeInTheDocument()
     }
-    expect(screen.getByRole('region', { name: 'Tu operación, en un solo lugar.' })).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Tu próxima consulta empieza aquí.' })).toBeInTheDocument()
     expect(screen.getByRole('contentinfo')).toBeInTheDocument()
     expect(screen.getByRole('main')).toBeInTheDocument()
     // Every image declares its size (no layout shift); the photo loads lazily, the hero does not.
@@ -100,7 +100,7 @@ describe('LandingPage', () => {
     expect(panelLinks).toHaveLength(4) // header, hero, closing call to action and footer navigation
     for (const link of panelLinks) expect(link).toHaveAttribute('href', '/app/dashboard')
     expect(screen.queryByRole('link', { name: 'Iniciar sesión' })).not.toBeInTheDocument()
-    expect(screen.getByRole('heading', { level: 2, name: 'Tu operación, en un solo lugar.' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 2, name: 'Tu próxima consulta empieza aquí.' })).toBeInTheDocument()
     expect(screen.getByText(/Iniciaste sesión como Ana Pérez/)).toBeInTheDocument()
   })
 })

@@ -475,3 +475,52 @@
   flex: none;
   white-space: nowrap;
 }
+
+/* ---------- Public footer v2: brand, "Explora" and "Acceso" zones, then a compact legal line ---------- */
+.public-footer__inner {
+  gap: var(--space-8);
+}
+
+.public-footer__group {
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: var(--space-2);
+}
+
+.public-footer__heading {
+  margin: 0 0 var(--space-1);
+  color: var(--color-on-dark-muted);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.public-footer__group a {
+  padding-block: var(--space-1);
+  color: var(--color-on-dark);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+}
+
+.public-footer__group a:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.3em;
+}
+
+.public-footer__note {
+  margin: 0;
+  font-size: var(--text-xs);
+}
+
+.public-footer__legal {
+  overflow-wrap: anywhere;
+  font-size: var(--text-xs);
+}
+
+@media (min-width: 48rem) {
+  .public-footer__inner {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr);
+  }
+}

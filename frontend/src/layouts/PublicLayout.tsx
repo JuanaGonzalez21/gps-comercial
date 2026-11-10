@@ -81,16 +81,23 @@ export default function PublicLayout() {
         <div className="public-footer__inner">
           <div className="public-footer__brand">
             <Brand to="/" tone="dark" />
-            <p>Gestión y monitoreo de flotas sobre Wialon. Acceso solo para usuarios creados por un administrador.</p>
+            <p>Información clara para gestionar tu flota.</p>
           </div>
-          <nav aria-label="Pie de página" className="public-footer__nav">
+          <nav aria-labelledby="footer-explore" className="public-footer__group">
+            <h2 id="footer-explore" className="public-footer__heading">
+              Explora
+            </h2>
             {SECTIONS.map((section) => (
               <a key={section.href} href={section.href}>
                 {section.label}
               </a>
             ))}
-            <Link to={signedIn ? '/app/dashboard' : '/login'}>{signedIn ? 'Ir al panel' : 'Iniciar sesión'}</Link>
           </nav>
+          <div className="public-footer__group">
+            <h2 className="public-footer__heading">Acceso</h2>
+            <Link to={signedIn ? '/app/dashboard' : '/login'}>{signedIn ? 'Ir al panel' : 'Iniciar sesión'}</Link>
+            <p className="public-footer__note">Acceso para usuarios autorizados.</p>
+          </div>
           <p className="public-footer__legal">
             © 2026 GPS Comercial · Mapas © colaboradores de OpenStreetMap · Fotografías ilustrativas
           </p>

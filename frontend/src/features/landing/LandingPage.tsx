@@ -6,9 +6,12 @@ import {
   ArrowRightIcon,
   AuditIcon,
   CheckIcon,
+  EyeIcon,
   HistoryIcon,
   LinkButton,
   MapIcon,
+  SteeringWheelIcon,
+  UserCogIcon,
   UsersIcon,
   type ButtonVariant,
   type IconProps,
@@ -38,16 +41,15 @@ const STEPS = [
 ]
 
 // Wording checked against ROLE_PERMISSIONS in backend/app/domain/permissions.py.
-const ROLES = [
-  {
-    name: 'Administrador',
-    text: 'Todo lo del operador, además de crear usuarios, asignar roles y consultar la auditoría.',
-  },
+// Operators edit people, assignments and vehicle custom fields; they cannot create vehicles in Wialon.
+const ROLES: { name: string; text: string; Icon: ComponentType<IconProps> }[] = [
+  { name: 'Administrador', text: 'Gestiona usuarios, permisos y operación.', Icon: UserCogIcon },
   {
     name: 'Operador',
-    text: 'Gestiona conductores, pasajeros, asignaciones y campos personalizados, y exporta datos en CSV.',
+    text: 'Gestiona personas, asignaciones y campos de los vehículos según sus permisos.',
+    Icon: SteeringWheelIcon,
   },
-  { name: 'Visualizador', text: 'Consulta el panel, los vehículos, las personas y el historial, sin hacer cambios.' },
+  { name: 'Visualizador', text: 'Consulta la información sin modificarla.', Icon: EyeIcon },
 ]
 
 function AccessCta({ signedIn, variant = 'primary' }: { signedIn: boolean; variant?: ButtonVariant }) {
@@ -218,36 +220,48 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section id="control-de-acceso" className="landing-section" aria-labelledby="acceso-title">
-        <div className="landing-container">
-          <p className="landing-kicker">Control de acceso</p>
-          <h2 id="acceso-title" className="landing-section__title">
-            Cada persona, con el acceso que necesita.
-          </h2>
+      <section id="control-de-acceso" className="landing-section landing-access" aria-labelledby="acceso-title">
+        <div className="landing-container landing-access__grid">
+          <div>
+            <p className="landing-kicker">Control de acceso</p>
+            <h2 id="acceso-title" className="landing-section__title">
+              Un equipo conectado. Responsabilidades claras.
+            </h2>
+            <p className="landing-section__lead">Cada persona accede a las herramientas que necesita para su trabajo.</p>
+            <p className="landing-audit">
+              <AuditIcon aria-hidden="true" />
+              Operaciones registradas para su consulta.
+            </p>
+          </div>
           <ul className="landing-roles" role="list">
-            {ROLES.map((role) => (
-              <li key={role.name}>
-                <h3 className="landing-roles__name">{role.name}</h3>
-                <p>{role.text}</p>
+            {ROLES.map(({ name, text, Icon }) => (
+              <li key={name} className="landing-roles__row">
+                <span className="landing-roles__icon" aria-hidden="true">
+                  <Icon />
+                </span>
+                <div>
+                  <h3 className="landing-roles__name">{name}</h3>
+                  <p>{text}</p>
+                </div>
               </li>
             ))}
           </ul>
-          <p className="landing-audit">
-            <AuditIcon aria-hidden="true" />
-            Los inicios de sesión y los cambios quedan en un registro de operaciones que el administrador puede consultar.
-          </p>
         </div>
       </section>
 
       <section className="landing-cta" aria-labelledby="cta-title">
         <div className="landing-container landing-cta__inner">
           <div>
-            <h2 id="cta-title" className="landing-section__title">
-              Tu operación, en un solo lugar.
+            <h2 id="cta-title" className="landing-cta__title">
+              Tu próxima consulta empieza aquí.
             </h2>
-            {signedIn && user && <p className="landing-cta__session">Iniciaste sesión como {user.full_name}.</p>}
+            <p className="landing-cta__text">
+              {signedIn && user
+                ? `Iniciaste sesión como ${user.full_name}. Continúa con tu operación.`
+                : 'Accede a tu flota y continúa con tu operación.'}
+            </p>
           </div>
-          <AccessCta signedIn={signedIn} />
+          <AccessCta signedIn={signedIn} variant="secondary" />
         </div>
       </section>
     </div>

@@ -38,8 +38,15 @@ export function ExportCsvButton({ entity, filters }: ExportCsvButtonProps) {
   }
 
   return (
-    <Button variant="secondary" size="sm" loading={busy} loadingText="Exportando…" onClick={handleClick}>
-      <DownloadIcon /> Exportar CSV
+    <Button
+      variant="secondary"
+      size="sm"
+      icon={<DownloadIcon />}
+      loading={busy}
+      loadingText="Exportando…"
+      onClick={handleClick}
+    >
+      Exportar CSV
     </Button>
   )
 }

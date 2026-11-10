@@ -39,8 +39,13 @@ Solo cambia la apariencia: la estructura, el orden, los textos, las rutas y la l
 El login copia el diseño de referencia: títulos, textos y fondos. Como logo se usa el icono de GPS Comercial
 (pin blanco sobre baldosa roja), no el del prototipo. La lógica no cambia:
 - validación, mensajes de error y alertas de sesión;
-- foco en el error;
+- foco en el primer campo con error;
 - etiquetas "Correo electrónico" y "Contraseña" y botón "Ingresar".
+
+Se añadieron dos elementos visibles en todos los tamaños:
+- un aviso de resumen, como en el diseño M1, tras enviar con campos inválidos: "Revisa los campos marcados." y
+  "Hay N errores.". Usa `role="alert"` y se actualiza al corregir cada campo; si es el último, desaparece;
+- el enlace discreto "‹ Volver al inicio" (gris `#57525C`, 7,59:1) debajo del formulario.
 
 - **Escritorio (≥ 64 rem):** columna oscura `#1F1A24` a la izquierda (2/5) y página blanca a la derecha.
   - Columna oscura:
@@ -60,22 +65,28 @@ El login copia el diseño de referencia: títulos, textos y fondos. Como logo se
   - banda oscura con el logo y "Tu flota en tiempo real." (24 px a 360 px, hasta 30 px en tablet);
   - el contenido de la banda empieza donde empieza la columna del formulario. Se midió en 10 tamaños,
     de 320 a 1440 px, y el logo y el título comparten la coordenada x del formulario, sin desplazamiento horizontal;
-  - debajo, el formulario sobre blanco y la nota "Solo para cuentas creadas por el administrador. En el primer
-    ingreso deberás cambiar tu contraseña.".
+  - un anillo rojo decorativo en la esquina superior derecha de la banda, que no cruza texto;
+  - debajo, el formulario sobre blanco, sin el texto introductorio en teléfonos (< 48 rem), como en M1;
+  - bajo "Ingresar", dos líneas cortas de 13 px, cada una con su icono en `#176F75`:
+    - llave: "¿Olvidaste tu contraseña? Pide al administrador que la restablezca.";
+    - usuario administrador: "Solo cuentas creadas por el administrador. En tu primer ingreso cambiarás la
+      contraseña.".
+
+    Es la versión condensada a petición de Juana; en escritorio se mantiene la frase completa del diseño, sin
+    icono y a 14 px.
 - **Textos que se retiraron:**
   - "Monitoreo de flotas sobre Wialon" y su lista de tres capacidades;
   - "Las horas se muestran en la zona horaria de Bogotá.";
-  - el pie "¿No tienes cuenta?… Volver al inicio". El logo sigue enlazando a la landing.
-- **No se copió:**
-  - la pista del prototipo "Prueba: envía vacío o con un correo inválido.";
-  - el resumen de errores "Revisa los campos marcados. Hay 2 errores.", porque añadirlo cambiaría la validación.
+  - el pie "¿No tienes cuenta? Solo un administrador puede crear usuarios.".
+- **No se copió:** la pista del prototipo "Prueba: envía vacío o con un correo inválido.".
 - **Accesibilidad:**
   - un solo `h1` ("Iniciar sesión");
   - el panel es un `aside` con nombre y el título de marca es un párrafo;
   - en el panel oscuro el anillo de foco es blanco: el rojo solo da 3,80:1 sobre `#1F1A24`;
-  - contraste del texto: 0 casos por debajo de AA a 1280 y 360 px;
-  - sin desplazamiento horizontal a 1280, 1024 y 360 px;
-  - sin errores de consola.
+  - contraste del texto: 0 casos por debajo de AA a 1280 y 360 px, también con errores;
+  - sin desplazamiento horizontal en 10 tamaños, de 320 a 1440 px;
+  - sin errores de consola;
+  - pruebas nuevas: el aviso cuenta 2, luego 1 y desaparece; "Volver al inicio" lleva a la landing.
 - **Cambiar contraseña:** conserva la tarjeta blanca sobre lavanda con el logo encima.
 
 ## Tonos nuevos (solo dentro del ámbito)

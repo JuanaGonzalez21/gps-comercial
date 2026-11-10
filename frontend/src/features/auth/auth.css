@@ -78,6 +78,29 @@
   outline-color: var(--color-on-dark); /* the red ring is only 3.80:1 here; white is clearer */
 }
 
+/* Decorative brand-red rings from the design reference. CSS only (never announced), drawn behind
+   the content. Phones and tablets: one ring in the band's top-right corner, clear of the text. */
+.auth-aside::before,
+.auth-aside::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  border: 1px solid rgb(235 22 44 / 0.5);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.auth-aside::before {
+  top: -6rem;
+  right: -5rem;
+  width: 11rem;
+  height: 11rem;
+}
+
+.auth-aside::after {
+  display: none;
+}
+
 .auth-aside__title {
   font-size: clamp(1.5rem, 1.25rem + 1vw, 1.875rem); /* 24 px at 360, up to 30 px on tablets */
   font-weight: var(--weight-bold);
@@ -133,10 +156,65 @@
   box-shadow: none;
 }
 
-.auth-card__help,
-.auth-page__mobile-note {
-  font-size: var(--text-sm);
+/* Phones: the design goes straight from the title to the form; the access notes below cover it. */
+.auth-page--split .auth-card__intro {
+  display: none;
+}
+
+/* Help under "Ingresar": two short lines, each with its icon (teal 5.89:1, text 7.59:1). */
+.auth-help {
+  display: grid;
+  gap: var(--space-2);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--color-text-secondary);
+}
+
+.auth-help__item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.auth-help__icon {
+  width: 1rem;
+  height: 1rem;
+  margin-top: 0.15rem;
+  flex-shrink: 0;
+  color: var(--color-primary);
+}
+
+.auth-help__full {
+  display: none;
+}
+
+/* Subtle way back to the landing (the logo also links there). */
+.auth-back {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: var(--space-1);
+  min-height: 2.25rem;
   color: var(--color-text-secondary); /* 7.59:1 on white */
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+}
+
+.auth-back:hover {
+  color: var(--color-text);
+  text-decoration: underline;
+}
+
+.auth-back__icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+@media (min-width: 48rem) {
+  .auth-page--split .auth-card__intro {
+    display: block;
+  }
 }
 
 @media (min-width: 64rem) {
@@ -169,19 +247,15 @@
     display: grid;
   }
 
-  /* Decorative brand-red rings from the design reference. CSS only (never announced), behind the
-     content, low opacity so the notes they pass under stay fully legible. */
+  /* Wide screens: two rings at the bottom right, as in the design; lower opacity so the notes
+     they pass under stay fully legible. */
   .auth-aside::before,
   .auth-aside::after {
-    content: '';
-    position: absolute;
-    z-index: -1;
-    border: 1px solid rgb(235 22 44 / 0.4);
-    border-radius: 50%;
-    pointer-events: none;
+    border-color: rgb(235 22 44 / 0.4);
   }
 
   .auth-aside::before {
+    top: auto;
     right: -6rem;
     bottom: -7rem;
     width: 22rem;
@@ -189,6 +263,7 @@
   }
 
   .auth-aside::after {
+    display: block;
     right: -2rem;
     bottom: -3rem;
     width: 14rem;
@@ -200,8 +275,20 @@
     padding: var(--space-8) var(--space-6);
   }
 
-  .auth-page__mobile-note {
+  /* The brand column already shows the access notes; the help keeps the design's plain text. */
+  .auth-help {
+    font-size: var(--text-sm);
+    line-height: var(--leading-normal);
+  }
+
+  .auth-help__item--compact,
+  .auth-help__icon,
+  .auth-help__short {
     display: none;
+  }
+
+  .auth-help__full {
+    display: inline;
   }
 }
 

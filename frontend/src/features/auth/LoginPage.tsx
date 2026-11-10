@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { Navigate, useLocation, useSearchParams } from 'react-router'
+import { Link, Navigate, useLocation, useSearchParams } from 'react-router'
 import { z } from 'zod'
 import { isApiError } from '@/api/errors'
 import { useServerWakeUp } from '@/api/system'
@@ -14,6 +14,7 @@ import {
   Brand,
   Button,
   Card,
+  ChevronLeftIcon,
   KeyIcon,
   PasswordField,
   TextField,
@@ -59,7 +60,7 @@ export default function LoginPage() {
     register,
     handleSubmit,
     setError,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, submitCount },
   } = useForm<LoginInput, unknown, LoginOutput>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: '', password: '' },
@@ -93,6 +94,9 @@ export default function LoginPage() {
 
   const expired = searchParams.get('reason') === 'expired'
   const loggedOut = wasLoggedOut(location.state)
+  // Summary after a submit with invalid fields; it updates as each field is corrected.
+  const errorCount = Object.keys(errors).length
+  const showErrorSummary = submitCount > 0 && errorCount > 0 && !formError
 
   return (
     <main id="main" className="auth-page auth-page--split">
@@ -146,6 +150,11 @@ export default function LoginPage() {
               {formError}
             </Alert>
           )}
+          {showErrorSummary && (
+            <Alert tone="error" role="alert" title="Revisa los campos marcados.">
+              {errorCount === 1 ? 'Hay 1 error.' : `Hay ${errorCount} errores.`}
+            </Alert>
+          )}
 
           <form className="auth-form" noValidate onSubmit={onSubmit}>
             <TextField
@@ -175,15 +184,29 @@ export default function LoginPage() {
               Ingresar
             </Button>
           </form>
-          <p className="auth-card__help">
-            ¿Olvidaste tu contraseña? Comunícate con el administrador de tu empresa para restablecerla.
-          </p>
+          <ul className="auth-help" role="list">
+            <li className="auth-help__item">
+              <KeyIcon className="auth-help__icon" />
+              {/* Short wording on phones and tablets; the design's full sentence on wide screens. */}
+              <span className="auth-help__short">
+                ¿Olvidaste tu contraseña? Pide al administrador que la restablezca.
+              </span>
+              <span className="auth-help__full">
+                ¿Olvidaste tu contraseña? Comunícate con el administrador de tu empresa para
+                restablecerla.
+              </span>
+            </li>
+            {/* Phones and tablets: the brand band only shows the title, so its access note moves here. */}
+            <li className="auth-help__item auth-help__item--compact">
+              <UserCogIcon className="auth-help__icon" />
+              <span>Solo cuentas creadas por el administrador. En tu primer ingreso cambiarás la contraseña.</span>
+            </li>
+          </ul>
         </Card>
-        {/* On phones the brand band only shows the title, so the access notes move below the form. */}
-        <p className="auth-page__mobile-note">
-          Solo para cuentas creadas por el administrador. En el primer ingreso deberás cambiar tu
-          contraseña.
-        </p>
+        <Link to="/" className="auth-back">
+          <ChevronLeftIcon className="auth-back__icon" />
+          Volver al inicio
+        </Link>
       </div>
     </main>
   )

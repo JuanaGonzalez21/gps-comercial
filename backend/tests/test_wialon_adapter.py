@@ -215,7 +215,10 @@ def test_passenger_update_sends_complete_custom_fields_and_timezone() -> None:
 def test_unbind_uses_currently_bound_unit() -> None:
     fake = FakeWialon()
     fake.handlers["resource/bind_unit_driver"] = {}
-    make_gateway(fake).unbind_driver(77, 5)
+    # This fake Wialon never applies the change: the gateway must say so, not claim success.
+    with pytest.raises(domain.UpstreamUnavailableError) as raised:
+        make_gateway(fake).unbind_driver(77, 5)
+    assert "todavía no lo refleja" in raised.value.detail
     binds = [params for svc, params in fake.calls if svc == "resource/bind_unit_driver"]
     assert binds == [{"resourceId": 77, "unitId": 1, "driverId": 5, "time": 0, "mode": 0}]
 
@@ -310,3 +313,37 @@ def test_token_and_session_never_logged(caplog) -> None:
     with pytest.raises(domain.UpstreamForbiddenError):
         make_gateway(fake).list_units()
     assert TOKEN not in caplog.text and "sid-1" not in caplog.text
+
+
+def test_cache_does_not_store_reads_started_before_an_invalidation() -> None:
+    from app.infrastructure.wialon.gateway import _TtlCache
+
+    cache = _TtlCache(60, clock=lambda: 0.0)
+
+    def slow_load() -> str:
+        cache.invalidate("resources")  # a write lands while this read is in flight
+        return "pre-write state"
+
+    assert cache.get_or_load("resources", slow_load) == "pre-write state"
+    assert cache.get_or_load("resources", lambda: "fresh state") == "fresh state"
+
+
+def test_unexpected_write_answer_is_reported_as_uncertain() -> None:
+    fake = FakeWialon()
+    fake.handlers["resource/update_tag"] = {"unexpected": True}
+    with pytest.raises(domain.UpstreamUnavailableError) as raised:
+        make_gateway(fake).update_passenger(77, 9, PassengerInput(name="Luis"))
+    assert "No se pudo confirmar" in raised.value.detail
+
+
+def test_numeric_custom_field_values_do_not_drop_the_passenger() -> None:
+    fake = FakeWialon()
+    tag = {**RESOURCES["items"][0]["tags"]["9"], "jp": {"Edad": 30, "Nota": None}}
+    resource = {**RESOURCES["items"][0], "tags": {"9": tag}}
+    fake.handlers["core/search_items"] = lambda params: (
+        UNITS
+        if params["spec"]["itemsType"] == "avl_unit"
+        else {"totalItemsCount": 1, "items": [resource]}
+    )
+    passenger = next(p for p in make_gateway(fake).list_passengers() if p.id == 9)
+    assert passenger.custom_fields == {"Edad": "30", "Nota": ""}

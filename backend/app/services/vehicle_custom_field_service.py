@@ -28,6 +28,7 @@ class VehicleCustomFieldService:
         with audit_failures(
             self._audit, action, entity_type=_ENTITY, entity_id=unit_id, details=details
         ):
+            self._gateway.refresh()
             self._ensure_unique_name(self.list_fields(unit_id), name, own_id=None)
             field = self._gateway.create_unit_custom_field(unit_id, name, value)
             details["field_id"] = field.id
@@ -51,6 +52,7 @@ class VehicleCustomFieldService:
         with audit_failures(
             self._audit, action, entity_type=_ENTITY, entity_id=unit_id, details=details
         ):
+            self._gateway.refresh()  # compare against Wialon, not against a cached copy
             fields = self.list_fields(unit_id)
             current = self._field(fields, field_id)
             if expected_value is not None and current.value != expected_value:
@@ -74,6 +76,7 @@ class VehicleCustomFieldService:
         with audit_failures(
             self._audit, action, entity_type=_ENTITY, entity_id=unit_id, details=details
         ):
+            self._gateway.refresh()
             current = self._field(self.list_fields(unit_id), field_id)
             details["name"] = current.name
             self._gateway.delete_unit_custom_field(unit_id, field_id)

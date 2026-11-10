@@ -13,7 +13,12 @@ from collections.abc import Callable, Sequence
 from datetime import datetime
 from typing import Any
 
-from app.domain.errors import ConflictError, NotFoundError, UpstreamError
+from app.domain.errors import (
+    ConflictError,
+    NotFoundError,
+    UpstreamError,
+    UpstreamUnavailableError,
+)
 from app.domain.fleet import (
     CustomField,
     Driver,
@@ -25,7 +30,7 @@ from app.domain.fleet import (
     Unit,
 )
 from app.infrastructure.wialon import mappers
-from app.infrastructure.wialon.client import WialonClient
+from app.infrastructure.wialon.client import UNCERTAIN_WRITE, WialonClient
 from app.infrastructure.wialon.errors import NO_MESSAGES
 from app.infrastructure.wialon.schemas import RawMessages, RawSearchResult
 
@@ -38,6 +43,11 @@ MESSAGES_WITH_DATA_MASK = 0xFF00  # flags=0 with this mask = "all messages with 
 # re-read until the new state is visible before answering.
 BINDING_CONFIRM_ATTEMPTS = 8
 BINDING_CONFIRM_INTERVAL_SECONDS = 0.75
+BINDING_CONFIRM_MAX_SECONDS = 8.0
+BINDING_NOT_CONFIRMED = (
+    "Wialon recibió el cambio de asignación pero todavía no lo refleja. "
+    "Revisa el estado en unos segundos antes de volver a intentarlo."
+)
 # An unbind stamped in the same second as the previous bind is not applied by Wialon (verified).
 MIN_SECONDS_BETWEEN_BINDINGS = 2.0
 
@@ -47,6 +57,9 @@ class _TtlCache:
         self._ttl = ttl_seconds
         self._clock = clock
         self._values: dict[str, tuple[float, Any]] = {}
+        # Bumped by invalidate(): a load that started before an invalidation is not stored,
+        # otherwise a slow read in flight during a write would re-cache the pre-write state.
+        self._generations: dict[str, int] = {"units": 0, "resources": 0}
         self._locks: dict[str, threading.Lock] = {
             "units": threading.Lock(),
             "resources": threading.Lock(),
@@ -60,12 +73,15 @@ class _TtlCache:
             cached = self._values.get(key)
             if cached and self._clock() < cached[0]:
                 return cached[1]
+            generation = self._generations[key]
             value = loader()
-            self._values[key] = (self._clock() + self._ttl, value)
+            if self._generations[key] == generation:
+                self._values[key] = (self._clock() + self._ttl, value)
             return value
 
     def invalidate(self, *keys: str) -> None:
-        for key in keys or tuple(self._values):
+        for key in keys or tuple(self._generations):
+            self._generations[key] += 1
             self._values.pop(key, None)
 
 
@@ -100,7 +116,10 @@ def _created_object(body: Any, what: str) -> dict[str, Any]:
     """update_* services answer [id, {object}] on create/update and [id, null] on delete."""
     if isinstance(body, list) and len(body) == 2 and isinstance(body[1], dict):
         return body[1]
-    raise UpstreamError(f"Wialon devolvió una respuesta inesperada al guardar {what}.")
+    # The write was sent and Wialon answered something else: the change may have been applied.
+    raise UpstreamUnavailableError(
+        f"Wialon respondió de forma inesperada al guardar {what}. {UNCERTAIN_WRITE}"
+    )
 
 
 class WialonFleetGateway:
@@ -114,11 +133,15 @@ class WialonFleetGateway:
     ) -> None:
         self._client = client
         self._cache = _TtlCache(cache_ttl_seconds, clock)
+        self._clock = clock
         self._sleep = sleep
         self._messages_lock = threading.Lock()  # loaded messages live in the shared session
 
     def close(self) -> None:
         self._client.close()
+
+    def refresh(self) -> None:
+        self._cache.invalidate()
 
     # ----- raw reads ---------------------------------------------------------------------
     def _raw_units(self) -> list[dict[str, Any]]:
@@ -159,15 +182,19 @@ class WialonFleetGateway:
     def _confirm_binding(
         self, resource_id: int, key: str, entry_id: int, label: str, expected_unit: int | None
     ) -> None:
+        # Propagation took ~2 s against the real account, but nothing guarantees it: when the new
+        # state is not visible within the limits we answer "pending confirmation", never success.
+        deadline = self._clock() + BINDING_CONFIRM_MAX_SECONDS
         for attempt in range(BINDING_CONFIRM_ATTEMPTS):
             self._cache.invalidate("resources")
             entry = self._raw_entry(resource_id, key, entry_id, label)
             if (entry.get("bu") or None) == expected_unit:
                 return
-            if attempt < BINDING_CONFIRM_ATTEMPTS - 1:
-                self._sleep(BINDING_CONFIRM_INTERVAL_SECONDS)
-        # Wialon accepted the request ({}); it may still be applying it. Never claim the opposite.
+            if attempt == BINDING_CONFIRM_ATTEMPTS - 1 or self._clock() >= deadline:
+                break
+            self._sleep(BINDING_CONFIRM_INTERVAL_SECONDS)
         logger.warning("wialon_binding_not_confirmed", extra={"kind": key, "entry_id": entry_id})
+        raise UpstreamUnavailableError(BINDING_NOT_CONFIRMED, retry_after_seconds=10)
 
     def _respect_last_binding_time(self, entry: dict[str, Any]) -> None:
         last_change = entry.get("bt") or 0  # UNIX time of the last bind/unbind
@@ -227,6 +254,7 @@ class WialonFleetGateway:
         return self._driver_from_object(resource_id, _created_object(body, "el conductor"))
 
     def update_driver(self, resource_id: int, driver_id: int, data: DriverInput) -> Driver:
+        self._cache.invalidate("resources")  # merge onto the current remote state
         current = self._raw_entry(resource_id, "drvrs", driver_id, "conductor")
         params = {
             "itemId": resource_id,
@@ -249,13 +277,16 @@ class WialonFleetGateway:
         return self._driver_from_object(resource_id, _created_object(body, "el conductor"))
 
     def delete_driver(self, resource_id: int, driver_id: int) -> None:
+        self._cache.invalidate("resources")  # merge onto the current remote state
         self._raw_entry(resource_id, "drvrs", driver_id, "conductor")
         params = {"itemId": resource_id, "id": driver_id, "callMode": "delete"}
         self._write("resource/update_driver", params, invalidate=("resources",))
 
     def bind_driver(self, resource_id: int, driver_id: int, unit_id: int) -> None:
-        self._raw_entry(resource_id, "drvrs", driver_id, "conductor")
+        self._cache.invalidate("resources")  # merge onto the current remote state
+        current = self._raw_entry(resource_id, "drvrs", driver_id, "conductor")
         self.get_unit(unit_id)
+        self._respect_last_binding_time(current)
         params = {
             "resourceId": resource_id,
             "unitId": unit_id,
@@ -267,6 +298,7 @@ class WialonFleetGateway:
         self._confirm_binding(resource_id, "drvrs", driver_id, "conductor", unit_id)
 
     def unbind_driver(self, resource_id: int, driver_id: int) -> None:
+        self._cache.invalidate("resources")  # merge onto the current remote state
         current = self._raw_entry(resource_id, "drvrs", driver_id, "conductor")
         unit_id = current.get("bu") or 0
         if not unit_id:
@@ -301,6 +333,7 @@ class WialonFleetGateway:
     def update_passenger(
         self, resource_id: int, passenger_id: int, data: PassengerInput
     ) -> Passenger:
+        self._cache.invalidate("resources")  # merge onto the current remote state
         current = self._raw_entry(resource_id, "tags", passenger_id, "pasajero")
         params: dict[str, Any] = {
             "itemId": resource_id,
@@ -320,13 +353,16 @@ class WialonFleetGateway:
         return self._passenger_from_object(resource_id, _created_object(body, "el pasajero"))
 
     def delete_passenger(self, resource_id: int, passenger_id: int) -> None:
+        self._cache.invalidate("resources")  # merge onto the current remote state
         self._raw_entry(resource_id, "tags", passenger_id, "pasajero")
         params = {"itemId": resource_id, "id": passenger_id, "callMode": "delete"}
         self._write("resource/update_tag", params, invalidate=("resources",))
 
     def bind_passenger(self, resource_id: int, passenger_id: int, unit_id: int) -> None:
-        self._raw_entry(resource_id, "tags", passenger_id, "pasajero")
+        self._cache.invalidate("resources")  # merge onto the current remote state
+        current = self._raw_entry(resource_id, "tags", passenger_id, "pasajero")
         self.get_unit(unit_id)
+        self._respect_last_binding_time(current)
         params = {
             "resourceId": resource_id,
             "unitId": unit_id,
@@ -338,6 +374,7 @@ class WialonFleetGateway:
         self._confirm_binding(resource_id, "tags", passenger_id, "pasajero", unit_id)
 
     def unbind_passenger(self, resource_id: int, passenger_id: int) -> None:
+        self._cache.invalidate("resources")  # merge onto the current remote state
         current = self._raw_entry(resource_id, "tags", passenger_id, "pasajero")
         unit_id = current.get("bu") or 0
         if not unit_id:
@@ -388,6 +425,7 @@ class WialonFleetGateway:
         self._write("item/update_custom_field", params, invalidate=("units",))
 
     def _require_unit_field(self, unit_id: int, field_id: int) -> None:
+        self._cache.invalidate("units")
         unit = self.get_unit(unit_id)
         if not any(f.id == field_id for f in unit.custom_fields):
             raise NotFoundError("El campo personalizado no existe en este vehículo.")

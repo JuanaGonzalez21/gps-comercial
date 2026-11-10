@@ -104,7 +104,7 @@ class DriverService:
         with audit_failures(
             self._audit, "driver.updated", entity_type=_ENTITY, entity_id=key, details=details
         ):
-            current = self._find(resource_id, driver_id)
+            current = self._find_fresh(resource_id, driver_id)
             details["changed_fields"] = changed_fields(_editable(current), _editable(data))
             self._ensure_unique_code(resource_id, data.code, own_id=driver_id)
             # The gateway re-sends every remote attribute it does not edit (jp, ej, ck...).
@@ -118,7 +118,7 @@ class DriverService:
         with audit_failures(
             self._audit, "driver.deleted", entity_type=_ENTITY, entity_id=key, details=details
         ):
-            current = self._find(resource_id, driver_id)
+            current = self._find_fresh(resource_id, driver_id)
             details["name"] = current.name
             self._gateway.delete_driver(resource_id, driver_id)
         self._audit.record("driver.deleted", entity_type=_ENTITY, entity_id=key, details=details)
@@ -129,7 +129,7 @@ class DriverService:
         with audit_failures(
             self._audit, "driver.assigned", entity_type=_ENTITY, entity_id=key, details=details
         ):
-            driver = self._find(resource_id, driver_id)
+            driver = self._find_fresh(resource_id, driver_id)
             unit = self._gateway.get_unit(unit_id)  # 404 if the vehicle does not exist
             if driver.unit_id == unit_id:
                 raise ConflictError("El conductor ya está asignado a este vehículo.")
@@ -151,7 +151,7 @@ class DriverService:
         with audit_failures(
             self._audit, "driver.unassigned", entity_type=_ENTITY, entity_id=key, details=details
         ):
-            driver = self._find(resource_id, driver_id)
+            driver = self._find_fresh(resource_id, driver_id)
             if driver.unit_id is None:
                 raise ConflictError("El conductor no está asignado a ningún vehículo.")
             details["unit_id"] = driver.unit_id
@@ -160,6 +160,11 @@ class DriverService:
         return self.get(resource_id, driver_id)
 
     # ----- helpers -----------------------------------------------------------------------
+    def _find_fresh(self, resource_id: int, driver_id: int) -> Driver:
+        # Writes merge onto the current remote object: never start from a cached copy.
+        self._gateway.refresh()
+        return self._find(resource_id, driver_id)
+
     def _find(self, resource_id: int, driver_id: int) -> Driver:
         for driver in self._gateway.list_drivers():
             if driver.resource_id == resource_id and driver.id == driver_id:

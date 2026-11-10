@@ -99,6 +99,9 @@ class FakeFleetGateway:
     def close(self) -> None:
         return None
 
+    def refresh(self) -> None:
+        return None  # in-memory data is always current
+
     # ----- units -------------------------------------------------------------------------
     def list_units(self) -> Sequence[Unit]:
         with self._lock:

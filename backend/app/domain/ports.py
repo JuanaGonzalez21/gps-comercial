@@ -26,6 +26,13 @@ from app.domain.fleet import (
 
 
 class FleetGateway(Protocol):
+    def refresh(self) -> None:
+        """Discard cached reads so the next read reflects the platform.
+
+        Services call it before every read-merge-write sequence.
+        """
+        ...
+
     # --- Units (vehicles) ---
     def list_units(self) -> Sequence[Unit]: ...
 

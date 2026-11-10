@@ -100,6 +100,14 @@ class WialonClient:
                     continue
                 logger.warning("wialon_error", extra={"svc": svc, "wialon_code": error.code})
                 raise to_domain_error(error) from None
+            except domain.UpstreamError:
+                if read_only:
+                    raise
+                # HTTP error page or non-JSON body after sending a write: it may have been applied.
+                logger.warning("wialon_write_uncertain", extra={"svc": svc})
+                raise domain.UpstreamUnavailableError(
+                    UNCERTAIN_WRITE, retry_after_seconds=10
+                ) from None
             except httpx2.TransportError as exc:
                 # ConnectError means nothing reached Wialon, so even a write is safe to resend.
                 safe = read_only or isinstance(exc, httpx2.ConnectError)

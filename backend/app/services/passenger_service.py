@@ -131,7 +131,7 @@ class PassengerService:
         with audit_failures(
             self._audit, "passenger.updated", entity_type=_ENTITY, entity_id=key, details=details
         ):
-            current = self._find(resource_id, passenger_id)
+            current = self._find_fresh(resource_id, passenger_id)
             data = PassengerInput(
                 name=name, code=code, phone=phone, custom_fields=dict(current.custom_fields)
             )
@@ -147,7 +147,7 @@ class PassengerService:
         with audit_failures(
             self._audit, "passenger.deleted", entity_type=_ENTITY, entity_id=key, details=details
         ):
-            current = self._find(resource_id, passenger_id)
+            current = self._find_fresh(resource_id, passenger_id)
             details["name"] = current.name
             self._gateway.delete_passenger(resource_id, passenger_id)
         self._audit.record("passenger.deleted", entity_type=_ENTITY, entity_id=key, details=details)
@@ -158,7 +158,7 @@ class PassengerService:
         with audit_failures(
             self._audit, "passenger.assigned", entity_type=_ENTITY, entity_id=key, details=details
         ):
-            passenger = self._find(resource_id, passenger_id)
+            passenger = self._find_fresh(resource_id, passenger_id)
             unit = self._gateway.get_unit(unit_id)  # 404 if the vehicle does not exist
             if passenger.unit_id == unit_id:
                 raise ConflictError("El pasajero ya está asignado a este vehículo.")
@@ -185,7 +185,7 @@ class PassengerService:
             entity_id=key,
             details=details,
         ):
-            passenger = self._find(resource_id, passenger_id)
+            passenger = self._find_fresh(resource_id, passenger_id)
             if passenger.unit_id is None:
                 raise ConflictError("El pasajero no está asignado a ningún vehículo.")
             details["unit_id"] = passenger.unit_id
@@ -208,7 +208,7 @@ class PassengerService:
         with audit_failures(
             self._audit, action, entity_type=_ENTITY, entity_id=entity, details=details
         ):
-            current = self._find(resource_id, passenger_id)
+            current = self._find_fresh(resource_id, passenger_id)
             if _key_taken(current.custom_fields, key):
                 raise ConflictError(FIELD_TAKEN)
             self._save_fields(current, {**current.custom_fields, key: value})
@@ -232,7 +232,7 @@ class PassengerService:
         with audit_failures(
             self._audit, action, entity_type=_ENTITY, entity_id=entity, details=details
         ):
-            current = self._find(resource_id, passenger_id)
+            current = self._find_fresh(resource_id, passenger_id)
             fields = current.custom_fields
             if key not in fields:
                 raise NotFoundError(FIELD_NOT_FOUND)
@@ -255,7 +255,7 @@ class PassengerService:
         with audit_failures(
             self._audit, action, entity_type=_ENTITY, entity_id=entity, details=details
         ):
-            current = self._find(resource_id, passenger_id)
+            current = self._find_fresh(resource_id, passenger_id)
             if key not in current.custom_fields:
                 raise NotFoundError(FIELD_NOT_FOUND)
             remaining = {k: v for k, v in current.custom_fields.items() if k != key}
@@ -269,6 +269,11 @@ class PassengerService:
             name=current.name, code=current.code, phone=current.phone, custom_fields=fields
         )
         return self._gateway.update_passenger(current.resource_id, current.id, data)
+
+    def _find_fresh(self, resource_id: int, passenger_id: int) -> Passenger:
+        # Writes merge onto the current remote object: never start from a cached copy.
+        self._gateway.refresh()
+        return self._find(resource_id, passenger_id)
 
     def _find(self, resource_id: int, passenger_id: int) -> Passenger:
         for passenger in self._gateway.list_passengers():

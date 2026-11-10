@@ -4,7 +4,7 @@ They are lenient with unknown keys (Wialon adds fields over time) but strict wit
 that fails validation is skipped and logged by the mapper instead of breaking the whole response.
 """
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class _Raw(BaseModel):
@@ -54,7 +54,15 @@ class RawTag(_Raw):
     c: str = ""
     p: str = ""
     bu: int = 0
-    jp: dict[str, str] | list[object] | None = None
+    jp: dict[str, object] | list[object] | None = None
+
+    @field_validator("jp")
+    @classmethod
+    def stringify_values(cls, value: object) -> object:
+        # A numeric custom field must not invalidate the whole passenger: keep it as text.
+        if isinstance(value, dict):
+            return {str(k): "" if v is None else str(v) for k, v in value.items()}
+        return value
 
 
 class RawResource(_Raw):

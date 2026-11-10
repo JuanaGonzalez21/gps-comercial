@@ -24,7 +24,10 @@ muestra a escala de país.
 |---|---|---|
 | ![Login](docs/screenshots/login.png) | ![Historial](docs/screenshots/historial.png) | ![Landing móvil](docs/screenshots/landing-movil.png) |
 
-**Lighthouse móvil** sobre la URL de producción `https://gpscomercial.juanagonzalez.dev`, tras el pulido visual
+> Las capturas de la landing y la tabla de Lighthouse corresponden a la **versión anterior de la landing**. El rediseño
+> publicado el 2026-11-10 (PR #7) todavía no se ha medido con Lighthouse; estas cifras no son resultados del diseño actual.
+
+**Lighthouse móvil** sobre la URL de producción `https://gpscomercial.juanagonzalez.dev`, landing anterior al PR #7
 (2026-11-10 12:42 UTC, dos ejecuciones):
 
 | Ejecución | Rendimiento | Accesibilidad | Buenas prácticas | SEO | LCP | TBT | CLS |
@@ -61,7 +64,7 @@ muestra a escala de país.
 - CORS y CSRF: un `POST` con `Origin` ajeno → 403 `csrf_failed`, porque Vercel reenvía el `Origin`. Sin sesión → 401.
 - Neon conectado: migraciones aplicadas al arrancar y Admin creado desde las variables de Render.
 - La autora confirmó en el navegador el login, la consulta de flota y la edición.
-- Lighthouse móvil: 99/100/100/100.
+- Lighthouse móvil: 99/100/100/100 (2026-11-09, landing anterior; el diseño actual está pendiente de medir).
 - Arranque tras inactividad: el aviso "Iniciando el servidor" y los reintentos están probados en local. La medición en producción del 2026-11-10 encontró el servicio ya activo (`/health` en 1,0 s), así que no se observó un arranque en frío real; se comprueba abriendo la web tras 15 min sin uso.
 - Prueba autenticada de solo lectura `e2e/production.spec.ts` (cookies `HttpOnly`/`Secure`/`SameSite=Lax`, CSRF, refresh, datos reales, rutas directas, logout y, opcionalmente, rol Visualizador): la ejecuta la autora con sus credenciales en su terminal.
 

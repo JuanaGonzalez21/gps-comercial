@@ -1,11 +1,13 @@
 import { useId, useMemo, type MouseEvent } from 'react'
 import type { TrackPoint } from '@/api/types'
-import { formatDateTimeShort, formatSpeed, formatTime } from '@/lib/format'
+import { formatDateTimeShort, formatNumber, formatSpeed, formatTime } from '@/lib/format'
+import { Card } from '@/ui'
 import { nearestIndex, niceSpeedMax, sampleIndices } from './speedScale'
 
 // Speed over time, drawn as own SVG (no chart library). The plot stretches to its container
 // (preserveAspectRatio="none" + non-scaling strokes) and the axis labels are HTML, so text keeps
-// its size from 360 px to desktop. A vertical cursor follows the playback position.
+// its size from 360 px to desktop. A vertical cursor follows the playback position; the part
+// already played is filled in teal and the rest in a light tint, both outlined by the speed line.
 
 const WIDTH = 1000
 const HEIGHT = 200
@@ -17,10 +19,22 @@ export interface SpeedChartProps {
   currentIndex: number
   /** Mouse shortcut to move the playback; keyboard users have the position slider. */
   onSeek: (index: number) => void
+  /** Statistics from the API (all points, not only the simplified ones drawn here). */
+  maxSpeedKmh: number | null
+  avgSpeedKmh: number | null
 }
 
-export function SpeedChart({ points, currentIndex, onSeek }: SpeedChartProps) {
+function speedMeta(maxSpeedKmh: number | null, avgSpeedKmh: number | null): string {
+  const parts = ['km/h']
+  if (maxSpeedKmh !== null) parts.push(`máx. ${formatNumber(maxSpeedKmh)}`)
+  if (avgSpeedKmh !== null) parts.push(`prom. ${formatNumber(avgSpeedKmh)}`)
+  return parts.join(' · ')
+}
+
+export function SpeedChart({ points, currentIndex, onSeek, maxSpeedKmh, avgSpeedKmh }: SpeedChartProps) {
   const titleId = useId()
+  // useId may contain characters that are not safe inside url(#…).
+  const clipId = `speed-played-${useId().replace(/[^\w-]/g, '')}`
   const chart = useMemo(() => {
     const times = points.map((point) => new Date(point.recorded_at).getTime())
     const first = times[0] ?? 0
@@ -80,18 +94,21 @@ export function SpeedChart({ points, currentIndex, onSeek }: SpeedChartProps) {
         `máxima ${formatSpeed(chart.maxSpeed)}. La línea vertical marca la posición de la reproducción.`
 
   return (
-    <section className="speed-chart" aria-labelledby={titleId}>
-      <h3 id={titleId} className="speed-chart__title">
-        Velocidad en el tiempo
-      </h3>
+    <Card as="section" padded={false} className="track-card speed-chart" aria-labelledby={titleId}>
+      <div className="speed-chart__head">
+        <h3 id={titleId} className="card-title">
+          Velocidad en el tiempo
+        </h3>
+        <p className="card-meta">{speedMeta(maxSpeedKmh, avgSpeedKmh)}</p>
+      </div>
       {chart.maxSpeed === null ? (
         <p className="speed-chart__empty">Wialon no reportó velocidad para los puntos de este rango.</p>
       ) : (
         <div className="speed-chart__frame">
           <div className="speed-chart__y-axis" aria-hidden="true">
-            <span>{formatSpeed(chart.axisMax)}</span>
-            <span>{formatSpeed(chart.axisMax / 2)}</span>
-            <span>0 km/h</span>
+            <span>{formatNumber(chart.axisMax)}</span>
+            <span>{formatNumber(chart.axisMax / 2)}</span>
+            <span>0</span>
           </div>
           <div className="speed-chart__plot">
             <svg
@@ -102,7 +119,12 @@ export function SpeedChart({ points, currentIndex, onSeek }: SpeedChartProps) {
               aria-label={summary}
               onClick={handleClick}
             >
-              {[0, 0.5, 1].map((fraction) => (
+              <defs>
+                <clipPath id={clipId}>
+                  <rect x={0} y={0} width={Math.max(0, cursorX)} height={HEIGHT} />
+                </clipPath>
+              </defs>
+              {[0, 0.5].map((fraction) => (
                 <line
                   key={fraction}
                   className="speed-chart__grid"
@@ -114,6 +136,7 @@ export function SpeedChart({ points, currentIndex, onSeek }: SpeedChartProps) {
                 />
               ))}
               <path className="speed-chart__area" d={chart.area} />
+              <path className="speed-chart__area speed-chart__area--played" d={chart.area} clipPath={`url(#${clipId})`} />
               <path className="speed-chart__line" d={chart.line} vectorEffect="non-scaling-stroke" />
               <line
                 className="speed-chart__cursor"
@@ -158,6 +181,6 @@ export function SpeedChart({ points, currentIndex, onSeek }: SpeedChartProps) {
           </table>
         </div>
       </details>
-    </section>
+    </Card>
   )
 }

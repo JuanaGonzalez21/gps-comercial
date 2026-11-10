@@ -125,6 +125,25 @@ describe('HistoryPage', () => {
     expect(trackCalls(calls)).toHaveLength(0)
   })
 
+  it('marks the quick range that filled the dates and clears it when a date is typed', async () => {
+    mockApi()
+    renderPage()
+    const user = userEvent.setup()
+    const group = screen.getByRole('group', { name: /^Rango rápido \(hora de Colombia, máx\. 7 días\)/ })
+    // The form opens with the last 24 hours.
+    expect(within(group).getByRole('button', { name: 'Últimas 24 h' })).toHaveAttribute('aria-pressed', 'true')
+
+    await user.click(within(group).getByRole('button', { name: 'Hoy' }))
+    expect(within(group).getByRole('button', { name: 'Hoy' })).toHaveAttribute('aria-pressed', 'true')
+    expect(within(group).getByRole('button', { name: 'Últimas 24 h' })).toHaveAttribute('aria-pressed', 'false')
+
+    setRange('2026-11-09T08:00', '2026-11-09T10:30')
+    for (const chip of within(group).getAllByRole('button')) {
+      expect(chip).toHaveAttribute('aria-pressed', 'false')
+    }
+    expect(screen.getByLabelText(/^Desde/)).toHaveAccessibleDescription(/hora de Colombia, máx\. 7 días/)
+  })
+
   it('searches vehicles on the server and keeps the choice', async () => {
     const { calls } = mockApi()
     renderPage()

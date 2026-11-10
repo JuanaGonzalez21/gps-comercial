@@ -149,3 +149,10 @@ table {
   gap: var(--space-3);
   justify-items: start;
 }
+
+/* Figures that users compare (speeds, dates, counts, KPIs) align in columns. */
+table,
+.kpi-grid,
+.stat-value {
+  font-variant-numeric: tabular-nums;
+}

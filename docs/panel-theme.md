@@ -136,3 +136,35 @@ Se añadieron dos elementos visibles en todos los tamaños:
 - `docs/estado.md` y la sección "Decisiones de diseño" del README, si repiten estos puntos.
 - En `design-system.md` (apartado "Pulido visual final"), el bloque **Login** describe el panel anterior. También
   queda desactualizada cualquier captura del login en el README.
+
+## Rediseño del panel (handoff Claude Design, 2026-11-10) — estado
+Rama `feat/dashboard-redesign` (sobre `style/panel-login-visual`), local, sin push. Solo diseño: sin cambios de
+backend, API, permisos ni validaciones.
+
+| Área | Estado |
+|---|---|
+| Base visual (Figtree/JetBrains Mono propias, tokens, campos, diálogos, toasts, paginación, insignias, controles nuevos) | Hecho |
+| Estructura (menú 256 px, riel 88 px en tablet, barra y cajón en móvil, conteos, aviso cerrable) | Hecho |
+| Panel | Hecho |
+| Historial | Hecho |
+| Conductores y Pasajeros | Hecho (falta revisar 834 px, el modal y el menú ⋮ con teclado en navegador) |
+| Vehículos | Parcial: cabecera, búsqueda, 8 por página, mapa 440 px, leyenda |
+| Detalle de vehículo | Pendiente |
+| Usuarios, Auditoría, Cambiar contraseña | Parcial: tablas, insignias, avatar, tarjeta de contraseña |
+
+Desviaciones deliberadas (requisito o accesibilidad): fila de vehículos selecciona y resalta en el mapa (RF-15);
+orden por columnas (UX-06); sin "placa" (la API no la da); rol Operador en el formulario (RF-05); campos con borde
+3.20:1 y foco turquesa sólido (UX-03); texto sobre lavanda en #57525C; "Guardar contraseña" sin opacidad de
+deshabilitado; con cambio obligatorio se mantiene "Cancelar y cerrar sesión"; iconos SVG propios en lugar de la
+fuente Material Symbols (CSP y rendimiento).
+
+Pendientes anotados por pantalla:
+- Vehículos: chips de estado (conteos del resumen, solo sin búsqueda ni filtro de conductor), tabla nueva, fila
+  seleccionable + enlace "Ver detalle de X", reparto 3:2 con mapa sticky, tarjetas móviles, marcadores del diseño.
+- Detalle: fila 2:1, rejilla de datos, conductor/pasajeros, campos personalizados en tiles.
+- Usuarios: acciones (Editar + menú ⋮), roles en tarjetas de radio con Operador, diálogo de contraseña temporal.
+- Auditoría: 10 por página, detalle expandible, ID recortado. Contraseña: aviso de coincidencia, "Cancelar y volver
+  al panel" cuando el cambio no es obligatorio.
+- Historial (decisión de Juana): línea fina sobre el gráfico de velocidad (contraste) y "1 d 0 h" frente a "24 h".
+
+Comprobado: `tsc`, `oxlint`, 163/163 pruebas Vitest y `npm run build`.

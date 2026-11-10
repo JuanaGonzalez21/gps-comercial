@@ -75,7 +75,7 @@ describe('LandingPage', () => {
     const user = userEvent.setup()
 
     const loginLinks = screen.getAllByRole('link', { name: 'Iniciar sesión' })
-    expect(loginLinks).toHaveLength(4) // hero, header, final CTA and footer navigation // header, hero and closing call to action
+    expect(loginLinks).toHaveLength(4) // header, hero, closing call to action and footer navigation
     for (const link of loginLinks) expect(link).toHaveAttribute('href', '/login')
     expect(screen.queryByRole('link', { name: 'Ir al panel' })).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: /registr|crear cuenta/i })).not.toBeInTheDocument()
@@ -90,7 +90,7 @@ describe('LandingPage', () => {
     renderLanding('authenticated', makeUser())
 
     const panelLinks = screen.getAllByRole('link', { name: 'Ir al panel' })
-    expect(panelLinks).toHaveLength(4) // hero, header, final CTA and footer navigation
+    expect(panelLinks).toHaveLength(4) // header, hero, closing call to action and footer navigation
     for (const link of panelLinks) expect(link).toHaveAttribute('href', '/app/dashboard')
     expect(screen.queryByRole('link', { name: 'Iniciar sesión' })).not.toBeInTheDocument()
     expect(screen.getByRole('heading', { level: 2, name: 'Tu panel está listo' })).toBeInTheDocument()

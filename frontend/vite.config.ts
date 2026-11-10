@@ -26,6 +26,8 @@ export default defineConfig(({ mode }) => {
       setupFiles: ['./src/test/setup.ts'],
       css: false,
       restoreMocks: true,
+      // Form flows type with userEvent and take 3-4 s on an idle machine; 5 s (default) flakes under load.
+      testTimeout: 15_000,
       exclude: ['e2e/**', 'node_modules/**'],
     },
   }

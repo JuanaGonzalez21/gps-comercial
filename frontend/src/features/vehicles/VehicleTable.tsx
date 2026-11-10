@@ -2,6 +2,7 @@ import { Link } from 'react-router'
 import type { VehicleSort, VehicleSummary } from '@/api/types'
 import { formatDateTime, formatDateTimeShort, formatRelative, formatSpeed } from '@/lib/format'
 import { ArrowDownIcon, ArrowUpIcon, Skeleton, SortIcon, StatusBadge } from '@/ui'
+import { NoPositionBadge } from './NoPositionBadge'
 
 type SortField = 'name' | 'status' | 'last_message_at'
 
@@ -71,7 +72,9 @@ interface VehicleTableProps {
 
 /**
  * Desktop and tablet list (UX-06): sortable headers, row selection synced with the map.
- * Passenger counts live in the cards and the vehicle detail to keep the table readable next to the map.
+ * Four columns so the table fits next to the map (about 34rem at 1280 px): the detail link lives
+ * in the name cell and the speed under the status. Passenger counts are in the cards and the
+ * detail. Wider content (zoom, long names) still scrolls inside a focusable, named region.
  */
 export function VehicleTable({
   items,
@@ -85,19 +88,16 @@ export function VehicleTable({
   return (
     // Scrollable regions must be reachable by keyboard (tabIndex) and named.
     <div className="table-scroll" role="region" aria-label="Tabla de vehículos" tabIndex={0}>
-      <table className="data-table" aria-busy={busy || undefined}>
+      <table className="data-table vehicle-table" aria-busy={busy || undefined}>
         <caption className="visually-hidden">
           Vehículos ordenados por {SORT_DESCRIPTIONS[sort]}. Selecciona un nombre para ubicarlo en el
-          mapa.
+          mapa; los vehículos sin posición no aparecen en él.
         </caption>
         <thead>
           <tr>
             <SortableHeader label="Vehículo" field="name" sort={sort} onSort={onSortChange} />
             <SortableHeader label="Estado" field="status" sort={sort} onSort={onSortChange} />
             <th scope="col">Conductor</th>
-            <th scope="col" className="data-table__numeric">
-              Velocidad
-            </th>
             <SortableHeader
               label="Actualizado"
               field="last_message_at"
@@ -105,33 +105,47 @@ export function VehicleTable({
               onSort={onSortChange}
               descendingFirst
             />
-            <th scope="col">
-              <span className="visually-hidden">Acciones</span>
-            </th>
           </tr>
         </thead>
         <tbody>
           {items.map((vehicle) => {
             const selected = vehicle.id === selectedId
+            const speed = vehicle.position?.speed_kmh
             return (
               <tr
                 key={vehicle.id}
                 ref={(element) => registerRow(vehicle.id, element)}
                 className={selected ? 'is-selected' : undefined}
               >
-                <th scope="row">
-                  <button
-                    type="button"
-                    className="row-select"
-                    aria-pressed={selected}
-                    onClick={() => onToggleSelect(vehicle.id)}
-                  >
-                    {vehicle.name}
-                  </button>
-                  {!vehicle.position && <span className="data-table__note">Sin posición en el mapa</span>}
+                <th scope="row" className="vehicle-table__name">
+                  {vehicle.position ? (
+                    <button
+                      type="button"
+                      className="row-select"
+                      aria-pressed={selected}
+                      onClick={() => onToggleSelect(vehicle.id)}
+                    >
+                      {vehicle.name}
+                    </button>
+                  ) : (
+                    // Nothing to locate on the map: plain text instead of a dead "select" button.
+                    <span className="row-name">{vehicle.name}</span>
+                  )}
+                  <span className="vehicle-table__links">
+                    {!vehicle.position && <NoPositionBadge />}
+                    <Link to={`/app/vehicles/${vehicle.id}`} className="table-link">
+                      Ver detalle{' '}<span className="visually-hidden">de {vehicle.name}</span>
+                    </Link>
+                  </span>
                 </th>
                 <td>
                   <StatusBadge status={vehicle.status} />
+                  {speed !== null && speed !== undefined && (
+                    <span className="data-table__note">
+                      <span className="visually-hidden">Velocidad: </span>
+                      {formatSpeed(speed)}
+                    </span>
+                  )}
                 </td>
                 <td>
                   {vehicle.driver ? (
@@ -140,7 +154,6 @@ export function VehicleTable({
                     <span className="muted-text">Sin conductor asignado</span>
                   )}
                 </td>
-                <td className="data-table__numeric">{formatSpeed(vehicle.position?.speed_kmh)}</td>
                 <td>
                   {vehicle.last_message_at ? (
                     <>
@@ -152,11 +165,6 @@ export function VehicleTable({
                   ) : (
                     <span className="muted-text">Sin dato</span>
                   )}
-                </td>
-                <td>
-                  <Link to={`/app/vehicles/${vehicle.id}`} className="table-link">
-                    Detalle<span className="visually-hidden"> de {vehicle.name}</span>
-                  </Link>
                 </td>
               </tr>
             )
@@ -170,7 +178,7 @@ export function VehicleTable({
 export function VehicleTableSkeleton({ rows = 6 }: { rows?: number }) {
   return (
     <div className="table-scroll" aria-hidden="true">
-      <table className="data-table">
+      <table className="data-table vehicle-table">
         <tbody>
           {Array.from({ length: rows }, (_, index) => (
             <tr key={index}>
@@ -182,9 +190,6 @@ export function VehicleTableSkeleton({ rows = 6 }: { rows?: number }) {
               </td>
               <td>
                 <Skeleton width="8rem" />
-              </td>
-              <td>
-                <Skeleton width="4rem" />
               </td>
               <td>
                 <Skeleton width="10rem" />

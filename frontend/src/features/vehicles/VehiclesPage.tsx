@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router'
 import { getErrorMessage } from '@/api/errors'
 import type { VehicleListParams, VehicleSort, VehicleStatus } from '@/api/types'
 import { useVehiclePositions, useVehicles } from '@/api/vehicles'
+import { ExportCsvButton } from '@/features/exports/ExportCsvButton'
 import { formatNumber, formatTime } from '@/lib/format'
 import { useDebouncedValue, useDocumentTitle, useMediaQuery, usePrefersReducedMotion } from '@/lib/hooks'
 import { VehicleMap } from '@/map/VehicleMap'
@@ -68,6 +69,12 @@ export default function VehiclesPage() {
     page_size: PAGE_SIZE,
   }
   const list = useVehicles(listParams)
+  const exportFilters = {
+    search: listParams.search,
+    status: listParams.status,
+    has_driver: listParams.has_driver,
+    sort,
+  }
   const positions = useVehiclePositions({ search: search || undefined, status: status || undefined })
 
   // /vehicles/positions has no driver filter: apply it here so map and list show the same set.
@@ -92,6 +99,9 @@ export default function VehiclesPage() {
   // The map panel may still be hidden (mobile toggle) when the user asks for it: scroll after render.
   const scrollToMapRef = useRef(false)
   const showOnMap = (id: number) => {
+    // A vehicle without coordinates has no marker: never switch views or ask the map for a popup.
+    const vehicle = list.data?.items.find((item) => item.id === id)
+    if (!vehicle?.position) return
     setSelection({ id, source: 'list' })
     setFocusRequest((count) => count + 1)
     if (isCompact) setView('map')
@@ -256,12 +266,16 @@ export default function VehiclesPage() {
         title="Vehículos"
         description="Posición y estado de la flota. Se actualiza cada 15 segundos mientras ves esta página."
         actions={
-          <p className="freshness">
-            {positions.isFetching ? <Spinner size="sm" /> : <RefreshIcon className="freshness__icon" />}
-            <span>
-              {generatedAt ? `Última actualización ${formatTime(generatedAt)}` : 'Esperando datos…'}
-            </span>
-          </p>
+          <>
+            <p className="freshness">
+              {positions.isFetching ? <Spinner size="sm" /> : <RefreshIcon className="freshness__icon" />}
+              <span>
+                {generatedAt ? `Última actualización ${formatTime(generatedAt)}` : 'Esperando datos…'}
+              </span>
+            </p>
+            {/* Same filters and order as the list; hidden for roles without exports:csv (RF-25). */}
+            <ExportCsvButton entity="vehicles" filters={exportFilters} />
+          </>
         }
       />
 

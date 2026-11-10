@@ -1,6 +1,7 @@
 import type { VehicleSummary } from '@/api/types'
 import { formatDateTime, formatNumber, formatRelative, formatSpeed } from '@/lib/format'
 import { Button, LinkButton, MapIcon, Skeleton, StatusBadge } from '@/ui'
+import { NoPositionBadge } from './NoPositionBadge'
 
 interface VehicleCardListProps {
   items: readonly VehicleSummary[]
@@ -28,7 +29,10 @@ export function VehicleCardList({ items, selectedId, onShowOnMap, registerRow }:
                 <h3 id={titleId} className="vehicle-card__name">
                   {vehicle.name}
                 </h3>
-                <StatusBadge status={vehicle.status} />
+                <span className="vehicle-card__badges">
+                  <StatusBadge status={vehicle.status} />
+                  {!vehicle.position && <NoPositionBadge />}
+                </span>
               </div>
               <dl className="vehicle-card__details">
                 <div>
@@ -52,23 +56,27 @@ export function VehicleCardList({ items, selectedId, onShowOnMap, registerRow }:
                   </dd>
                 </div>
               </dl>
+              {!vehicle.position && (
+                <p className="vehicle-card__note">
+                  Su último reporte no trae coordenadas válidas, por eso no aparece en el mapa.
+                </p>
+              )}
               <div className="vehicle-card__actions">
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  icon={<MapIcon />}
-                  disabled={!vehicle.position}
-                  onClick={() => onShowOnMap(vehicle.id)}
-                >
-                  Ver en el mapa
-                </Button>
+                {/* Only vehicles with a position can be located: no disabled, unexplained button. */}
+                {vehicle.position && (
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    icon={<MapIcon />}
+                    onClick={() => onShowOnMap(vehicle.id)}
+                  >
+                    Ver en el mapa{' '}<span className="visually-hidden">{vehicle.name}</span>
+                  </Button>
+                )}
                 <LinkButton size="sm" variant="ghost" to={`/app/vehicles/${vehicle.id}`}>
-                  Detalle<span className="visually-hidden"> de {vehicle.name}</span>
+                  Ver detalle{' '}<span className="visually-hidden">de {vehicle.name}</span>
                 </LinkButton>
               </div>
-              {!vehicle.position && (
-                <p className="data-table__note">Sin posición válida para mostrar en el mapa.</p>
-              )}
             </article>
           </li>
         )

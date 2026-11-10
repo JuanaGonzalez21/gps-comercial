@@ -3,15 +3,16 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { describe, expect, it, vi } from 'vitest'
-import type { Page, VehicleMarker, VehiclePositions, VehicleSummary } from '@/api/types'
+import type { Me, Page, VehicleMarker, VehiclePositions, VehicleSummary } from '@/api/types'
+import { AuthContext, type AuthContextValue } from '@/auth/useAuth'
 import type { VehicleMapProps } from '@/map/VehicleMap'
-import { jsonResponse, mockFetch, problemResponse } from '@/test/http'
+import { jsonResponse, makeUser, mockFetch, problemResponse, VIEWER_PERMISSIONS } from '@/test/http'
 import VehiclesPage from './VehiclesPage'
 
 // Leaflet needs a real layout engine; the page is tested against a stand-in with the same props.
 vi.mock('@/map/VehicleMap', () => ({
-  VehicleMap: ({ markers, selectedId, onSelect, children }: VehicleMapProps) => (
-    <div data-testid="vehicle-map" data-selected={selectedId ?? ''}>
+  VehicleMap: ({ markers, selectedId, focusRequest, onSelect, children }: VehicleMapProps) => (
+    <div data-testid="vehicle-map" data-selected={selectedId ?? ''} data-focus-request={focusRequest}>
       <p>{markers.length} marcadores</p>
       {markers.map((marker) => (
         <button key={marker.id} type="button" onClick={() => onSelect(marker.id)}>
@@ -68,7 +69,19 @@ function positions(items = MARKERS): VehiclePositions {
   return { items, generated_at: '2026-11-09T19:33:11Z' }
 }
 
-function renderPage() {
+function authFor(user: Me): AuthContextValue {
+  return {
+    status: 'authenticated',
+    user,
+    login: vi.fn(),
+    logout: vi.fn(),
+    changePassword: vi.fn(),
+    refreshUser: vi.fn(),
+    hasPermission: (permission) => user.permissions.includes(permission),
+  }
+}
+
+function renderPage(user: Me = makeUser()) {
   const router = createMemoryRouter(
     [
       { path: '/app/vehicles', element: <VehiclesPage /> },
@@ -79,7 +92,9 @@ function renderPage() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   render(
     <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
+      <AuthContext value={authFor(user)}>
+        <RouterProvider router={router} />
+      </AuthContext>
     </QueryClientProvider>,
   )
 }
@@ -211,5 +226,67 @@ describe('VehiclesPage', () => {
     expect(screen.getByText('No hay vehículos con posición válida para estos filtros.')).toBeInTheDocument()
     await user.click(screen.getAllByRole('button', { name: 'Limpiar filtros' })[0])
     expect(await screen.findByText('Aún no hay vehículos')).toBeInTheDocument()
+  })
+  it('keeps vehicles without coordinates in the list, badged, and never asks the map for them', async () => {
+    mockFetch(({ url }) =>
+      url.startsWith('/api/v1/vehicles/positions') ? jsonResponse(positions()) : jsonResponse(page(VEHICLES)),
+    )
+    renderPage()
+
+    const table = await screen.findByRole('table')
+    const row = within(table).getByRole('rowheader', { name: /Van 02/ })
+    // Icon + text badge, and no "select on map" button for a vehicle the map cannot show.
+    expect(within(row).getByText('Sin posición')).toBeInTheDocument()
+    expect(within(row).queryByRole('button')).not.toBeInTheDocument()
+    expect(within(row).getByRole('link', { name: 'Ver detalle de Van 02' })).toHaveAttribute(
+      'href',
+      '/app/vehicles/2',
+    )
+    // The positioned vehicle has no badge and keeps its map button.
+    const located = within(table).getByRole('rowheader', { name: /Camión 01/ })
+    expect(within(located).queryByText('Sin posición')).not.toBeInTheDocument()
+    expect(within(located).getByRole('button', { name: 'Camión 01' })).toBeInTheDocument()
+    expect(screen.getByTestId('vehicle-map')).toHaveAttribute('data-focus-request', '0')
+  })
+
+  it('offers the CSV export with the current filters to roles that may export', async () => {
+    const { calls } = mockFetch(({ url }) => {
+      if (url.startsWith('/api/v1/vehicles/positions')) return jsonResponse(positions())
+      if (url.startsWith('/api/v1/exports/vehicles.csv')) {
+        return new Response('nombre,estado', {
+          status: 200,
+          headers: {
+            'Content-Type': 'text/csv; charset=utf-8',
+            'Content-Disposition': 'attachment; filename="vehiculos.csv"',
+          },
+        })
+      }
+      return jsonResponse(page(VEHICLES))
+    })
+    const createObjectURL = vi.fn(() => 'blob:vehiculos')
+    Object.assign(URL, { createObjectURL, revokeObjectURL: vi.fn() })
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined)
+    renderPage()
+    const user = userEvent.setup()
+    await screen.findByRole('table')
+
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Estado' }), 'moving')
+    await user.click(screen.getByRole('button', { name: 'Exportar CSV' }))
+
+    await waitFor(() => expect(click).toHaveBeenCalled())
+    const exportCall = calls.find((call) => call.url.startsWith('/api/v1/exports/vehicles.csv'))
+    expect(exportCall?.url).toContain('status=moving')
+    expect(exportCall?.url).toContain('sort=name')
+    expect(createObjectURL).toHaveBeenCalled()
+  })
+
+  it('hides the CSV export from the Visualizador role', async () => {
+    mockFetch(({ url }) =>
+      url.startsWith('/api/v1/vehicles/positions') ? jsonResponse(positions()) : jsonResponse(page(VEHICLES)),
+    )
+    renderPage(makeUser({ role: { code: 'viewer', name: 'Visualizador' }, permissions: VIEWER_PERMISSIONS }))
+
+    await screen.findByRole('table')
+    expect(screen.queryByRole('button', { name: 'Exportar CSV' })).not.toBeInTheDocument()
   })
 })

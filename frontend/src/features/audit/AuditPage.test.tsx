@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import type { AuditLogOut, Page } from '@/api/types'
 import { jsonResponse, mockFetch, problemResponse, type FetchCall } from '@/test/http'
+import { AuditCardList } from './AuditCardList'
 import AuditPage from './AuditPage'
 
 const ENTRIES: AuditLogOut[] = [
@@ -66,21 +67,36 @@ describe('AuditPage', () => {
     expect(within(created).getByText('ana.perez@example.com')).toBeInTheDocument()
     expect(within(created).getByText('Usuario')).toBeInTheDocument()
     expect(within(created).getByText('Éxito')).toBeInTheDocument()
-    expect(within(created).getByText('198.51.100.20')).toBeInTheDocument()
+    expect(within(created).getByText('IP 198.51.100.20')).toBeInTheDocument()
+    // Long ids are shortened on screen; the full value stays in the tooltip and for screen readers.
+    const shortened = within(created).getByText('00000000…00009')
+    expect(shortened.parentElement).toHaveAttribute('title', '00000000-0000-0000-0000-000000000009')
+    expect(within(created).getByText('00000000-0000-0000-0000-000000000009')).toHaveClass('visually-hidden')
 
     const failed = within(table).getByRole('rowheader', { name: /9 de nov de 2026, 13:00/ }).closest('tr')!
     expect(within(failed).getByText('Inicio de sesión fallido')).toBeInTheDocument()
     expect(within(failed).getByText('Fallo')).toBeInTheDocument()
     expect(within(failed).getByText('Sin detalles')).toBeInTheDocument()
+    expect(within(failed).queryByRole('button')).not.toBeInTheDocument()
 
-    const toggle = within(created).getByRole('button', { name: 'Detalles de Usuario creado' })
+    const toggle = within(created).getByRole('button', {
+      name: 'Ver detalles de Usuario creado, 9 de nov de 2026, 14:33',
+    })
     expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    const details = document.getElementById(toggle.getAttribute('aria-controls')!)!
+    expect(details).not.toBeVisible()
     await user.click(toggle)
     expect(toggle).toHaveAttribute('aria-expanded', 'true')
-    const details = document.getElementById(toggle.getAttribute('aria-controls')!)!
     expect(details).toBeVisible()
-    expect(details).toHaveTextContent('"note": "<img src=x onerror=alert(1)>"')
+    // The panel spans the whole row and lists each detail as text: a hostile value is not HTML.
+    expect(details.querySelector('td')).toHaveAttribute('colspan', '6')
+    expect(within(details).getByText('note')).toBeInTheDocument()
+    expect(within(details).getByText('<img src=x onerror=alert(1)>')).toBeInTheDocument()
     expect(document.querySelector('img')).toBeNull()
+
+    await user.click(toggle)
+    expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    expect(details).not.toBeVisible()
   })
 
   it('builds the query from the filters, sending Bogota days as UTC instants', async () => {
@@ -104,7 +120,7 @@ describe('AuditPage', () => {
       expect(last.searchParams.get('date_from')).toBe('2026-11-01T05:00:00.000Z')
       expect(last.searchParams.get('date_to')).toBe('2026-11-10T04:59:59.999Z')
       expect(last.searchParams.get('page')).toBe('1')
-      expect(last.searchParams.get('page_size')).toBe('20')
+      expect(last.searchParams.get('page_size')).toBe('10')
     })
   })
 
@@ -122,6 +138,28 @@ describe('AuditPage', () => {
     expect(screen.getByRole('heading', { name: 'Revisa el rango de fechas' })).toBeInTheDocument()
     // "Desde" alone is a valid filter; the inverted pair is never sent.
     expect(auditCalls(calls).some((url) => url.searchParams.has('date_to'))).toBe(false)
+  })
+
+  it('shows the same data in phone cards, with the date as heading and folding details', async () => {
+    render(<AuditCardList items={ENTRIES} />)
+    const user = userEvent.setup()
+
+    const card = screen.getByRole('article', { name: /9 de nov de 2026, 14:33/ })
+    expect(within(card).getByRole('heading', { level: 3 })).toHaveTextContent('9 de nov de 2026, 14:33')
+    expect(within(card).getByText('Usuario creado')).toBeInTheDocument()
+    expect(within(card).getByText('IP 198.51.100.20')).toBeInTheDocument()
+    expect(within(card).getByText('00000000…00009')).toBeInTheDocument()
+
+    const toggle = within(card).getByRole('button', { name: /^Ver detalles de Usuario creado/ })
+    const details = document.getElementById(toggle.getAttribute('aria-controls')!)!
+    expect(details).not.toBeVisible()
+    await user.click(toggle)
+    expect(details).toBeVisible()
+    expect(within(details).getByText('<img src=x onerror=alert(1)>')).toBeInTheDocument()
+
+    const failed = screen.getByRole('article', { name: /9 de nov de 2026, 13:00/ })
+    expect(within(failed).getByText('Fallo')).toBeInTheDocument()
+    expect(within(failed).queryByRole('button')).not.toBeInTheDocument()
   })
 
   it('shows an error with retry, then a guided empty state', async () => {

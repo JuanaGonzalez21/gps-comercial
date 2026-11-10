@@ -11,10 +11,10 @@ const OSM_TILES = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
 const OSM_ATTRIBUTION =
   '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 const BOGOTA: L.LatLngTuple = [4.711, -74.0721]
-// Palette: teal for the route, its darker tone for the played part, brand red for the cursor.
+// Palette: teal for the route, its accessible dark variant for the played part; teal cursor.
 const ROUTE_COLOR = '#1e8c93'
-const PLAYED_COLOR = '#125a5f'
-const CURSOR_SIZE = 26
+const PLAYED_COLOR = '#176f75'
+const CURSOR_SIZE = 30
 const FIT_PADDING_PX = 36
 const FOLLOW_MARGIN_PX = 20
 
@@ -101,7 +101,9 @@ export function TrackMap({ points, currentIndex, reducedMotion }: TrackMapProps)
       fadeAnimation: animate,
       markerZoomAnimation: animate,
     })
-    L.control.zoom({ zoomInTitle: 'Acercar', zoomOutTitle: 'Alejar' }).addTo(map)
+    L.control
+      .zoom({ position: 'topright', zoomInTitle: 'Acercar', zoomOutTitle: 'Alejar' })
+      .addTo(map)
     L.tileLayer(OSM_TILES, { maxZoom: 19, attribution: OSM_ATTRIBUTION }).addTo(map)
     layerRef.current = L.layerGroup().addTo(map)
     container.setAttribute('role', 'region')

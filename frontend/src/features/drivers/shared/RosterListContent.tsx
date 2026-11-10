@@ -42,7 +42,11 @@ export function RosterListContent<T>({
   children,
 }: RosterListContentProps<T>) {
   if (!data && isError) {
-    return <ErrorState title={errorTitle} message={getErrorMessage(error)} onRetry={onRetry} retrying={isFetching} />
+    return (
+      <div className="roster-panel__state">
+        <ErrorState title={errorTitle} message={getErrorMessage(error)} onRetry={onRetry} retrying={isFetching} />
+      </div>
+    )
   }
   if (!data) {
     return (
@@ -54,18 +58,20 @@ export function RosterListContent<T>({
       </>
     )
   }
-  if (data.total === 0) return <>{hasFilters ? noMatchesState : emptyState}</>
+  if (data.total === 0) return <div className="roster-panel__state">{hasFilters ? noMatchesState : emptyState}</div>
   if (data.items.length === 0) {
     return (
-      <EmptyState
-        title="Esta página ya no tiene resultados"
-        description="La lista cambió mientras la consultabas."
-        action={
-          <Button variant="secondary" onClick={onFirstPage}>
-            Ir a la primera página
-          </Button>
-        }
-      />
+      <div className="roster-panel__state">
+        <EmptyState
+          title="Esta página ya no tiene resultados"
+          description="La lista cambió mientras la consultabas."
+          action={
+            <Button variant="secondary" onClick={onFirstPage}>
+              Ir a la primera página
+            </Button>
+          }
+        />
+      </div>
     )
   }
   return <>{children(data)}</>

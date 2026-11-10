@@ -19,11 +19,16 @@ general se muestra a escala de país.
 La landing pública se consulta directamente en https://gpscomercial.juanagonzalez.dev. Su diseño final, basado en Claude
 Design (PR #9 y #10, 2026-11-10), está descrito en [docs/design-system.md](docs/design-system.md).
 
-| Dashboard | Vehículos: lista y mapa con clustering |
+> El panel y el login se rediseñaron a partir de Claude Design (PR #13, 2026-11-10; detalle en
+> [docs/panel-theme.md](docs/panel-theme.md)). La captura del **login** ya muestra el diseño actual. Las de
+> **Dashboard, Vehículos e Historial** son del **panel anterior** al rediseño, hasta regenerarlas con datos reales.
+> Mismas funciones, distinta presentación.
+
+| Dashboard (panel anterior) | Vehículos: lista y mapa con clustering (panel anterior) |
 |---|---|
 | ![Dashboard](docs/screenshots/dashboard.png) | ![Vehículos](docs/screenshots/vehiculos-mapa.png) |
 
-| Historial con reproducción y velocidad | Login |
+| Historial con reproducción y velocidad (panel anterior) | Login (diseño actual) |
 |---|---|
 | ![Historial](docs/screenshots/historial.png) | ![Login](docs/screenshots/login.png) |
 
@@ -238,10 +243,20 @@ Documento completo, con la tabla de contraste medida: [docs/design-system.md](do
 | Color | Rol | Contraste y uso |
 |---|---|---|
 | `#EEE8F2` | Fondo de la aplicación | Solo con texto oscuro `#1F1A24` (14,18:1) |
-| `#EB162C` | Marca y acento: logo, indicador activo, anillo de foco de 3 px | 4,48:1 sobre blanco. Solo elementos no textuales o texto grande |
+| `#EB162C` | Marca y acento: logo, indicador activo, anillo de foco de 3 px en la landing | 4,48:1 sobre blanco. Solo elementos no textuales o texto grande |
 | `#A81A2B` | Peligro, error y "Sin señal" | Texto blanco 7,37:1. Las acciones destructivas usan este color y nunca el primario |
 | `#1E8C93` | "En movimiento", éxito, iconos y marcadores | Los botones primarios usan su derivado oscuro `#176F75` (blanco 5,89:1) |
 | `#6B6B6B` | Texto secundario sobre blanco (5,33:1) y "Detenido" | — |
+
+**Panel y login (rediseño de Claude Design, 2026-11-10):**
+- Tema acotado a `.app-shell` y `.auth-page`; la landing conserva sus tokens.
+- Figtree y JetBrains Mono servidas desde el propio dominio (la CSP sigue en `font-src 'self'`).
+- Menú lateral blanco de 256 px en escritorio, riel de 88 px en tablet, y barra con cajón en móvil.
+- Ajustes de accesibilidad sobre el diseño:
+  - foco turquesa sólido de 2 px (`#176F75`, 5,89:1);
+  - bordes de campo `#958D9C` (3,20:1);
+  - texto secundario sobre lavanda `#57525C` (6,31:1).
+- Detalle y desviaciones en [docs/panel-theme.md](docs/panel-theme.md).
 
 **Jerarquía y estados:**
 - Cada estado combina **icono + texto + color**, e incluso forma de marcador distinta en el mapa: círculo con flecha, cuadrado y rombo con "!".
@@ -252,7 +267,7 @@ Documento completo, con la tabla de contraste medida: [docs/design-system.md](do
 - Foco visible y enlace "Saltar al contenido".
 - Etiquetas y errores asociados a cada campo.
 - Diálogos nativos con el foco atrapado y devuelto al cerrar.
-- Gráficas con tabla alternativa.
+- Gráficas con texto alternativo; la de velocidad añade una tabla de datos.
 - Respeto de `prefers-reduced-motion`.
 - Diseño mobile-first: en 360 px las tablas se convierten en tarjetas y el mapa alterna con la lista.
 

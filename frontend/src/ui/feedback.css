@@ -67,7 +67,7 @@
 .skeleton {
   display: block;
   border-radius: var(--radius-sm);
-  background: linear-gradient(90deg, #ebe5ef 0%, #f6f2f8 50%, #ebe5ef 100%);
+  background: linear-gradient(90deg, #ece6f0 0%, #f7f4f9 50%, #ece6f0 100%);
   background-size: 200% 100%;
   animation: skeleton-shimmer 1.4s ease-in-out infinite;
 }
@@ -102,8 +102,8 @@
   height: 3rem;
   margin-bottom: var(--space-1);
   border-radius: var(--radius-full);
-  background: var(--color-success-bg);
-  color: var(--color-primary);
+  background: var(--color-surface-soft, var(--color-success-bg));
+  color: var(--color-text-muted, var(--color-primary));
 }
 
 .state-block__icon svg {
@@ -133,22 +133,23 @@
   margin-top: var(--space-2);
 }
 
-/* Alerts: icon + title + tone (never colour alone) */
+/* Alerts: icon + title + tone (never colour alone). Soft tinted card, 14 px radius. */
 .alert {
   display: flex;
   align-items: flex-start;
   gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
+  padding: 0.75rem 0.875rem;
   border: 1px solid transparent;
-  border-left-width: 4px;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-tile, var(--radius-lg));
+  font-size: 0.875rem;
+  line-height: 1.45;
   color: var(--color-text);
 }
 
 .alert__icon {
-  width: 1.25rem;
-  height: 1.25rem;
-  margin-top: 0.1rem;
+  width: 1.375rem;
+  height: 1.375rem;
+  margin-top: 0.05rem;
   flex-shrink: 0;
 }
 
@@ -158,50 +159,73 @@
 }
 
 .alert__title {
-  font-weight: var(--weight-semibold);
+  font-weight: var(--weight-bold);
 }
 
 .alert__text {
-  font-size: var(--text-sm);
+  font-size: 0.875rem;
 }
 
 .alert__action {
   flex-shrink: 0;
+  margin: -0.25rem -0.25rem 0 0;
 }
 
-.alert--info {
-  background: var(--color-info-bg);
-  border-color: var(--color-teal);
-}
-
-.alert--info .alert__icon {
-  color: var(--color-primary);
-}
-
+.alert--info,
 .alert--success {
   background: var(--color-success-bg);
-  border-color: var(--color-teal);
+  border-color: #b9dfe2;
 }
 
+.alert--info .alert__icon,
 .alert--success .alert__icon {
   color: var(--color-primary);
 }
 
+/* Warning: the handoff's pink notice (#FDECEE / #F5C9CF), dark text 11.87:1, title in dark red. */
 .alert--warning {
   background: var(--color-warning-bg);
-  border-color: var(--color-brand);
+  border-color: var(--color-warning-border, #f3c3c9);
 }
 
-.alert--warning .alert__icon {
+.alert--warning .alert__icon,
+.alert--warning .alert__title {
   color: var(--color-danger);
 }
 
 .alert--error {
   background: var(--color-danger-bg);
-  border-color: var(--color-danger);
+  border-color: #f0c4ca;
 }
 
 .alert--error .alert__icon,
 .alert--error .alert__title {
+  color: var(--color-danger);
+}
+
+/* Inline notice: title and text on one line ("Datos simulados. No provienen…"). */
+.alert--inline .alert__body {
+  display: block;
+}
+
+.alert--inline .alert__title,
+.alert--inline .alert__text {
+  display: inline;
+}
+
+.alert--inline .alert__title::after {
+  content: ' ';
+}
+
+.alert--warning .alert__action .icon-button,
+.alert--error .alert__action .icon-button {
+  width: 2rem;
+  height: 2rem;
+  color: var(--color-danger);
+}
+
+.alert--warning .alert__action .icon-button:hover,
+.alert--error .alert__action .icon-button:hover {
+  background: #f8d7dc;
   color: var(--color-danger);
 }

@@ -1,0 +1,213 @@
+/* Panel controls: segmented control, filter chips, avatars and the "⋮" action menu. */
+
+/* ---------- Segmented control: lavender track, white pressed option ---------- */
+.segmented {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 0.75rem;
+  background: var(--color-surface-soft);
+}
+
+.segmented__option {
+  flex: 1;
+  min-height: 2.375rem; /* 38 px */
+  padding: 0 0.625rem;
+  border: 0;
+  border-radius: 0.5625rem;
+  background: transparent;
+  color: var(--color-text);
+  font-size: 0.875rem;
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
+}
+
+.segmented__option:hover {
+  background: rgb(255 255 255 / 0.6);
+}
+
+/* Pressed: white card with a light shadow and bold text (not colour alone). */
+.segmented__option[aria-pressed='true'] {
+  background: var(--color-surface);
+  font-weight: var(--weight-bold);
+  box-shadow: 0 1px 3px rgb(31 26 36 / 0.15);
+}
+
+/* Small variant (playback speed): teal pressed option, white text 5.89:1. */
+.segmented--sm {
+  display: inline-flex;
+}
+
+.segmented--sm .segmented__option {
+  flex: none;
+  width: 2.75rem;
+  font-weight: var(--weight-bold);
+}
+
+.segmented--sm .segmented__option[aria-pressed='true'] {
+  background: var(--color-primary);
+  color: var(--color-on-dark);
+  box-shadow: none;
+}
+
+/* ---------- Filter chips ---------- */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 2.5rem; /* 40 px touch target (the design draws 38) */
+  padding: 0 0.875rem;
+  flex: none;
+  border: 1px solid var(--color-border-control);
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 0.875rem;
+  font-weight: var(--weight-semibold);
+  white-space: nowrap;
+}
+
+.chip:hover {
+  background: var(--color-surface-muted);
+}
+
+.chip__dot {
+  width: 0.5625rem;
+  height: 0.5625rem;
+  flex-shrink: 0;
+  border-radius: 50%;
+}
+
+.chip__count {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.8;
+}
+
+/* Status filter pressed: dark fill, white text (17.05:1); the dot keeps the status colour. */
+.chip--dark[aria-pressed='true'] {
+  border-color: var(--color-dark);
+  background: var(--color-dark);
+  color: var(--color-on-dark);
+}
+
+.chip--dark[aria-pressed='true'] .chip__dot {
+  box-shadow: 0 0 0 2px var(--color-dark), 0 0 0 3px rgb(255 255 255 / 0.7);
+}
+
+/* Quick range pressed: teal tint, teal text (5.12:1) and border. */
+.chip--accent {
+  min-height: 2.125rem; /* 34 px */
+  padding: 0 0.75rem;
+  font-size: 0.84375rem;
+}
+
+.chip--accent[aria-pressed='true'] {
+  border-color: var(--color-teal);
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+}
+
+/* ---------- Avatar (initials) ---------- */
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 50%;
+  font-weight: var(--weight-bold);
+  line-height: 1;
+  user-select: none;
+}
+
+.avatar--sm {
+  width: 2.25rem;
+  height: 2.25rem;
+  font-size: 0.75rem;
+}
+
+.avatar--md {
+  width: 2.375rem;
+  height: 2.375rem;
+  font-size: 0.8125rem;
+}
+
+.avatar--lg {
+  width: 2.5rem;
+  height: 2.5rem;
+  font-size: 0.8125rem;
+}
+
+.avatar--dark {
+  background: var(--color-dark);
+  color: var(--color-on-dark);
+}
+
+.avatar--soft {
+  background: var(--color-surface-soft);
+  color: var(--color-text-nav);
+}
+
+.avatar--teal {
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+}
+
+/* ---------- Action menu ---------- */
+.action-menu {
+  position: relative;
+  display: inline-flex;
+}
+
+.action-menu__list {
+  z-index: var(--z-overlay);
+  display: flex;
+  flex-direction: column;
+  min-width: 13rem;
+  max-height: 17.5rem;
+  padding: 0.375rem;
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-md);
+}
+
+.action-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-height: 2.5rem;
+  padding: 0 0.625rem;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text);
+  font-size: 0.875rem;
+  font-weight: var(--weight-semibold);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.action-menu__item:hover,
+.action-menu__item:focus-visible {
+  background: var(--color-nav-hover);
+}
+
+.action-menu__item:focus-visible {
+  outline-offset: -2px;
+}
+
+.action-menu__item--danger {
+  color: var(--color-danger); /* 7.37:1 */
+}
+
+.action-menu__icon {
+  display: inline-flex;
+  width: 1.1875rem;
+  height: 1.1875rem;
+}
+
+.action-menu__icon svg {
+  width: 100%;
+  height: 100%;
+}

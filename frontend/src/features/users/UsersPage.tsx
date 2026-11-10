@@ -21,9 +21,9 @@ import {
   ErrorState,
   PageHeader,
   Pagination,
-  PlusIcon,
   SearchIcon,
   UserCogIcon,
+  UserPlusIcon,
   useToast,
 } from '@/ui'
 import { TemporaryPasswordDialog } from './TemporaryPasswordDialog'
@@ -39,8 +39,11 @@ import './users.css'
 
 const PAGE_SIZE = 20
 const SEARCH_DEBOUNCE_MS = 350
-/** Below 80rem (phones, tablets, small laptops) the list is cards; the full table needs the width. */
-const COMPACT_QUERY = '(max-width: 79.99rem)'
+/**
+ * Cards below 64rem. Measured: the table needs about 739 px, more than the 622/688 px left at
+ * 768/834 px wide, so it would scroll sideways; at 1024 px it fits (878 of 878 px).
+ */
+const COMPACT_QUERY = '(max-width: 63.99rem)'
 
 type DialogState =
   | { kind: 'create' }
@@ -222,7 +225,7 @@ export default function UsersPage() {
         title="Aún no hay usuarios"
         description="Crea el primer acceso para tu equipo."
         action={
-          <Button icon={<PlusIcon />} onClick={() => openDialog({ kind: 'create' })}>
+          <Button icon={<UserPlusIcon />} onClick={() => openDialog({ kind: 'create' })}>
             Crear usuario
           </Button>
         }
@@ -261,9 +264,9 @@ export default function UsersPage() {
     <>
       <PageHeader
         title="Usuarios"
-        description="Crea accesos, asigna roles, activa o desactiva cuentas y restablece contraseñas. No hay registro público: solo un administrador crea usuarios."
+        description="Crea accesos, asigna roles, activa o desactiva cuentas y restablece contraseñas. Solo un administrador puede crear usuarios."
         actions={
-          <Button icon={<PlusIcon />} onClick={() => openDialog({ kind: 'create' })}>
+          <Button icon={<UserPlusIcon />} onClick={() => openDialog({ kind: 'create' })}>
             Crear usuario
           </Button>
         }

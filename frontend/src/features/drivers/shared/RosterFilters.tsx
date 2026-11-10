@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react'
-import { Button, SelectField, TextField, type SelectOption } from '@/ui'
-import { toAssignedFilter, toNameSort, type AssignedFilter, type NameSort } from './listState'
+import { Button, SearchIcon, SegmentedControl, SelectField, TextField, type SegmentOption, type SelectOption } from '@/ui'
+import { toNameSort, type AssignedFilter, type NameSort } from './listState'
 
-const ASSIGNED_OPTIONS: readonly SelectOption[] = [
+const ASSIGNED_OPTIONS: readonly SegmentOption<AssignedFilter>[] = [
   { value: '', label: 'Todos' },
   { value: 'yes', label: 'Con vehículo' },
   { value: 'no', label: 'Sin vehículo' },
@@ -32,7 +32,7 @@ interface RosterFiltersProps {
   children?: ReactNode
 }
 
-/** Server-side search and filters of the drivers and passengers lists (UX-06). */
+/** Filter card: server-side search + "Asignación" segmented control (UX-06, RF-28). */
 export function RosterFilters({
   label,
   searchLabel,
@@ -56,26 +56,28 @@ export function RosterFilters({
         placeholder={searchPlaceholder}
         autoComplete="off"
         maxLength={100}
+        leadingIcon={<SearchIcon />}
+        fieldClassName="roster-filters__search"
         value={search}
         onChange={(event) => onSearchChange(event.target.value)}
       />
-      <div className="roster-filters__row">
-        <SelectField
-          label="Asignación"
-          options={ASSIGNED_OPTIONS}
-          value={assigned}
-          onChange={(event) => onAssignedChange(toAssignedFilter(event.target.value))}
-        />
-        {children}
-        {showSort && (
-          <SelectField
-            label="Ordenar por nombre"
-            options={SORT_OPTIONS}
-            value={sort}
-            onChange={(event) => onSortChange(toNameSort(event.target.value))}
-          />
-        )}
+      <div className="roster-filters__assigned">
+        {/* Visible caption; the group itself is named "Asignación" (no double reading). */}
+        <span className="field__label" aria-hidden="true">
+          Asignación
+        </span>
+        <SegmentedControl label="Asignación" options={ASSIGNED_OPTIONS} value={assigned} onChange={onAssignedChange} />
       </div>
+      {children}
+      {showSort && (
+        <SelectField
+          label="Ordenar por nombre"
+          options={SORT_OPTIONS}
+          fieldClassName="roster-filters__select"
+          value={sort}
+          onChange={(event) => onSortChange(toNameSort(event.target.value))}
+        />
+      )}
       {hasFilters && (
         <Button variant="ghost" className="roster-filters__clear" onClick={onClear}>
           Limpiar filtros

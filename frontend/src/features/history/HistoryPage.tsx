@@ -8,10 +8,12 @@ import { useHistoryVehicle, useVehicleTrack, type TrackRequest } from '@/api/his
 import { formatDateTime, formatNumber } from '@/lib/format'
 import { useDocumentTitle, usePrefersReducedMotion } from '@/lib/hooks'
 import {
+  ArrowRightIcon,
   Button,
   Card,
   EmptyState,
   ErrorState,
+  FilterChip,
   HistoryIcon,
   PageHeader,
   Skeleton,
@@ -54,13 +56,19 @@ const historySchema = z
 type HistoryFormValues = z.infer<typeof historySchema>
 
 const FIELD_ORDER = ['vehicle_id', 'from', 'to'] as const
+/** Time zone and range limit: labels the quick ranges and describes both date fields. */
+const RANGE_NOTE_ID = 'history-range-note'
 
 function positiveId(value: string | null): number | null {
   return value && /^[1-9]\d*$/.test(value) ? Number(value) : null
 }
 
 /** Form defaults and the query to run on arrival, read from the URL (last 24 h by default). */
-function initialState(params: URLSearchParams): { values: HistoryFormValues; request: TrackRequest | null } {
+function initialState(params: URLSearchParams): {
+  values: HistoryFormValues
+  request: TrackRequest | null
+  preset: RangePresetId | null
+} {
   const vehicleId = positiveId(params.get('vehicle'))
   const from = parseIsoInstant(params.get('from'))
   const to = parseIsoInstant(params.get('to'))
@@ -68,6 +76,7 @@ function initialState(params: URLSearchParams): { values: HistoryFormValues; req
     from !== null && to !== null && from < to && to.getTime() - from.getTime() <= MAX_RANGE_MS
   const range = urlRangeValid ? { from, to } : presetRange('last_24h')
   return {
+    preset: urlRangeValid ? null : 'last_24h',
     values: {
       vehicle_id: vehicleId === null ? '' : String(vehicleId),
       from: toZonedInput(range.from),
@@ -84,13 +93,16 @@ function sameRequest(a: TrackRequest | null, b: TrackRequest): boolean {
 
 function TrackSkeleton() {
   return (
-    <div className="track-skeleton" aria-hidden="true">
-      <Skeleton height="clamp(18rem, 50vh, 30rem)" />
-      <div className="track-skeleton__side">
-        <Skeleton height="1.5rem" width="60%" />
-        <Skeleton height="3rem" />
-        <Skeleton height="3rem" />
-        <Skeleton height="3rem" />
+    <div className="track-result__body" aria-hidden="true">
+      <div className="card track-card track-result__main">
+        <Skeleton height="23.75rem" />
+        <Skeleton height="2.75rem" width="60%" />
+        <Skeleton height="3.75rem" />
+      </div>
+      <div className="card track-card track-stats">
+        <Skeleton height="1.25rem" width="60%" />
+        <Skeleton height="9rem" />
+        <Skeleton height="6rem" />
       </div>
     </div>
   )
@@ -102,6 +114,8 @@ export default function HistoryPage() {
   const reducedMotion = usePrefersReducedMotion()
   const [initial] = useState(() => initialState(searchParams))
   const [request, setRequest] = useState<TrackRequest | null>(initial.request)
+  // Quick range the dates were last filled with (aria-pressed); typing a date clears it.
+  const [activePreset, setActivePreset] = useState<RangePresetId | null>(initial.preset)
 
   const {
     control,
@@ -123,6 +137,7 @@ export default function HistoryPage() {
 
   const applyPreset = (id: RangePresetId) => {
     const range = presetRange(id)
+    setActivePreset(id)
     // After a first submit the fields validate live, so a preset also clears stale errors.
     setValue('from', toZonedInput(range.from), { shouldDirty: true, shouldValidate: isSubmitted })
     setValue('to', toZonedInput(range.to), { shouldDirty: true, shouldValidate: isSubmitted })
@@ -151,6 +166,7 @@ export default function HistoryPage() {
   const rangeText = request
     ? `del ${formatDateTime(request.from)} al ${formatDateTime(request.to)}`
     : ''
+  const clearPreset = () => setActivePreset(null)
 
   let announcement = ''
   let content
@@ -163,6 +179,7 @@ export default function HistoryPage() {
         description="Selecciona el vehículo, indica desde y hasta cuándo (hora de Colombia) y pulsa «Ver recorrido». Los rangos rápidos llenan las fechas por ti."
       />
     )
+    content = <Card className="history-state">{content}</Card>
   } else if (track.isPending) {
     announcement = 'Cargando recorrido…'
     content = <TrackSkeleton />
@@ -176,6 +193,7 @@ export default function HistoryPage() {
         retrying={track.isFetching}
       />
     )
+    content = <Card className="history-state">{content}</Card>
   } else if (track.data.points.length === 0) {
     announcement = 'No hay posiciones en el rango elegido.'
     content = (
@@ -186,6 +204,7 @@ export default function HistoryPage() {
         description={`${vehicleName} no reportó posiciones ${rangeText}. Prueba con otro rango, por ejemplo «Ayer» o «Últimas 24 h».`}
       />
     )
+    content = <Card className="history-state">{content}</Card>
   } else {
     announcement = `Recorrido cargado: ${formatNumber(track.data.points.length)} puntos.`
     content = (
@@ -204,63 +223,70 @@ export default function HistoryPage() {
         description="Revisa por dónde pasó un vehículo, reprodúcelo y consulta su velocidad."
       />
 
-      <Card as="section" className="history-query" aria-labelledby="history-query-title">
-        <h2 id="history-query-title" className="history-section-title">
+      <Card as="section" padded={false} className="history-query" aria-labelledby="history-query-title">
+        <h2 id="history-query-title" className="visually-hidden">
           Consulta
         </h2>
         <form className="history-form" noValidate onSubmit={onSubmit}>
-          <Controller
-            control={control}
-            name="vehicle_id"
-            render={({ field, fieldState }) => (
-              <VehiclePicker
-                value={field.value}
-                onChange={field.onChange}
-                onBlur={field.onBlur}
-                name={field.name}
-                selectRef={field.ref}
-                error={fieldState.error?.message}
-              />
-            )}
-          />
-
-          <fieldset className="history-form__range">
-            <legend className="history-form__legend">Rango de fechas (hora de Colombia)</legend>
-            <div className="history-presets" role="group" aria-label="Rangos rápidos">
-              {RANGE_PRESETS.map((preset) => (
-                <Button key={preset.id} variant="secondary" size="sm" onClick={() => applyPreset(preset.id)}>
-                  {preset.label}
-                </Button>
-              ))}
+          <div className="history-form__grid">
+            <Controller
+              control={control}
+              name="vehicle_id"
+              render={({ field, fieldState }) => (
+                <VehiclePicker
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  name={field.name}
+                  selectRef={field.ref}
+                  error={fieldState.error?.message}
+                />
+              )}
+            />
+            <TextField
+              type="datetime-local"
+              label="Desde"
+              isRequired
+              describedBy={RANGE_NOTE_ID}
+              error={errors.from?.message}
+              {...register('from', { onChange: clearPreset })}
+            />
+            <TextField
+              type="datetime-local"
+              label="Hasta"
+              isRequired
+              describedBy={RANGE_NOTE_ID}
+              error={errors.to?.message}
+              {...register('to', { onChange: clearPreset })}
+            />
+            <div className="history-form__submit">
+              {/* Same height as a field label, so the button lines up with the inputs. */}
+              <span className="field__label history-form__spacer" aria-hidden="true" />
+              <Button
+                type="submit"
+                icon={<HistoryIcon />}
+                loading={track.isFetching}
+                loadingText="Cargando recorrido…"
+              >
+                Ver recorrido
+              </Button>
             </div>
-            <div className="history-form__dates">
-              <TextField
-                type="datetime-local"
-                label="Desde"
-                isRequired
-                error={errors.from?.message}
-                {...register('from')}
-              />
-              <TextField
-                type="datetime-local"
-                label="Hasta"
-                isRequired
-                hint={`Máximo ${MAX_RANGE_DAYS} días entre ambas fechas.`}
-                error={errors.to?.message}
-                {...register('to')}
-              />
-            </div>
-          </fieldset>
+          </div>
 
-          <div className="history-form__actions">
-            <Button
-              type="submit"
-              icon={<HistoryIcon />}
-              loading={track.isFetching}
-              loadingText="Cargando recorrido…"
-            >
-              Ver recorrido
-            </Button>
+          <div className="history-presets" role="group" aria-labelledby={RANGE_NOTE_ID}>
+            <span id={RANGE_NOTE_ID} className="history-presets__label">
+              Rango rápido (hora de Colombia, máx. {MAX_RANGE_DAYS} días):
+            </span>
+            {RANGE_PRESETS.map((preset) => (
+              <FilterChip
+                key={preset.id}
+                tone="accent"
+                pressed={activePreset === preset.id}
+                onClick={() => applyPreset(preset.id)}
+              >
+                {preset.label}
+              </FilterChip>
+            ))}
           </div>
         </form>
       </Card>
@@ -268,10 +294,14 @@ export default function HistoryPage() {
       <section className="history-results" aria-labelledby="history-results-title">
         <div className="history-results__header">
           <div>
-            <h2 id="history-results-title" className="history-section-title">
+            <h2 id="history-results-title" className="history-results__title">
               {request ? `Recorrido de ${vehicleName}` : 'Recorrido'}
             </h2>
-            {request && <p className="history-results__range">Horas de Colombia, {rangeText}.</p>}
+            {request && (
+              <p className="history-results__range">
+                {`D${rangeText.slice(1)}`} · hora de Colombia
+              </p>
+            )}
           </div>
           <div className="history-results__actions">
             {request && track.isFetching && !track.isPending && (
@@ -282,6 +312,7 @@ export default function HistoryPage() {
             {request && (
               <Link className="history-results__link" to={`/app/vehicles/${request.vehicleId}`}>
                 Ver detalle del vehículo
+                <ArrowRightIcon />
               </Link>
             )}
           </div>

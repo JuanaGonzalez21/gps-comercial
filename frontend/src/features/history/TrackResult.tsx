@@ -1,7 +1,7 @@
 import { useId } from 'react'
 import type { Track } from '@/api/types'
 import { formatDateTime, formatNumber, formatSpeed } from '@/lib/format'
-import { Alert } from '@/ui'
+import { Alert, Card } from '@/ui'
 import { PlaybackControls } from './PlaybackControls'
 import { SpeedChart } from './SpeedChart'
 import { TrackMap } from './TrackMap'
@@ -13,6 +13,37 @@ export interface TrackResultProps {
   reducedMotion: boolean
 }
 
+/** Summary tile: short visible label ("Vel. máxima") with the full term for screen readers. */
+function StatTile({
+  label,
+  fullLabel,
+  value,
+  tone = 'soft',
+  size = 'lg',
+}: {
+  label: string
+  fullLabel?: string
+  value: string
+  tone?: 'accent' | 'soft'
+  size?: 'lg' | 'md'
+}) {
+  return (
+    <div className={`track-tile track-tile--${tone} track-tile--${size}`}>
+      <dt>
+        {fullLabel ? (
+          <>
+            <span aria-hidden="true">{label}</span>
+            <span className="visually-hidden">{fullLabel}</span>
+          </>
+        ) : (
+          label
+        )}
+      </dt>
+      <dd>{value}</dd>
+    </div>
+  )
+}
+
 /**
  * A loaded route with points: map, playback, speed chart and statistics share one playback
  * position. Mount it with a key per track so the playback starts again for each query.
@@ -20,6 +51,7 @@ export interface TrackResultProps {
 export function TrackResult({ track, reducedMotion }: TrackResultProps) {
   const { points, stats } = track
   const playback = usePlayback(points.length)
+  const mapTitleId = useId()
   const statsTitleId = useId()
   const firstPoint = points[0]
   const lastPoint = points[points.length - 1]
@@ -51,40 +83,51 @@ export function TrackResult({ track, reducedMotion }: TrackResultProps) {
 
       <div className="track-result__body">
         <div className="track-result__main">
-          <TrackMap points={points} currentIndex={playback.index} reducedMotion={reducedMotion} />
-          <PlaybackControls
+          <Card as="section" padded={false} className="track-card" aria-labelledby={mapTitleId}>
+            <h3 id={mapTitleId} className="visually-hidden">
+              Mapa y reproducción
+            </h3>
+            <TrackMap points={points} currentIndex={playback.index} reducedMotion={reducedMotion} />
+            <PlaybackControls
+              points={points}
+              index={playback.index}
+              playing={playback.playing}
+              speed={playback.speed}
+              onToggle={playback.toggle}
+              onSeek={playback.seek}
+              onSpeedChange={playback.setSpeed}
+            />
+          </Card>
+          <SpeedChart
             points={points}
-            index={playback.index}
-            playing={playback.playing}
-            speed={playback.speed}
-            onToggle={playback.toggle}
+            currentIndex={playback.index}
             onSeek={playback.seek}
-            onSpeedChange={playback.setSpeed}
+            maxSpeedKmh={stats.max_speed_kmh}
+            avgSpeedKmh={stats.avg_speed_kmh}
           />
-          <SpeedChart points={points} currentIndex={playback.index} onSeek={playback.seek} />
         </div>
 
-        <section className="track-stats" aria-labelledby={statsTitleId}>
-          <h3 id={statsTitleId} className="track-stats__title">
+        <Card as="section" padded={false} className="track-card track-stats" aria-labelledby={statsTitleId}>
+          <h3 id={statsTitleId} className="card-title">
             Resumen del recorrido
           </h3>
+          <dl className="track-stats__tiles">
+            <StatTile label="Distancia" value={formatDistance(stats.distance_km)} tone="accent" />
+            <StatTile label="Duración" value={formatDuration(stats.duration_s)} />
+            <StatTile
+              label="Vel. máxima"
+              fullLabel="Velocidad máxima"
+              value={formatSpeed(stats.max_speed_kmh)}
+              size="md"
+            />
+            <StatTile
+              label="Vel. promedio"
+              fullLabel="Velocidad promedio"
+              value={formatSpeed(stats.avg_speed_kmh)}
+              size="md"
+            />
+          </dl>
           <dl className="track-stats__list">
-            <div>
-              <dt>Distancia</dt>
-              <dd>{formatDistance(stats.distance_km)}</dd>
-            </div>
-            <div>
-              <dt>Duración</dt>
-              <dd>{formatDuration(stats.duration_s)}</dd>
-            </div>
-            <div>
-              <dt>Velocidad máxima</dt>
-              <dd>{formatSpeed(stats.max_speed_kmh)}</dd>
-            </div>
-            <div>
-              <dt>Velocidad promedio</dt>
-              <dd>{formatSpeed(stats.avg_speed_kmh)}</dd>
-            </div>
             <div>
               <dt>Primera posición</dt>
               <dd>
@@ -105,9 +148,9 @@ export function TrackResult({ track, reducedMotion }: TrackResultProps) {
             </div>
           </dl>
           <p className="track-stats__note">
-            Velocidad promedio de las posiciones reportadas. Horas en America/Bogota.
+            Velocidad promedio calculada con las posiciones reportadas. Horas en America/Bogota.
           </p>
-        </section>
+        </Card>
       </div>
     </div>
   )

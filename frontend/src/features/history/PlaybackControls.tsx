@@ -1,7 +1,7 @@
 import { useId } from 'react'
 import type { TrackPoint } from '@/api/types'
-import { formatCourse, formatNumber, formatSpeed, formatTime } from '@/lib/format'
-import { Button, PauseIcon, PlayIcon } from '@/ui'
+import { formatCourse, formatNumber, formatSpeed } from '@/lib/format'
+import { Button, PauseIcon, PlayIcon, SegmentedControl, type SegmentOption } from '@/ui'
 import { formatDateTimeSeconds } from './timeRange'
 import { PLAYBACK_SPEEDS, type PlaybackSpeed } from './usePlayback'
 
@@ -15,6 +15,13 @@ export interface PlaybackControlsProps {
   onSpeedChange: (speed: PlaybackSpeed) => void
 }
 
+type SpeedValue = `${PlaybackSpeed}`
+
+const SPEED_OPTIONS: ReadonlyArray<SegmentOption<SpeedValue>> = PLAYBACK_SPEEDS.map((option) => ({
+  value: `${option}`,
+  label: `x${option}`,
+}))
+
 /** Play/pause, speed and a keyboard-accessible position slider, plus the current point in text. */
 export function PlaybackControls({
   points,
@@ -25,7 +32,6 @@ export function PlaybackControls({
   onSeek,
   onSpeedChange,
 }: PlaybackControlsProps) {
-  const titleId = useId()
   const sliderId = useId()
   const last = points.length - 1
   const point = points[Math.min(index, last)]
@@ -42,10 +48,7 @@ export function PlaybackControls({
       : ''
 
   return (
-    <section className="playback" aria-labelledby={titleId}>
-      <h3 id={titleId} className="playback__title">
-        Reproducción
-      </h3>
+    <>
       <p className="visually-hidden" role="status">
         {announcement}
       </p>
@@ -58,24 +61,17 @@ export function PlaybackControls({
         >
           {label}
         </Button>
-        <div className="playback__speeds" role="group" aria-label="Velocidad de reproducción">
-          {PLAYBACK_SPEEDS.map((option) => (
-            <button
-              key={option}
-              type="button"
-              className="playback__speed"
-              aria-pressed={option === speed}
-              onClick={() => onSpeedChange(option)}
-              disabled={!canPlay}
-            >
-              x{option}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="playback__scrubber">
-        <label htmlFor={sliderId} className="playback__slider-label">
+        {/* A single point has nothing to play: no speed choice. */}
+        {canPlay && (
+          <SegmentedControl
+            size="sm"
+            label="Velocidad de reproducción"
+            options={SPEED_OPTIONS}
+            value={`${speed}`}
+            onChange={(value) => onSpeedChange(Number(value) as PlaybackSpeed)}
+          />
+        )}
+        <label htmlFor={sliderId} className="visually-hidden">
           Posición en el recorrido
         </label>
         <input
@@ -90,34 +86,30 @@ export function PlaybackControls({
           disabled={!canPlay}
           onChange={(event) => onSeek(Number(event.target.value))}
         />
-        <div className="playback__ends" aria-hidden="true">
-          <span>{formatTime(points[0].recorded_at)}</span>
-          <span>{formatTime(points[last].recorded_at)}</span>
-        </div>
       </div>
 
-      <dl className="playback__current">
-        <div>
+      <dl className="track-facts">
+        <div className="track-facts__item track-facts__item--wide">
           <dt>Fecha y hora</dt>
           <dd>
             <time dateTime={point.recorded_at}>{formatDateTimeSeconds(point.recorded_at)}</time>
           </dd>
         </div>
-        <div>
+        <div className="track-facts__item">
           <dt>Velocidad</dt>
           <dd>{formatSpeed(point.speed_kmh)}</dd>
         </div>
-        <div>
+        <div className="track-facts__item">
           <dt>Rumbo</dt>
           <dd>{formatCourse(point.course_deg)}</dd>
         </div>
-        <div>
+        <div className="track-facts__item">
           <dt>Punto</dt>
           <dd>
             {formatNumber(index + 1)} de {formatNumber(points.length)}
           </dd>
         </div>
       </dl>
-    </section>
+    </>
   )
 }

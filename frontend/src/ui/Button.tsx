@@ -3,7 +3,8 @@ import { Link, type LinkProps } from 'react-router'
 import { Spinner } from './Spinner'
 import './button.css'
 
-export type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost'
+/** "soft": lavender fill with a teal label, for secondary shortcuts such as "Ver vehículos". */
+export type ButtonVariant = 'primary' | 'secondary' | 'soft' | 'danger' | 'ghost'
 export type ButtonSize = 'sm' | 'md'
 
 interface ButtonStyleProps {
@@ -11,6 +12,8 @@ interface ButtonStyleProps {
   size?: ButtonSize
   /** Decorative leading icon. */
   icon?: ReactNode
+  /** Decorative trailing icon, for example an arrow on "Ver …" shortcuts. */
+  trailingIcon?: ReactNode
   fullWidth?: boolean
 }
 
@@ -37,6 +40,7 @@ export function Button({
   variant = 'primary',
   size = 'md',
   icon,
+  trailingIcon,
   fullWidth,
   loading = false,
   loadingText,
@@ -56,6 +60,7 @@ export function Button({
     >
       {loading ? <Spinner size="sm" /> : icon}
       {children !== undefined && <span>{loading && loadingText ? loadingText : children}</span>}
+      {!loading && trailingIcon}
     </button>
   )
 }
@@ -67,6 +72,7 @@ export function LinkButton({
   variant = 'primary',
   size = 'md',
   icon,
+  trailingIcon,
   fullWidth,
   className,
   children,
@@ -76,6 +82,7 @@ export function LinkButton({
     <Link className={buttonClasses(variant, size, fullWidth, className)} {...rest}>
       {icon}
       <span>{children}</span>
+      {trailingIcon}
     </Link>
   )
 }

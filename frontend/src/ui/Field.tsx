@@ -81,6 +81,8 @@ export interface TextFieldProps
   extends Omit<InputHTMLAttributes<HTMLInputElement>, 'aria-describedby'>,
     CommonFieldProps {
   ref?: Ref<HTMLInputElement>
+  /** Decorative icon inside the start of the input (for example a magnifier on search boxes). */
+  leadingIcon?: ReactNode
 }
 
 export function TextField({
@@ -94,6 +96,7 @@ export function TextField({
   id,
   className,
   ref,
+  leadingIcon,
   ...inputProps
 }: TextFieldProps) {
   const autoId = useId()
@@ -109,17 +112,30 @@ export function TextField({
       describedBy={describedBy}
       className={fieldClassName}
     >
-      {(ids) => (
-        <input
-          ref={ref}
-          id={inputId}
-          className={['field__control', className].filter(Boolean).join(' ')}
-          aria-invalid={error ? true : undefined}
-          aria-required={isRequired || undefined}
-          aria-describedby={ids}
-          {...inputProps}
-        />
-      )}
+      {(ids) => {
+        const input = (
+          <input
+            ref={ref}
+            id={inputId}
+            className={['field__control', leadingIcon && 'field__control--with-icon', className]
+              .filter(Boolean)
+              .join(' ')}
+            aria-invalid={error ? true : undefined}
+            aria-required={isRequired || undefined}
+            aria-describedby={ids}
+            {...inputProps}
+          />
+        )
+        if (!leadingIcon) return input
+        return (
+          <span className="field__search">
+            <span className="field__search-icon" aria-hidden="true">
+              {leadingIcon}
+            </span>
+            {input}
+          </span>
+        )
+      }}
     </FieldShell>
   )
 }

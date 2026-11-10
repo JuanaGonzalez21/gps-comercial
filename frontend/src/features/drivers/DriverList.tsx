@@ -1,13 +1,15 @@
 import type { ReactNode } from 'react'
 import type { DriverOut } from '@/api/types'
 import { sortCaption, type NameSort } from './shared/listState'
-import { NameSortHeader, OptionalText, VehicleCell } from './shared/RosterTable'
+import { NameSortHeader, OptionalText, RosterPerson, VehicleCell } from './shared/RosterTable'
 
 interface DriverListProps {
   items: readonly DriverOut[]
-  /** Resource name per id, only when the account has several resources. */
+  /** Resource name per id (null while unknown). */
   resourceNames: ReadonlyMap<number, string> | null
   linkVehicles: boolean
+  /** Opens the assignment dialog; null when the role cannot assign. */
+  onAssign: ((driver: DriverOut) => void) | null
   /** Row actions allowed for the current role; null hides the column. */
   renderActions: ((driver: DriverOut) => ReactNode) | null
 }
@@ -18,11 +20,23 @@ interface DriverTableProps extends DriverListProps {
   busy: boolean
 }
 
+function vehicleCell(driver: DriverOut, linkVehicles: boolean, onAssign: DriverListProps['onAssign']) {
+  return (
+    <VehicleCell
+      vehicle={driver.vehicle}
+      linkable={linkVehicles}
+      personName={driver.name}
+      onAssign={onAssign ? () => onAssign(driver) : undefined}
+    />
+  )
+}
+
 /** Tablet and desktop: sortable table (UX-06). */
 export function DriverTable({
   items,
   resourceNames,
   linkVehicles,
+  onAssign,
   renderActions,
   sort,
   onSortChange,
@@ -40,7 +54,7 @@ export function DriverTable({
             <th scope="col">Vehículo</th>
             {renderActions && (
               <th scope="col" className="roster-table__actions">
-                <span className="visually-hidden">Acciones</span>
+                Acciones
               </th>
             )}
           </tr>
@@ -49,21 +63,19 @@ export function DriverTable({
           {items.map((driver) => (
             <tr key={`${driver.resource_id}-${driver.id}`}>
               <th scope="row">
-                {driver.name}
-                {driver.description && <span className="roster-note">{driver.description}</span>}
-                {resourceNames && (
-                  <span className="roster-note">Recurso: {resourceNames.get(driver.resource_id) ?? driver.resource_id}</span>
-                )}
+                <RosterPerson
+                  name={driver.name}
+                  resourceName={resourceNames?.get(driver.resource_id) ?? null}
+                  description={driver.description}
+                />
               </th>
-              <td>
-                <OptionalText value={driver.code} />
+              <td className="roster-table__nowrap">
+                <OptionalText value={driver.code} mono />
               </td>
-              <td>
+              <td className="roster-table__nowrap">
                 <OptionalText value={driver.phone} />
               </td>
-              <td>
-                <VehicleCell vehicle={driver.vehicle} linkable={linkVehicles} />
-              </td>
+              <td>{vehicleCell(driver, linkVehicles, onAssign)}</td>
               {renderActions && <td className="roster-table__actions">{renderActions(driver)}</td>}
             </tr>
           ))}
@@ -73,8 +85,8 @@ export function DriverTable({
   )
 }
 
-/** Small screens (360 px): one readable card per driver instead of a squeezed table. */
-export function DriverCards({ items, resourceNames, linkVehicles, renderActions }: DriverListProps) {
+/** Phones (< 48rem): one stacked card per driver instead of a squeezed table. */
+export function DriverCards({ items, resourceNames, linkVehicles, onAssign, renderActions }: DriverListProps) {
   return (
     <ul className="roster-cards" role="list">
       {items.map((driver) => {
@@ -82,20 +94,17 @@ export function DriverCards({ items, resourceNames, linkVehicles, renderActions 
         return (
           <li key={`${driver.resource_id}-${driver.id}`} className="roster-card">
             <article aria-labelledby={titleId}>
-              <h3 id={titleId} className="roster-card__name">
-                {driver.name}
-              </h3>
+              <RosterPerson
+                name={driver.name}
+                resourceName={resourceNames?.get(driver.resource_id) ?? null}
+                description={driver.description}
+                titleId={titleId}
+              />
               <dl className="roster-card__details">
-                <div>
-                  <dt>Vehículo</dt>
-                  <dd>
-                    <VehicleCell vehicle={driver.vehicle} linkable={linkVehicles} />
-                  </dd>
-                </div>
                 <div>
                   <dt>Código</dt>
                   <dd>
-                    <OptionalText value={driver.code} />
+                    <OptionalText value={driver.code} mono />
                   </dd>
                 </div>
                 <div>
@@ -104,20 +113,12 @@ export function DriverCards({ items, resourceNames, linkVehicles, renderActions 
                     <OptionalText value={driver.phone} />
                   </dd>
                 </div>
-                {driver.description && (
-                  <div>
-                    <dt>Descripción</dt>
-                    <dd>{driver.description}</dd>
-                  </div>
-                )}
-                {resourceNames && (
-                  <div>
-                    <dt>Recurso</dt>
-                    <dd>{resourceNames.get(driver.resource_id) ?? driver.resource_id}</dd>
-                  </div>
-                )}
+                <div>
+                  <dt>Vehículo</dt>
+                  <dd>{vehicleCell(driver, linkVehicles, onAssign)}</dd>
+                </div>
               </dl>
-              {renderActions?.(driver)}
+              {renderActions && <div className="roster-card__actions">{renderActions(driver)}</div>}
             </article>
           </li>
         )

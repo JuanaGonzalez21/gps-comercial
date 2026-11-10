@@ -50,6 +50,14 @@ export function entityLabel(entityType: string | null): string | null {
   return ENTITY_LABELS[entityType] ?? entityType
 }
 
+const ID_HEAD = 8
+const ID_TAIL = 5
+
+/** "1422e771…cfb6c": long identifiers (UUIDs) are shortened on screen. */
+export function shortId(id: string): string {
+  return id.length > ID_HEAD + ID_TAIL + 3 ? `${id.slice(0, ID_HEAD)}…${id.slice(-ID_TAIL)}` : id
+}
+
 /** Entries without details (or with an empty object) show "Sin detalles" instead of a toggle. */
 export function hasDetails(entry: Pick<AuditLogOut, 'details'>): boolean {
   return entry.details !== null && Object.keys(entry.details).length > 0

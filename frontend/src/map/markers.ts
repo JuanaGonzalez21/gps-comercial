@@ -6,6 +6,7 @@ import L from './leaflet'
 // Marker and popup DOM is built with createElement/textContent: vehicle names come from Wialon,
 // so they never go through innerHTML (SEG-03). No style attributes either (strict CSP).
 
+/** Click and focus target of a marker; the visible shape inside is 24 px (map.css). */
 export const MARKER_SIZE = 32
 
 function markerLabel(vehicle: VehicleMarker): string {

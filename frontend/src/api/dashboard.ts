@@ -26,3 +26,21 @@ export function useDashboardSummary() {
     refetchIntervalInBackground: false,
   })
 }
+
+/**
+ * Totals for the navigation counters. Shares the dashboard cache key, so it never adds a request
+ * while the Panel is open; elsewhere it fetches once and reuses the result for a minute (no polling).
+ */
+export function useNavigationCounts(enabled: boolean) {
+  return useQuery({
+    queryKey: dashboardKeys.summary(),
+    queryFn: ({ signal }) => fetchDashboardSummary(signal),
+    enabled,
+    staleTime: 60_000,
+    select: (summary) => ({
+      vehicles: summary.vehicles_total,
+      drivers: summary.drivers_total,
+      passengers: summary.passengers_total,
+    }),
+  })
+}

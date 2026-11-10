@@ -1,8 +1,8 @@
-import { useState, type ChangeEvent, type KeyboardEvent, type Ref } from 'react'
+import { useId, useState, type ChangeEvent, type KeyboardEvent, type Ref } from 'react'
 import { useHistoryVehicle, useVehicleOptions } from '@/api/history'
 import { formatNumber } from '@/lib/format'
 import { useDebouncedValue } from '@/lib/hooks'
-import { Button, RefreshIcon, SelectField, TextField, type SelectOption } from '@/ui'
+import { Button, RefreshIcon, SearchIcon, SelectField, TextField, type SelectOption } from '@/ui'
 
 const SEARCH_DEBOUNCE_MS = 300
 
@@ -20,8 +20,12 @@ export interface VehiclePickerProps {
  * Searchable vehicle selector built from native controls (fully keyboard and screen reader
  * friendly): a search box filters on the server, a select lists the matches. The current choice
  * is always kept as an option, even when a new search does not include it.
+ *
+ * Renders three cells of the query grid (search, list status, select), so the select lines up
+ * with the date fields as in the design; the status describes both controls.
  */
 export function VehiclePicker({ value, onChange, onBlur, name, selectRef, error }: VehiclePickerProps) {
+  const statusId = useId()
   const [searchInput, setSearchInput] = useState('')
   const search = useDebouncedValue(searchInput.trim(), SEARCH_DEBOUNCE_MS)
   const options = useVehicleOptions(search)
@@ -78,30 +82,24 @@ export function VehiclePicker({ value, onChange, onBlur, name, selectRef, error 
   }
 
   return (
-    <div className="vehicle-picker">
+    <>
       <TextField
         type="search"
         label="Buscar vehículo"
-        hint="Escribe parte del nombre para filtrar la lista."
+        placeholder="Parte del nombre"
+        leadingIcon={<SearchIcon />}
+        describedBy={statusId}
+        fieldClassName="history-form__search"
         value={searchInput}
         onChange={(event) => setSearchInput(event.target.value)}
         onKeyDown={preventSubmit}
         autoComplete="off"
         enterKeyHint="search"
       />
-      <div className="vehicle-picker__select">
-        <SelectField
-          label="Vehículo"
-          isRequired
-          name={name}
-          ref={selectRef}
-          value={value}
-          onChange={handleSelect}
-          onBlur={onBlur}
-          options={selectOptions}
-          error={error}
-          hint={<span role="status">{listStatus}</span>}
-        />
+      <div className="history-form__list-status">
+        <p id={statusId} role="status">
+          {listStatus}
+        </p>
         {options.isError && !options.data && (
           <Button
             variant="secondary"
@@ -115,6 +113,18 @@ export function VehiclePicker({ value, onChange, onBlur, name, selectRef, error 
           </Button>
         )}
       </div>
-    </div>
+      <SelectField
+        label="Vehículo"
+        isRequired
+        name={name}
+        ref={selectRef}
+        value={value}
+        onChange={handleSelect}
+        onBlur={onBlur}
+        options={selectOptions}
+        error={error}
+        describedBy={statusId}
+      />
+    </>
   )
 }

@@ -14,10 +14,6 @@ export function toAssigned(filter: AssignedFilter): boolean | undefined {
   return filter === '' ? undefined : filter === 'yes'
 }
 
-export function toAssignedFilter(value: string): AssignedFilter {
-  return value === 'yes' || value === 'no' ? value : ''
-}
-
 export function toNameSort(value: string): NameSort {
   return value === '-name' ? '-name' : 'name'
 }

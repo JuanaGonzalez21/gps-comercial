@@ -1,15 +1,17 @@
 import type { ReactNode } from 'react'
 import type { PassengerOut } from '@/api/types'
 import { sortCaption, type NameSort } from '@/features/drivers/shared/listState'
-import { NameSortHeader, OptionalText, VehicleCell } from '@/features/drivers/shared/RosterTable'
-import { Button } from '@/ui'
+import { NameSortHeader, OptionalText, RosterPerson, VehicleCell } from '@/features/drivers/shared/RosterTable'
 
 interface PassengerListProps {
   items: readonly PassengerOut[]
+  /** Resource name per id (null while unknown). */
   resourceNames: ReadonlyMap<number, string> | null
   linkVehicles: boolean
   /** Opens the custom fields editor (read-only for roles without passengers:write). */
   onOpenFields: (passenger: PassengerOut) => void
+  /** Opens the assignment dialog; null when the role cannot assign. */
+  onAssign: ((passenger: PassengerOut) => void) | null
   /** Row actions allowed for the current role; null hides them. */
   renderActions: ((passenger: PassengerOut) => ReactNode) | null
 }
@@ -20,16 +22,27 @@ interface PassengerTableProps extends PassengerListProps {
   busy: boolean
 }
 
-function fieldCount(count: number): string {
-  return count === 1 ? '1 campo' : `${count} campos`
+/** "1 campo" / "N campos" chip that opens the custom fields dialog (RF-27). */
+function FieldsChip({ passenger, onOpen }: { passenger: PassengerOut; onOpen: (p: PassengerOut) => void }) {
+  const count = passenger.custom_fields.length
+  return (
+    <button type="button" className="roster-chip" onClick={() => onOpen(passenger)}>
+      {count === 1 ? '1 campo ' : `${count} campos `}
+      <span className="visually-hidden">
+        {count === 1 ? 'personalizado' : 'personalizados'} de {passenger.name}
+      </span>
+    </button>
+  )
 }
 
-function FieldsButton({ passenger, onOpen }: { passenger: PassengerOut; onOpen: (p: PassengerOut) => void }) {
+function vehicleCell(passenger: PassengerOut, linkVehicles: boolean, onAssign: PassengerListProps['onAssign']) {
   return (
-    <Button size="sm" variant="secondary" onClick={() => onOpen(passenger)}>
-      {`${fieldCount(passenger.custom_fields.length)} `}
-      <span className="visually-hidden">personalizados de {passenger.name}</span>
-    </Button>
+    <VehicleCell
+      vehicle={passenger.vehicle}
+      linkable={linkVehicles}
+      personName={passenger.name}
+      onAssign={onAssign ? () => onAssign(passenger) : undefined}
+    />
   )
 }
 
@@ -39,6 +52,7 @@ export function PassengerTable({
   resourceNames,
   linkVehicles,
   onOpenFields,
+  onAssign,
   renderActions,
   sort,
   onSortChange,
@@ -46,7 +60,7 @@ export function PassengerTable({
 }: PassengerTableProps) {
   return (
     <div className="roster-table-scroll" role="region" aria-label="Tabla de pasajeros" tabIndex={0}>
-      <table className="roster-table roster-table--extra-column" aria-busy={busy || undefined}>
+      <table className="roster-table" aria-busy={busy || undefined}>
         <caption className="visually-hidden">Pasajeros {sortCaption(sort)}.</caption>
         <thead>
           <tr>
@@ -54,10 +68,10 @@ export function PassengerTable({
             <th scope="col">Código</th>
             <th scope="col">Teléfono</th>
             <th scope="col">Vehículo</th>
-            <th scope="col">Campos personalizados</th>
+            <th scope="col">Campos</th>
             {renderActions && (
               <th scope="col" className="roster-table__actions">
-                <span className="visually-hidden">Acciones</span>
+                Acciones
               </th>
             )}
           </tr>
@@ -66,24 +80,20 @@ export function PassengerTable({
           {items.map((passenger) => (
             <tr key={`${passenger.resource_id}-${passenger.id}`}>
               <th scope="row">
-                {passenger.name}
-                {resourceNames && (
-                  <span className="roster-note">
-                    Recurso: {resourceNames.get(passenger.resource_id) ?? passenger.resource_id}
-                  </span>
-                )}
+                <RosterPerson
+                  name={passenger.name}
+                  resourceName={resourceNames?.get(passenger.resource_id) ?? null}
+                />
               </th>
-              <td>
-                <OptionalText value={passenger.code} />
+              <td className="roster-table__nowrap">
+                <OptionalText value={passenger.code} mono />
               </td>
-              <td>
+              <td className="roster-table__nowrap">
                 <OptionalText value={passenger.phone} />
               </td>
-              <td>
-                <VehicleCell vehicle={passenger.vehicle} linkable={linkVehicles} />
-              </td>
-              <td>
-                <FieldsButton passenger={passenger} onOpen={onOpenFields} />
+              <td>{vehicleCell(passenger, linkVehicles, onAssign)}</td>
+              <td className="roster-table__nowrap">
+                <FieldsChip passenger={passenger} onOpen={onOpenFields} />
               </td>
               {renderActions && <td className="roster-table__actions">{renderActions(passenger)}</td>}
             </tr>
@@ -94,30 +104,32 @@ export function PassengerTable({
   )
 }
 
-/** Small screens (360 px): cards with a preview of the first custom fields. */
-export function PassengerCards({ items, resourceNames, linkVehicles, onOpenFields, renderActions }: PassengerListProps) {
+/** Phones (< 48rem): one stacked card per passenger. */
+export function PassengerCards({
+  items,
+  resourceNames,
+  linkVehicles,
+  onOpenFields,
+  onAssign,
+  renderActions,
+}: PassengerListProps) {
   return (
     <ul className="roster-cards" role="list">
       {items.map((passenger) => {
         const titleId = `passenger-card-${passenger.resource_id}-${passenger.id}`
-        const preview = passenger.custom_fields.slice(0, 2)
         return (
           <li key={`${passenger.resource_id}-${passenger.id}`} className="roster-card">
             <article aria-labelledby={titleId}>
-              <h3 id={titleId} className="roster-card__name">
-                {passenger.name}
-              </h3>
+              <RosterPerson
+                name={passenger.name}
+                resourceName={resourceNames?.get(passenger.resource_id) ?? null}
+                titleId={titleId}
+              />
               <dl className="roster-card__details">
-                <div>
-                  <dt>Vehículo</dt>
-                  <dd>
-                    <VehicleCell vehicle={passenger.vehicle} linkable={linkVehicles} />
-                  </dd>
-                </div>
                 <div>
                   <dt>Código</dt>
                   <dd>
-                    <OptionalText value={passenger.code} />
+                    <OptionalText value={passenger.code} mono />
                   </dd>
                 </div>
                 <div>
@@ -126,23 +138,18 @@ export function PassengerCards({ items, resourceNames, linkVehicles, onOpenField
                     <OptionalText value={passenger.phone} />
                   </dd>
                 </div>
-                {preview.map((field) => (
-                  <div key={field.key}>
-                    <dt>{field.key}</dt>
-                    <dd>{field.value || <span className="roster-muted">Sin valor</span>}</dd>
-                  </div>
-                ))}
-                {resourceNames && (
-                  <div>
-                    <dt>Recurso</dt>
-                    <dd>{resourceNames.get(passenger.resource_id) ?? passenger.resource_id}</dd>
-                  </div>
-                )}
+                <div>
+                  <dt>Vehículo</dt>
+                  <dd>{vehicleCell(passenger, linkVehicles, onAssign)}</dd>
+                </div>
+                <div>
+                  <dt>Campos</dt>
+                  <dd>
+                    <FieldsChip passenger={passenger} onOpen={onOpenFields} />
+                  </dd>
+                </div>
               </dl>
-              <div className="roster-actions">
-                <FieldsButton passenger={passenger} onOpen={onOpenFields} />
-              </div>
-              {renderActions?.(passenger)}
+              {renderActions && <div className="roster-card__actions">{renderActions(passenger)}</div>}
             </article>
           </li>
         )

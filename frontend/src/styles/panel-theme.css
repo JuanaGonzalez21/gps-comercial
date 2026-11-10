@@ -1,0 +1,241 @@
+/* Panel and login theme: Claude Design handoff "Rediseño GPS Comercial" (2026-11-10).
+
+   Scope: the authenticated area (.app-shell, including its native <dialog>s) and the auth screens
+   (.auth-page). Every selector starts with one of those roots, so the landing keeps the global
+   tokens. Components used only by the panel (fields, dialogs, toasts, tables…) read the scoped
+   tokens below from their own stylesheets; Button and Brand, shared with the landing, are adjusted
+   here.
+
+   Accessibility deviations from the handoff (UX-03, WCAG 2.x AA), measured with the relative-
+   luminance formula:
+   - input/select borders use #958D9C (3.20:1 on white) instead of #D6CCDD (1.45:1), so fields stay
+     identifiable; text-labelled buttons keep #D6CCDD;
+   - secondary text on the lavender page uses #57525C (6.31:1): #6B6B6B only reaches 4.43:1 there;
+   - keyboard focus is a solid 2px #176F75 ring (5.89:1) instead of the 20 % tint. */
+
+@font-face {
+  font-family: 'Figtree';
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url('../assets/fonts/figtree-latin-wght.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304,
+    U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400 500;
+  font-display: swap;
+  src: url('../assets/fonts/jetbrains-mono-latin-wght.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304,
+    U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* ---------- Scoped tokens ---------- */
+:is(.app-shell, .auth-page) {
+  --font-sans: 'Figtree', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', Consolas, monospace;
+
+  /* Ink and neutrals */
+  --color-text: #1f1a24;
+  --color-text-secondary: #57525c; /* 7.59:1 white, 6.31:1 lavender */
+  --color-text-muted: #6b6b6b; /* white and near-white surfaces only (5.33:1) */
+  --color-text-nav: #4a4550; /* inactive menu items and action icons (9.30:1) */
+  --color-surface-muted: #f7f4f9; /* secondary-button hover */
+  --color-surface-soft: #f1ecf5; /* soft buttons, segmented controls, neutral chips */
+  --color-surface-tile: #fcfbfd; /* tiles inside cards */
+  --color-table-head: #f8f5fa;
+  --color-row-hover: #faf8fb;
+  --color-nav-hover: #f5f1f8;
+  --color-border: #e6dfeb; /* cards */
+  --color-border-tile: #eae4ee;
+  --color-border-row: #f1ecf4;
+  --color-border-control: #d6ccdd; /* text-labelled buttons */
+  --color-border-strong: #958d9c; /* inputs and selects (3.20:1) */
+
+  /* Actions */
+  --color-primary: #176f75; /* white text 5.89:1 */
+  --color-primary-hover: #125b60;
+  --color-primary-active: #0f4c50;
+  --color-soft-hover: #e7e0ee;
+
+  /* Status tints (text on tint >= 4.5:1) */
+  --color-success-bg: #e3f2f3;
+  --color-success-text: #176f75; /* 5.12:1 */
+  --color-info-bg: #e3f2f3;
+  --color-neutral-bg: #eeecef;
+  --color-neutral-text: #4f4f4f; /* 6.97:1 */
+  --color-danger-bg: #fde8ea;
+  --color-danger-text: #a81a2b; /* 6.29:1 */
+  --color-warning-bg: #fdecee;
+  --color-warning-border: #f5c9cf;
+  --color-danger-row: #fff8f9;
+
+  /* Radii */
+  --radius-sm: 0.5rem; /* menu items */
+  --radius-md: 0.625rem; /* controls: 10px */
+  --radius-lg: 1.125rem; /* cards: 18px */
+  --radius-tile: 0.875rem; /* maps, tiles, data groups: 14px */
+  --radius-xl: 1.25rem; /* modals: 20px */
+
+  /* Elevation */
+  --shadow-sm: 0 1px 2px rgb(31 26 36 / 0.04), 0 8px 24px -12px rgb(31 26 36 / 0.1);
+  --shadow-flat: 0 1px 2px rgb(31 26 36 / 0.04);
+  --shadow-md: 0 12px 32px -8px rgb(31 26 36 / 0.25);
+  --shadow-lg: 0 24px 64px -16px rgb(31 26 36 / 0.4);
+  --focus-halo: 0 0 0 3px rgb(30 140 147 / 0.22);
+
+  font-family: var(--font-sans);
+  color: var(--color-text);
+}
+
+/* Keyboard focus: solid turquoise ring (5.89:1 on white, 4.89:1 on lavender). */
+:is(.app-shell, .auth-page) :focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Fields draw their own focus (teal border + halo, see field.css). */
+:is(.app-shell, .auth-page) .field__control:focus-visible {
+  outline-color: transparent;
+}
+
+:is(.app-shell, .auth-page) :is(h1, h2, h3, h4) {
+  letter-spacing: -0.01em;
+}
+
+/* Codes, IDs and IPs */
+:is(.app-shell, .auth-page) .mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Brand (shared with the landing) ---------- */
+:is(.app-shell, .auth-page) .brand {
+  gap: 0.625rem;
+  font-weight: 800;
+}
+
+/* White pin on a brand-red tile (4.48:1, non-text). */
+:is(.app-shell, .auth-page) .brand__mark {
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0.4rem;
+  border-radius: var(--radius-md);
+  background: var(--color-brand);
+  color: var(--color-on-dark);
+}
+
+:is(.app-shell, .auth-page) .brand__mark circle {
+  fill: var(--color-brand);
+}
+
+/* ---------- Buttons (shared with the landing) ---------- */
+:is(.app-shell, .auth-page) .btn {
+  border-radius: var(--radius-md);
+  font-size: 0.9375rem;
+  transition:
+    background-color var(--duration-fast) var(--easing-standard),
+    border-color var(--duration-fast) var(--easing-standard),
+    color var(--duration-fast) var(--easing-standard);
+}
+
+:is(.app-shell, .auth-page) .btn svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+:is(.app-shell, .auth-page) .btn--sm {
+  min-height: 2.5rem;
+  font-size: 0.875rem;
+}
+
+:is(.app-shell, .auth-page) .btn--sm svg {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+:is(.app-shell, .auth-page) .btn--primary {
+  font-weight: var(--weight-bold);
+  box-shadow: none;
+}
+
+:is(.app-shell, .auth-page) .btn--primary:active:not(:disabled) {
+  background: var(--color-primary-active);
+}
+
+/* Secondary: white, quiet outline, dark label (17.05:1). */
+:is(.app-shell, .auth-page) .btn--secondary {
+  border-color: var(--color-border-control);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+:is(.app-shell, .auth-page) .btn--secondary:hover:not(:disabled) {
+  border-color: var(--color-border-control);
+  background: var(--color-surface-muted);
+  color: var(--color-text);
+}
+
+:is(.app-shell, .auth-page) .btn--secondary:active:not(:disabled) {
+  background: var(--color-bg);
+}
+
+/* Soft: lavender fill, teal label (5.06:1), used for "Ver …" shortcuts. */
+:is(.app-shell, .auth-page) .btn--soft {
+  border-color: transparent;
+  background: var(--color-surface-soft);
+  color: var(--color-primary);
+  font-weight: var(--weight-bold);
+}
+
+:is(.app-shell, .auth-page) .btn--soft:hover:not(:disabled) {
+  background: var(--color-soft-hover);
+  color: var(--color-primary-hover);
+}
+
+/* Ghost: transparent, dark label; hover lavender. */
+:is(.app-shell, .auth-page) .btn--ghost {
+  color: var(--color-text);
+}
+
+:is(.app-shell, .auth-page) .btn--ghost:hover:not(:disabled) {
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+:is(.app-shell, .auth-page) .btn--danger:active:not(:disabled) {
+  background: var(--color-danger-hover);
+}
+
+:is(.app-shell, .auth-page) .btn:disabled {
+  opacity: 0.55;
+}
+
+/* Icon-only button (40 × 40) */
+:is(.app-shell, .auth-page) .icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-nav);
+}
+
+:is(.app-shell, .auth-page) .icon-button:hover:not(:disabled),
+:is(.app-shell, .auth-page) .icon-button[aria-expanded='true'] {
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+:is(.app-shell, .auth-page) .icon-button svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}

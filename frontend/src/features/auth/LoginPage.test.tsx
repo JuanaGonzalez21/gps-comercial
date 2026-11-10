@@ -58,6 +58,33 @@ describe('LoginPage', () => {
     expect(login).not.toHaveBeenCalled()
   })
 
+  it('summarises the invalid fields and updates the count as they are corrected', async () => {
+    const login = vi.fn<AuthContextValue['login']>()
+    renderLogin(login)
+    const user = userEvent.setup()
+
+    await user.click(screen.getByRole('button', { name: 'Ingresar' }))
+
+    const summary = screen.getByRole('alert')
+    expect(summary).toHaveTextContent('Revisa los campos marcados.')
+    expect(summary).toHaveTextContent('Hay 2 errores.')
+
+    await user.type(screen.getByLabelText(/Correo electrónico/), 'ana@example.com')
+    expect(await screen.findByText('Hay 1 error.')).toBeInTheDocument()
+
+    await user.type(screen.getByLabelText(/^Contraseña/), 'secreto')
+    expect(screen.queryByText('Revisa los campos marcados.')).not.toBeInTheDocument()
+  })
+
+  it('offers a way back to the landing page', async () => {
+    renderLogin(vi.fn<AuthContextValue['login']>())
+    const user = userEvent.setup()
+
+    await user.click(screen.getByRole('link', { name: 'Volver al inicio' }))
+
+    expect(await screen.findByText('Inicio')).toBeInTheDocument()
+  })
+
   it('rejects a malformed e-mail', async () => {
     const login = vi.fn<AuthContextValue['login']>()
     renderLogin(login)

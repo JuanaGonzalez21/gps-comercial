@@ -4,6 +4,10 @@ Fuente de la sección "Decisiones de diseño" del README (requisito 8.1 y UX-01�
 Tokens en `frontend/src/styles/tokens.css`; componentes reutilizables en `frontend/src/ui/`.
 Fecha: 2026-11-09. Todo lo que se marca como "medido" se calculó o se observó; lo pendiente se dice.
 
+> **Panel y login rediseñados (PR #13, 2026-11-10).** Las secciones 1–9 describen el sistema base, que sigue
+> vigente en la landing. Para el área privada y el login manda la sección final «Rediseño del panel y del login» y el
+> detalle de [panel-theme.md](panel-theme.md).
+
 ## 1. Paleta obligatoria y función de cada color
 
 La interfaz es una herramienta de trabajo que se mira durante horas: el fondo debe ser tranquilo, la acción
@@ -203,7 +207,7 @@ Dirección: producto de flotas sobrio y preciso. La personalidad viene de la com
 - En la banda oscura los iconos usan un tono claro de `#1E8C93` (`#7FD3D8`, 9,92:1) y el anillo de foco pasa a blanco.
 - Cabecera con navegación a secciones reales (oculta por debajo de 48 rem, donde el pie y el enlace del hero la cubren). Pie con marca, enlaces reales y atribución de OpenStreetMap. Sin formularios ni registro.
 
-**Login**
+**Login** (sustituido por el rediseño del panel y del login, sección final)
 - Fondo plano lavanda (se retiraron los gradientes radiales).
 - En escritorio, panel oscuro con la marca y tres capacidades reales. En móvil, solo el formulario.
 - La tarjeta del formulario tiene borde discreto y sombra ligera.
@@ -245,3 +249,32 @@ Dirección: producto de flotas sobrio y preciso. La personalidad viene de la com
   - desplazamiento suave al pulsarlos (`html:has(.landing)`, solo con movimiento permitido; el panel no se ve afectado);
   - el menú móvil usa líneas suaves entre enlaces, sin subrayado;
   - en «Control de tu flota» la altura la fija el texto y la foto la cubre, sin hueco bajo el texto.
+
+## Rediseño del panel y del login (2026-11-10, PR #13; sustituye a lo anterior en el área privada)
+Handoff de Claude Design aplicado por el chat paralelo en `style/panel-login-visual` y `feat/dashboard-redesign`.
+Solo diseño: sin cambios de backend, API, permisos ni validaciones. Detalle, medidas y desviaciones en
+[panel-theme.md](panel-theme.md); valores finales en `frontend/src/styles/panel-theme.css`.
+
+- **Ámbito:** todos los selectores empiezan por `.app-shell` o `.auth-page`. La landing conserva los tokens globales,
+  la pila tipográfica del sistema y el foco rojo de 3 px.
+- **Tipografía (sustituye a §6 en el panel):** Figtree (texto) y JetBrains Mono (cifras e identificadores), servidas
+  desde el propio dominio con licencia OFL. La CSP no cambia (`font-src 'self'`).
+- **Estructura:** menú lateral blanco de 256 px desde 73,75 rem, riel de 88 px entre 47,5 y 73,75 rem, y barra
+  superior con cajón por debajo. Los contadores del menú reutilizan la caché del resumen del panel.
+- **Color y contraste (medidos):**
+  - texto secundario sobre lavanda `#57525C`, 6,31:1 (`#6B6B6B` solo llega a 4,43:1 ahí);
+  - bordes de campos y selects `#958D9C`, 3,20:1 sobre blanco;
+  - foco sólido turquesa de 2 px `#176F75`, 5,89:1, en lugar del tinte del diseño (sustituye a §7 en el panel).
+- **Acciones (sustituye a §4.4 en el panel):** la acción secundaria es neutra, con borde suave e icono turquesa. Hay
+  una variante `soft` (fondo lavanda, texto turquesa) para atajos como «Ver vehículos». Las acciones de cada fila
+  van en un menú «⋮» accesible (`ActionMenu`).
+- **Insignias:** radio de 6 px en el panel.
+- **Panel:** estado de la flota en barra segmentada con texto alternativo y fichas por estado, asignación de
+  conductores, mapa de la flota y lista «Requiere atención». Las gráficas de dona anteriores se retiraron.
+- **Desviaciones deliberadas del diseño:**
+  - la fila de Vehículos selecciona y resalta en el mapa (RF-15);
+  - el formulario de usuario muestra los tres roles (RF-05);
+  - la tabla de Usuarios aparece desde 64 rem;
+  - no hay placa ni contador de fallos porque la API no los da.
+- **Privacidad de las capturas:** `e2e/screenshots.spec.ts` enmascara ahora también el mapa del panel y los nombres
+  de «Requiere atención». Se comprobó con datos simulados.

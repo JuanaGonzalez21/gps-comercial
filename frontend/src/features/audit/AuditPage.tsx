@@ -11,7 +11,8 @@ import { AuditTable, AuditTableSkeleton } from './AuditTable'
 import '@/features/users/admin-table.css'
 import './audit.css'
 
-const PAGE_SIZE = 20
+/** Design "8. Auditoría": 10 events per page (the server paginates). */
+const PAGE_SIZE = 10
 const ACTOR_DEBOUNCE_MS = 350
 /** Below 80rem the log is cards; the six-column table needs the width. */
 const COMPACT_QUERY = '(max-width: 79.99rem)'
@@ -146,7 +147,7 @@ export default function AuditPage() {
           <h2 id="audit-list-title" className="admin-panel__title">
             Eventos
           </h2>
-          <p className="admin-panel__meta" role="status">
+          <p className="admin-panel__meta admin-panel__meta--chip" role="status">
             {total === undefined ? '' : total === 1 ? '1 evento' : `${formatNumber(total)} eventos`}
           </p>
         </div>

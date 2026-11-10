@@ -8,7 +8,19 @@ import { useServerWakeUp } from '@/api/system'
 import { getPostLoginPath, wasLoggedOut } from '@/auth/redirect'
 import { useAuth } from '@/auth/useAuth'
 import { useDocumentTitle } from '@/lib/hooks'
-import { Alert, Brand, Button, Card, PasswordField, TextField } from '@/ui'
+import {
+  Alert,
+  ArrowRightIcon,
+  Brand,
+  Button,
+  Card,
+  ChevronLeftIcon,
+  KeyIcon,
+  PasswordField,
+  TextField,
+  UserCogIcon,
+} from '@/ui'
+import '@/styles/panel-theme.css'
 import './auth.css'
 
 const loginSchema = z.object({
@@ -48,7 +60,7 @@ export default function LoginPage() {
     register,
     handleSubmit,
     setError,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, submitCount },
   } = useForm<LoginInput, unknown, LoginOutput>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: '', password: '' },
@@ -82,32 +94,41 @@ export default function LoginPage() {
 
   const expired = searchParams.get('reason') === 'expired'
   const loggedOut = wasLoggedOut(location.state)
+  // Summary after a submit with invalid fields; it updates as each field is corrected.
+  const errorCount = Object.keys(errors).length
+  const showErrorSummary = submitCount > 0 && errorCount > 0 && !formError
 
   return (
     <main id="main" className="auth-page auth-page--split">
-      {/* Product context next to the form on wide screens; hidden on small ones to keep the form first. */}
+      {/* Brand panel: a dark column on wide screens and a compact dark band above the form on phones. */}
       <aside className="auth-aside" aria-label="Sobre GPS Comercial">
         <Brand to="/" tone="dark" />
         <div className="auth-aside__body">
-          <p className="auth-aside__title">Monitoreo de flotas sobre Wialon</p>
-          <ul className="auth-aside__facts" role="list">
-            <li>Ubicación y estado de cada vehículo</li>
-            <li>Conductores, pasajeros y asignaciones</li>
-            <li>Historial de recorridos con reproducción</li>
-          </ul>
+          <p className="auth-aside__title">
+            Tu flota en tiempo real<span className="auth-aside__title-rest">, en un solo lugar</span>.
+          </p>
+          <p className="auth-aside__lead">
+            Posición, estado y asignaciones de conductores y pasajeros de cada vehículo.
+          </p>
         </div>
-        <p className="auth-aside__note">Las horas se muestran en la zona horaria de Bogotá.</p>
+        <ul className="auth-aside__notes" role="list">
+          <li>
+            <UserCogIcon className="auth-aside__note-icon" />
+            Solo para cuentas creadas por un administrador. No hay registro público.
+          </li>
+          <li>
+            <KeyIcon className="auth-aside__note-icon" />
+            En tu primer ingreso deberás cambiar la contraseña.
+          </li>
+        </ul>
       </aside>
       <div className="auth-page__panel">
-        <div className="auth-page__brand">
-          <Brand to="/" />
-        </div>
         <Card as="section" className="auth-card" aria-labelledby="login-title">
           <h1 id="login-title" className="auth-card__title">
             Iniciar sesión
           </h1>
           <p className="auth-card__intro">
-            Ingresa con el correo y la contraseña que te entregó el administrador.
+            Usa el correo y la contraseña que te entregó el administrador.
           </p>
 
           {expired && !formError && (
@@ -129,6 +150,11 @@ export default function LoginPage() {
               {formError}
             </Alert>
           )}
+          {showErrorSummary && (
+            <Alert tone="error" role="alert" title="Revisa los campos marcados.">
+              {errorCount === 1 ? 'Hay 1 error.' : `Hay ${errorCount} errores.`}
+            </Alert>
+          )}
 
           <form className="auth-form" noValidate onSubmit={onSubmit}>
             <TextField
@@ -136,6 +162,7 @@ export default function LoginPage() {
               type="email"
               inputMode="email"
               autoComplete="username"
+              placeholder="nombre@empresa.com"
               isRequired
               error={errors.email?.message}
               {...register('email')}
@@ -147,15 +174,39 @@ export default function LoginPage() {
               error={errors.password?.message}
               {...register('password')}
             />
-            <Button type="submit" fullWidth loading={isSubmitting} loadingText="Ingresando…">
+            <Button
+              type="submit"
+              fullWidth
+              icon={<ArrowRightIcon />}
+              loading={isSubmitting}
+              loadingText="Ingresando…"
+            >
               Ingresar
             </Button>
           </form>
+          <ul className="auth-help" role="list">
+            <li className="auth-help__item">
+              <KeyIcon className="auth-help__icon" />
+              {/* Short wording on phones and tablets; the design's full sentence on wide screens. */}
+              <span className="auth-help__short">
+                ¿Olvidaste tu contraseña? Pide al administrador que la restablezca.
+              </span>
+              <span className="auth-help__full">
+                ¿Olvidaste tu contraseña? Comunícate con el administrador de tu empresa para
+                restablecerla.
+              </span>
+            </li>
+            {/* Phones and tablets: the brand band only shows the title, so its access note moves here. */}
+            <li className="auth-help__item auth-help__item--compact">
+              <UserCogIcon className="auth-help__icon" />
+              <span>Solo cuentas creadas por el administrador. En tu primer ingreso cambiarás la contraseña.</span>
+            </li>
+          </ul>
         </Card>
-        <p className="auth-page__footer">
-          ¿No tienes cuenta? Solo un administrador puede crear usuarios.{' '}
-          <Link to="/">Volver al inicio</Link>
-        </p>
+        <Link to="/" className="auth-back">
+          <ChevronLeftIcon className="auth-back__icon" />
+          Volver al inicio
+        </Link>
       </div>
     </main>
   )

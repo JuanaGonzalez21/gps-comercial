@@ -1,7 +1,7 @@
 import type { UserOut } from '@/api/types'
-import { Skeleton } from '@/ui'
-import { UserActions, type UserAction } from './UserActions'
-import { ActiveBadge, LastLogin, PasswordState } from './UserBadges'
+import { Avatar, Skeleton } from '@/ui'
+import { SelfNote, UserActions, type UserAction } from './UserActions'
+import { ActiveBadge, LastLogin, PendingPasswordBadge } from './UserBadges'
 
 interface UserCardListProps {
   items: readonly UserOut[]
@@ -9,22 +9,27 @@ interface UserCardListProps {
   onAction: (action: UserAction, user: UserOut) => void
 }
 
-/** Phones (UX-01): one readable card per user with the same actions as the table. */
+/** Phones (UX-01): one row per user, stacked, with the same identity and actions as the table. */
 export function UserCardList({ items, currentUserId, onAction }: UserCardListProps) {
   return (
     <ul className="admin-cards" role="list">
       {items.map((user) => {
         const isSelf = user.id === currentUserId
         const titleId = `user-card-${user.id}`
+        const selfNoteId = `user-card-self-note-${user.id}`
         return (
           <li key={user.id}>
             <article className="admin-card" aria-labelledby={titleId}>
-              <div className="admin-card__header">
-                <h3 id={titleId} className="admin-card__title">
-                  {user.full_name}
-                  {isSelf && <span className="admin-tag">Tu cuenta</span>}
-                </h3>
-                <p className="admin-card__subtitle">{user.email}</p>
+              <div className="users-person">
+                <Avatar name={user.full_name} tone="dark" size="lg" />
+                <div className="users-person__identity">
+                  <h3 id={titleId} className="users-person__name">
+                    {user.full_name}
+                    {isSelf && <span className="admin-tag">Tu cuenta</span>}
+                  </h3>
+                  <p className="users-person__email">{user.email}</p>
+                  {isSelf && <SelfNote id={selfNoteId} className="users-person__note" />}
+                </div>
               </div>
               <dl className="admin-card__details">
                 <div>
@@ -33,14 +38,9 @@ export function UserCardList({ items, currentUserId, onAction }: UserCardListPro
                 </div>
                 <div>
                   <dt>Estado</dt>
-                  <dd>
+                  <dd className="admin-badges">
                     <ActiveBadge active={user.is_active} />
-                  </dd>
-                </div>
-                <div>
-                  <dt>Contraseña</dt>
-                  <dd>
-                    <PasswordState mustChange={user.must_change_password} />
+                    {user.must_change_password && <PendingPasswordBadge />}
                   </dd>
                 </div>
                 <div>
@@ -50,7 +50,9 @@ export function UserCardList({ items, currentUserId, onAction }: UserCardListPro
                   </dd>
                 </div>
               </dl>
-              <UserActions user={user} isSelf={isSelf} onAction={onAction} />
+              <div className="users-card__actions">
+                <UserActions user={user} isSelf={isSelf} onAction={onAction} selfNoteId={selfNoteId} />
+              </div>
             </article>
           </li>
         )
@@ -67,7 +69,7 @@ export function UserCardListSkeleton({ count = 3 }: { count?: number }) {
           <Skeleton width="10rem" height="1.25rem" />
           <Skeleton width="70%" />
           <Skeleton width="50%" />
-          <Skeleton width="80%" height="2rem" />
+          <Skeleton width="6rem" height="2.5rem" />
         </li>
       ))}
     </ul>

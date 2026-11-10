@@ -76,7 +76,7 @@ export function TemporaryPasswordDialog({ user, password, reason, onClose }: Tem
           <p className="temp-password__label">
             <KeyIcon /> Contraseña temporal
           </p>
-          <code ref={valueRef} className="temp-password__value" translate="no">
+          <code ref={valueRef} className="temp-password__value mono" translate="no">
             {password}
           </code>
           <Button

@@ -9,12 +9,12 @@
 }
 
 .passenger-new-fields__title,
-.cf-section-title {
+.passenger-fields__title {
   font-size: var(--text-base);
-  font-weight: var(--weight-semibold);
+  font-weight: var(--weight-bold);
 }
 
-.cf-section-title:focus {
+.passenger-fields__title:focus {
   outline: none;
 }
 
@@ -27,13 +27,17 @@
   display: grid;
   gap: var(--space-3);
   margin: 0;
-  padding: var(--space-3);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface-muted);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border-tile);
+  border-radius: 0.75rem;
+  background: var(--color-surface-tile);
 }
 
 .passenger-new-field__remove {
+  justify-self: start;
+}
+
+.passenger-new-fields__add {
   justify-self: start;
 }
 
@@ -44,22 +48,24 @@
   }
 }
 
-/* ---------- Custom fields editor ---------- */
-.cf-editor {
+/* ---------- Custom fields editor (dialog) ---------- */
+/* Same field tile as the vehicle detail in the design: #FCFBFD, 12 px radius, name over value,
+   "Editar" and "Eliminar" (dark red) on the right. */
+.passenger-fields {
   display: grid;
   gap: var(--space-4);
 }
 
-.cf-editor__notice:empty {
+.passenger-fields__notice:empty {
   display: none;
 }
 
-.cf-section {
+.passenger-fields__section {
   display: grid;
   gap: var(--space-3);
 }
 
-.cf-section__header {
+.passenger-fields__header {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -67,72 +73,91 @@
   gap: var(--space-2);
 }
 
-.cf-list {
-  display: grid;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-}
-
-.cf-row {
+.passenger-fields__list {
   display: grid;
   gap: var(--space-2);
-  padding: var(--space-3);
-  border-bottom: 1px solid var(--color-border);
 }
 
-.cf-row:last-child {
-  border-bottom: 0;
+.passenger-field {
+  display: grid;
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border-tile);
+  border-radius: 0.75rem;
+  background: var(--color-surface-tile);
 }
 
-.cf-row--active {
-  background: var(--color-surface-muted);
+/* Editing or confirming: white with the teal bar, so input borders keep 3.20:1 (on the lavender
+   tints they would drop under 3:1). */
+.passenger-field--active {
+  gap: var(--space-3);
+  padding-left: 1.25rem;
+  background: var(--color-surface);
   box-shadow: inset 4px 0 0 var(--color-teal);
 }
 
 @media (min-width: 36rem) {
-  .cf-row:not(.cf-row--active) {
+  .passenger-field:not(.passenger-field--active) {
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
   }
 }
 
-.cf-row__content {
+.passenger-field__content {
   display: grid;
-  gap: var(--space-1);
+  gap: 0.125rem;
   min-width: 0;
 }
 
-@media (min-width: 36rem) {
-  .cf-row__content {
-    grid-template-columns: minmax(8rem, 2fr) minmax(0, 3fr);
-    align-items: baseline;
-  }
+/* Field name: 13 px / 600, #57525C on #FCFBFD (7.1:1). */
+.passenger-field__key {
+  font-size: 0.8125rem;
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
 }
 
-.cf-row__key {
+.passenger-field__value {
   font-weight: var(--weight-semibold);
   overflow-wrap: anywhere;
 }
 
-.cf-row__value {
-  overflow-wrap: anywhere;
+.passenger-field__note {
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
 }
 
-.cf-row__question {
+.passenger-field__question {
   font-weight: var(--weight-semibold);
 }
 
-.cf-row__question:focus {
+.passenger-field__question:focus {
   outline: none;
 }
 
-.cf-row__form,
-.cf-add {
+.passenger-field__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+}
+
+/* "Eliminar": dark red text (#A81A2B: 7.4:1 on white, 6.3:1 on the #FDE8EA hover tint). */
+.passenger-field__actions .btn.passenger-field__delete {
+  color: var(--color-danger-text);
+}
+
+.passenger-field__actions .btn.passenger-field__delete:hover:not(:disabled) {
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
+}
+
+.passenger-field__form,
+.passenger-fields__add {
   display: grid;
   gap: var(--space-3);
 }
 
-.cf-add {
+.passenger-fields__add {
   padding-top: var(--space-4);
-  border-top: 1px solid var(--color-border);
+  border-top: 1px solid var(--color-border-row);
 }

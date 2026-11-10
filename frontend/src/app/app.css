@@ -31,7 +31,3 @@
   min-height: 100dvh;
   padding: var(--space-6);
 }
-
-.fleet-source-banner {
-  margin-bottom: var(--space-4);
-}
